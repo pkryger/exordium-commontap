@@ -32,6 +32,7 @@
 (setq helm-buffers-fuzzy-matching t
       helm-recentf-fuzzy-match t)
 (global-set-key (kbd "C-x C-f") 'helm-find-files)
+(setq helm-buffer-details-flag nil)
 
 (setq ispell-dictionary "british")
 (setq git-commit-mode-hook '(turn-on-auto-fill flyspell-mode))
