@@ -38,3 +38,5 @@
 (setq git-commit-mode-hook '(turn-on-auto-fill flyspell-mode))
 (add-hook 'org-mode-hook 'turn-on-flyspell)
 (add-hook 'text-mode-hook 'turn-on-flyspell)
+
+(set-time-zone-rule "BST")
