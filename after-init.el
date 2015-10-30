@@ -39,4 +39,4 @@
 (add-hook 'org-mode-hook 'turn-on-flyspell)
 (add-hook 'text-mode-hook 'turn-on-flyspell)
 
-(set-time-zone-rule "BST")
+(set-time-zone-rule "/usr/share/zoneinfo/Europe/London")
