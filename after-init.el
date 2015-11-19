@@ -26,7 +26,9 @@
 
 ;; helm goodies
 (global-set-key (kbd "M-x") 'helm-M-x)
-(global-set-key (kbd "C-S-a") 'helm-projectile-ack)
+(global-set-key (kbd "C-S-k") 'helm-projectile-ack)
+(global-set-key (kbd "C-S-a") 'helm-do-grep-ag)
+(global-set-key (kbd "C-S-g") 'helm-projectile-ag)
 (setq helm-M-x-fuzzy-match t) ;; optional fuzzy matching for helm-M-x
 (global-set-key (kbd "M-y") 'helm-show-kill-ring)
 (global-set-key (kbd "C-x b") 'helm-mini)
