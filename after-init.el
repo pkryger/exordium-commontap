@@ -25,17 +25,26 @@
  'revert-all-buffers)
 
 ;; helm goodies
+(require 'helm-ag)
 (global-set-key (kbd "M-x") 'helm-M-x)
-(global-set-key (kbd "C-S-k") 'helm-projectile-ack)
-(global-set-key (kbd "C-S-a") 'helm-do-grep-ag)
-(global-set-key (kbd "C-S-g") 'helm-projectile-ag)
-(setq helm-M-x-fuzzy-match t) ;; optional fuzzy matching for helm-M-x
+(global-set-key (kbd "C-x C-f") 'helm-find-files)
 (global-set-key (kbd "M-y") 'helm-show-kill-ring)
 (global-set-key (kbd "C-x b") 'helm-mini)
-(setq helm-buffers-fuzzy-matching t
-      helm-recentf-fuzzy-match t)
-(global-set-key (kbd "C-x C-f") 'helm-find-files)
-(setq helm-buffer-details-flag nil)
+
+(global-set-key (kbd "C-S-a") 'helm-ag)
+(global-set-key (kbd "C-S-r") 'helm-ag-project-root)
+(global-set-key (kbd "C-S-d") 'helm-do-ag)
+(global-set-key (kbd "C-S-f") 'helm-do-ag-this-file)
+(global-set-key (kbd "C-S-p") 'helm-projectile-ag)
+
+(setq helm-M-x-fuzzy-match t
+      helm-buffers-fuzzy-matching t
+      helm-recentf-fuzzy-match t
+      helm-ag-fuzzy-match t
+      helm-projectile-fuzzy-match t
+      helm-ff-fuzzy-matching t
+      helm-ag-insert-at-point 'symbol
+      helm-buffer-details-flag nil)
 
 (setq ispell-dictionary "british")
 (setq git-commit-mode-hook '(turn-on-auto-fill flyspell-mode))
