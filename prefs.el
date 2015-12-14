@@ -1,3 +1,4 @@
+(setq exordium-helm-everywhere t)
 (setq exordium-theme 'zenburn)
 (setq exordium-fci-mode :prog)
 (setq exordium-spell-check nil)
