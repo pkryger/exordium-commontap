@@ -26,16 +26,20 @@
 
 ;; helm goodies
 (require 'helm-ag)
+(setq projectile-switch-project-action 'helm-projectile)
+(substitute-key-definition
+ 'projectile-switch-project 'helm-projectile-switch-project
+ projectile-mode-map)
 (global-set-key (kbd "M-x") 'helm-M-x)
 (global-set-key (kbd "C-x C-f") 'helm-find-files)
 (global-set-key (kbd "M-y") 'helm-show-kill-ring)
 (global-set-key (kbd "C-x b") 'helm-mini)
 
-(global-set-key (kbd "C-S-a") 'helm-ag)
+(global-set-key (kbd "C-S-p") 'helm-ag)
 (global-set-key (kbd "C-S-r") 'helm-ag-project-root)
 (global-set-key (kbd "C-S-d") 'helm-do-ag)
 (global-set-key (kbd "C-S-f") 'helm-do-ag-this-file)
-(global-set-key (kbd "C-S-p") 'helm-projectile-ag)
+(global-set-key (kbd "C-S-a") 'helm-projectile-ag)
 
 (setq helm-M-x-fuzzy-match t
       helm-buffers-fuzzy-matching t
