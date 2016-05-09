@@ -4,3 +4,4 @@
 (setq exordium-spell-check nil)
 (setq exordium-theme-use-big-org-fonts nil)
 (setq exordium-smooth-scroll exordium-osx)
+(setq exordium-progress-bar t)
