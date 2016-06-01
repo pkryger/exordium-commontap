@@ -30,3 +30,8 @@
 (add-hook 'text-mode-hook 'turn-on-flyspell)
 
 (set-time-zone-rule "/usr/share/zoneinfo/Europe/London")
+
+;; Alias for C-c r [
+(define-key c-mode-base-map [(control <)] (function rtags-location-stack-back))
+;; Alias for C-c r [
+(define-key c-mode-base-map [(control >)] (function rtags-location-stack-forward))
