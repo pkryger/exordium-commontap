@@ -5,3 +5,4 @@
 (setq exordium-theme-use-big-org-fonts nil)
 (setq exordium-smooth-scroll exordium-osx)
 (setq exordium-progress-bar t)
+(setq exordium-enable-c++11-keywords :modern)
