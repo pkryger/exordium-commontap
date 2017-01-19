@@ -35,3 +35,6 @@
 (define-key c-mode-base-map [(control <)] (function rtags-location-stack-back))
 ;; Alias for C-c r [
 (define-key c-mode-base-map [(control >)] (function rtags-location-stack-forward))
+
+;; update version control status (git) in mode line
+(setq auto-revert-check-vc-info t)
