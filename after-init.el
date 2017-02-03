@@ -25,7 +25,8 @@
  'revert-all-buffers)
 
 (setq ispell-dictionary "british")
-(setq git-commit-mode-hook '(turn-on-auto-fill flyspell-mode))
+(add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
+(add-hook 'git-commit-mode-hook 'flyspell-mode)
 (add-hook 'org-mode-hook 'turn-on-flyspell)
 (add-hook 'text-mode-hook 'turn-on-flyspell)
 
