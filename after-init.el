@@ -39,3 +39,13 @@
 
 ;; update version control status (git) in mode line
 (setq auto-revert-check-vc-info t)
+
+;; use f8 to start/stop rtags
+(global-set-key
+ (kbd "<f8>")
+ '(lambda (&optional ARG)
+    (interactive "P")
+    (if ARG (rtags-stop)
+      (rtags-start-process-maybe)
+      (unless rtags-diagnostics-process
+        (rtags-diagnostics)))))
