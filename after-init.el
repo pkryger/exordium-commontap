@@ -46,6 +46,6 @@
  '(lambda (&optional ARG)
     (interactive "P")
     (if ARG (rtags-stop)
-      (rtags-start-process-maybe)
+      (rtags-start)
       (unless rtags-diagnostics-process
         (rtags-diagnostics)))))
