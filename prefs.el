@@ -7,4 +7,4 @@
 (setq exordium-progress-bar t)
 (setq exordium-enable-c++11-keywords :modern)
 (setq exordium-extra-packages '(magit-gh-pulls))
-(setq exordium-complete-mode :company)
+(setq exordium-complete-mode :auto-complete)
