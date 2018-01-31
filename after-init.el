@@ -51,3 +51,6 @@
         (rtags-diagnostics)))))
 
 ;; tune auto-complete
+(setq ac-auto-start nil     ;; original 0.3
+      ac-auto-show-menu nil ;; original 0.8
+      ac-delay 0.3)         ;; original 0.1
