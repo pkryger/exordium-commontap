@@ -8,3 +8,5 @@
 (setq exordium-enable-c++11-keywords :modern)
 (setq exordium-extra-packages '(magit-gh-pulls))
 (setq exordium-complete-mode :auto-complete)
+(setq exordium-display-line-numbers :nlinum)
+(setq exordium-inhibit-line-numbers-star-buffers t)
