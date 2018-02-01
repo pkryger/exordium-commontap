@@ -10,3 +10,4 @@
 (setq exordium-complete-mode :auto-complete)
 (setq exordium-display-line-numbers :nlinum)
 (setq exordium-inhibit-line-numbers-star-buffers t)
+(setq exordium-inhibit-line-numbers-buffer-size (* 512 1024))
