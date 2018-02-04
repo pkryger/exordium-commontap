@@ -54,3 +54,11 @@
 (setq ac-auto-start nil     ;; original 0.3
       ac-auto-show-menu nil ;; original 0.8
       ac-delay 0.3)         ;; original 0.1
+
+;; Use large cache only for minibuffer, use small otherwise, as per bling:
+;; http://bling.github.io/blog/2016/01/18/why-are-you-changing-gc-cons-threshold/
+(setq gc-cons-threshold 800000)
+(add-hook 'minibuffer-setup-hook #'(lambda ()
+                                     (setq gc-cons-threshold (* 1024 1024 100))))
+(add-hook 'minibuffer-exit-hook #'(lambda ()
+                                    (setq gc-cons-threshold 800000)))
