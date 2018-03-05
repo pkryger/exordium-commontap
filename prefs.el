@@ -3,7 +3,7 @@
 (setq exordium-fci-mode :prog)
 (setq exordium-spell-check nil)
 (setq exordium-theme-use-big-org-fonts nil)
-(setq exordium-smooth-scroll exordium-osx)
+;;(setq exordium-smooth-scroll exordium-osx)
 (setq exordium-progress-bar t)
 (setq exordium-enable-c++11-keywords :modern)
 (setq exordium-extra-packages '(magit-gh-pulls))
