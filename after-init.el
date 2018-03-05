@@ -57,8 +57,8 @@
 
 ;; Use large cache only for minibuffer, use small otherwise, as per bling:
 ;; http://bling.github.io/blog/2016/01/18/why-are-you-changing-gc-cons-threshold/
-(setq gc-cons-threshold 800000)
+(setq gc-cons-threshold (* 1024 1024 10))
 (add-hook 'minibuffer-setup-hook #'(lambda ()
                                      (setq gc-cons-threshold (* 1024 1024 100))))
 (add-hook 'minibuffer-exit-hook #'(lambda ()
-                                    (setq gc-cons-threshold 800000)))
+                                    (setq gc-cons-threshold (* 1024 1024 10))))
