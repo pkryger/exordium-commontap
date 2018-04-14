@@ -62,3 +62,7 @@
                                      (setq gc-cons-threshold (* 1024 1024 100))))
 (add-hook 'minibuffer-exit-hook #'(lambda ()
                                     (setq gc-cons-threshold (* 1024 1024 10))))
+
+;; Allegedly this also helps
+;; https://emacs.stackexchange.com/questions/28736/emacs-pointcursor-movement-lag/28746
+(setq auto-window-vscroll nil)
