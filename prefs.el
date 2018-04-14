@@ -11,3 +11,4 @@
 (setq exordium-display-line-numbers :nlinum)
 (setq exordium-inhibit-line-numbers-star-buffers t)
 (setq exordium-inhibit-line-numbers-buffer-size (* 512 1024))
+(setq exordium-theme-use-big-font nil)
