@@ -12,3 +12,4 @@
 (setq exordium-inhibit-line-numbers-star-buffers t)
 (setq exordium-inhibit-line-numbers-buffer-size (* 512 1024))
 (setq exordium-theme-use-big-font nil)
+(setq avy-all-windows 'all-frames)

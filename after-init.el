@@ -66,3 +66,6 @@
 ;; Allegedly this also helps
 ;; https://emacs.stackexchange.com/questions/28736/emacs-pointcursor-movement-lag/28746
 (setq auto-window-vscroll nil)
+
+;; Use M-o for ace-window
+(global-set-key (kbd "M-o") #'ace-window)
