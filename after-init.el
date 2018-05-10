@@ -23,7 +23,13 @@
 (global-set-key
  (kbd "<C-f5>")
  'revert-all-buffers)
-
+(when (executable-find "aspell")
+  (setq ispell-program-name "aspell")
+  (setq ispell-extra-args (list
+        "--sug-mode=ultra"
+        "--run-together"
+        "--run-together-limit=5"
+        "--run-together-min=2")))
 (setq ispell-dictionary "british")
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (add-hook 'git-commit-mode-hook 'flyspell-mode)
