@@ -13,3 +13,4 @@
 (setq exordium-inhibit-line-numbers-buffer-size (* 512 1024))
 (setq exordium-theme-use-big-font nil)
 (setq avy-all-windows 'all-frames)
+(setq flycheck-global-modes '(not c++-mode c-mode))
