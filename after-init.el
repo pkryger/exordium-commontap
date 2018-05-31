@@ -75,3 +75,6 @@
 
 ;; Use M-o for ace-window
 (global-set-key (kbd "M-o") #'ace-window)
+
+;; save state on exit
+(desktop-save-mode 1)
