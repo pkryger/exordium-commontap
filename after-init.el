@@ -78,3 +78,6 @@
 
 ;; save state on exit
 (desktop-save-mode 1)
+
+;; Use python3 by default
+(setq python-shell-interpreter "python3")
