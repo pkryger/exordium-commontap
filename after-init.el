@@ -82,6 +82,9 @@
 ;; Use python3 by default
 (setq python-shell-interpreter "python3")
 
+;; Apply PEP8 to python files
+(add-hook 'python-mode-hook 'py-autopep8-enable-on-save)
+
 ;; Note that the built-in `describe-function' includes both functions
 ;; and macros. `helpful-function' is functions only, so we provide
 ;; `helpful-callable' as a drop-in replacement.
