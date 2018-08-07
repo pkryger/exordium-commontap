@@ -79,6 +79,10 @@
 ;; save state on exit
 (desktop-save-mode 1)
 
+(require 'which-key)
+(which-key-mode)
+(diminish 'which-key-mode)
+
 ;; Use python3 by default
 (setq python-shell-interpreter "python3")
 
