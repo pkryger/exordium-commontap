@@ -89,6 +89,15 @@
 ;; Apply PEP8 to python files
 (add-hook 'python-mode-hook 'py-autopep8-enable-on-save)
 
+;; Turn anaconda on, this required at least jedi and factory_service python modules
+(require 'anaconda-mode)
+(add-hook 'python-mode-hook 'anaconda-mode)
+(setq anaconda-mode-lighter nil)
+
+;; Use anaconda for company
+(eval-after-load "company"
+  '(add-to-list 'company-backends 'company-anaconda))
+
 ;; Note that the built-in `describe-function' includes both functions
 ;; and macros. `helpful-function' is functions only, so we provide
 ;; `helpful-callable' as a drop-in replacement.
