@@ -73,6 +73,9 @@
 ;; https://emacs.stackexchange.com/questions/28736/emacs-pointcursor-movement-lag/28746
 (setq auto-window-vscroll nil)
 
+;; Don't auto save files in deft
+(setq deft-auto-save-interval 0)
+
 ;; Use M-o for ace-window
 (global-set-key (kbd "M-o") #'ace-window)
 
