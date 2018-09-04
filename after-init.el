@@ -1,17 +1,19 @@
-;; emacs mac ports customizations, per
-;; https://bitbucket.org/mituharu/emacs-mac/overview
+;; emacs mac ports customisations, per
+;; https://bitbucket.org/mituharu/emacs-mac/
 ;; Keybonds
-(global-set-key [(hyper a)] 'mark-whole-buffer)
-(global-set-key [(hyper v)] 'yank)
-(global-set-key [(hyper c)] 'kill-ring-save)
-(global-set-key [(hyper s)] 'save-buffer)
-(global-set-key [(hyper l)] 'goto-line)
-(global-set-key [(hyper w)]
-                (lambda () (interactive) (delete-window)))
-(global-set-key [(hyper z)] 'undo)
-;; mac switch meta key
 (when exordium-osx
+  (global-set-key [(hyper a)] 'mark-whole-buffer)
+  (global-set-key [(hyper v)] 'yank)
+  (global-set-key [(hyper c)] 'kill-ring-save)
+  (global-set-key [(hyper s)] 'save-buffer)
+  (global-set-key [(hyper l)] 'goto-line)
+  (global-set-key [(hyper w)]
+                  (lambda () (interactive) (delete-window)))
+  (global-set-key [(hyper z)] 'undo)
+  (global-set-key [(hyper q)] 'save-buffers-kill-emacs)
+
   (setq mac-option-modifier 'meta)
+  (setq mac-right-option-modifier nil)
   (setq mac-command-modifier 'hyper))
 
 (global-set-key
