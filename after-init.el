@@ -1,5 +1,5 @@
 ;; emacs mac ports customisations, per
-;; https://bitbucket.org/mituharu/emacs-mac/
+;; https://github.com/railwaycat/homebrew-emacsmacport
 ;; Keybonds
 (when exordium-osx
   (global-set-key [(hyper a)] 'mark-whole-buffer)
@@ -41,13 +41,18 @@
 (global-set-key
  (kbd "<C-f5>")
  'revert-all-buffers)
+
+;; spell checks as suggested by
+;; http://blog.binchen.org/posts/effective-spell-check-in-emacs.html
+;; http://blog.binchen.org/posts/how-to-spell-check-functionvariable-in-emacs.html
+(setq flyspell-issue-message-flag nil)
 (when (executable-find "aspell")
   (setq ispell-program-name "aspell")
   (setq ispell-extra-args (list
-        "--sug-mode=ultra"
-        "--run-together"
-        "--run-together-limit=5"
-        "--run-together-min=2")))
+        "--sug-mode=bad-spellers"
+        "--run-together")))
+        ;; "--run-together-limit=5"
+        ;; "--run-together-min=2"
 (setq ispell-dictionary "british")
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (add-hook 'git-commit-mode-hook 'flyspell-mode)
@@ -143,6 +148,15 @@
 ;; don't find this very useful, but it's frequently useful to only
 ;; look at interactive functions.
 (global-set-key (kbd "C-h C") #'helpful-command)
+
+;; Use the same keys for helm-swoop-edit as in magit-commit and
+;; helm-projectile-ag
+(setq helm-swoop-edit-map
+      (let (($map (make-sparse-keymap)))
+        (define-key $map (kbd "C-c C-c") 'helm-swoop--edit-complete)
+        (define-key $map (kbd "C-c C-k") 'helm-swoop--edit-cancel)
+        (define-key $map (kbd "C-c C-q C-k") 'helm-swoop--edit-delete-all-lines)
+        $map))
 
 ;; Diminish some modes
 (diminish 'eldoc-mode)
