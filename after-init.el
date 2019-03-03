@@ -101,6 +101,11 @@
 
 ;; Use M-o for ace-window
 (global-set-key (kbd "M-o") #'ace-window)
+;; Use bigger font for ace window
+(custom-set-faces
+ '(aw-leading-char-face
+   ((t
+     (:foreground "red" :bold t :height 2.5)))))
 
 ;; save state on exit
 (desktop-save-mode 1)
