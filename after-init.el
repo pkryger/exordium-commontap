@@ -67,7 +67,7 @@
 (define-key c-mode-base-map [(control >)] (function rtags-location-stack-forward))
 
 ;; update version control status (git) in mode line
-(setq auto-revert-check-vc-info t)
+;;(setq auto-revert-check-vc-info t)
 
 ;; use f8 to start/stop rtags
 (global-set-key
