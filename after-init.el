@@ -148,6 +148,10 @@
 ;; for this in lisp modes.
 (global-set-key (kbd "C-c C-d") #'helpful-at-point)
 
+;; Turn on page-break-lines-mode
+(add-to-list 'page-break-lines-modes 'helpful-mode)
+(global-page-break-lines-mode)
+
 ;; Look up *F*unctions (excludes macros).
 ;;
 ;; By default, C-h F is bound to `Info-goto-emacs-command-node'. Helpful
