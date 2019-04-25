@@ -13,7 +13,7 @@
   (global-set-key [(hyper q)] 'save-buffers-kill-emacs)
 
   (setq mac-option-modifier 'meta)
-  (setq mac-right-option-modifier nil)
+  (setq mac-right-option-modifier 'meta)
   (setq mac-command-modifier 'hyper))
 
 (global-set-key
