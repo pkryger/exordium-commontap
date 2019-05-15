@@ -6,3 +6,4 @@
 (add-to-list 'exordium-extra-pinned '(python . "gnu"))
 (add-to-list 'exordium-extra-pinned '(anaconda-mode . "melpa-pinned"))
 (add-to-list 'exordium-extra-pinned '(company-anaconda . "melpa-pinned"))
+(add-to-list 'exordium-extra-pinned '(swiper-helm . "melpa-pinned"))
