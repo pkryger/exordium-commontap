@@ -113,6 +113,7 @@
  '(aw-leading-char-face
    ((t
      (:foreground "red" :bold t :height 2.5)))))
+(setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
 
 ;; save state on exit
 (desktop-save-mode 1)
