@@ -221,5 +221,6 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
                                         (when smerge-mode
                                           (smerge-hydra/body))))
 
-(global-set-key (kbd "C-s") #'swiper-helm)
-(global-set-key (kbd "C-r") #'swiper-helm)
+;; Use swiper - the swiper-helm seems to be less usable
+(global-set-key (kbd "C-s") #'swiper)
+(global-set-key (kbd "C-r") #'swiper)
