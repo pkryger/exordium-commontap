@@ -224,3 +224,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 ;; Use swiper - the swiper-helm seems to be less usable
 (global-set-key (kbd "C-s") #'swiper)
 (global-set-key (kbd "C-r") #'swiper)
+
+;; Disable some ido hooks for helm mode
+(when exordium-helm-everywhere
+  (advice-remove 'call-interactively #'call-interactively@ido-cr+-record-current-command))
