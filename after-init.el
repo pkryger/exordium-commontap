@@ -228,3 +228,6 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 ;; Disable some ido hooks for helm mode
 (when exordium-helm-everywhere
   (advice-remove 'call-interactively #'call-interactively@ido-cr+-record-current-command))
+
+;; Use python3 for org
+(setq org-babel-python-command "python3")
