@@ -231,3 +231,6 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 
 ;; Use python3 for org
 (setq org-babel-python-command "python3")
+;; Don't ask for confirmation for code blocks (rather use :eval no)
+(setq org-confirm-babel-evaluate nil)
+
