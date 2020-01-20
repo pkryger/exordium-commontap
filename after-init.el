@@ -234,3 +234,80 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 ;; Don't ask for confirmation for code blocks (rather use :eval no)
 (setq org-confirm-babel-evaluate nil)
 
+(defcustom pk/mac-auto-operator-composition-strings
+  ;;
+  '(;; c++
+    "!=" "%" "%=" "&" "&&" "&&=" "&=" "*" "**" "***" "*/" "*=" "++" "+="
+    "--" "-=" "->" ".*" "..." "/" "/*" "//" "///" "/=" "::" "<" "<<" "<<<"
+    "<<=" "<=" "<=>" "=" "==" ">" ">=" ">>" ">>=" ">>>" "?:" "\\" "^=" "|"
+    "|=" "||" "||=" "~" "~="
+    ;; programming in non-c++ and nice stuff
+    "__" "@" "@@" "!!" "===" "!==" "=>" ":=" "[:]"  "/>" "</>" "</" "<>" "<-"
+    ";;" "\n" "fl" "Fl" "Tl" "www"
+    ;; org-mode ballots
+    "[ ]" "[X]"
+    )
+  "Sequence of strings used in automatic operator composition. Customised
+for FiraCode font: https://github.com/tonsky/FiraCode"
+  :package-version '(Mac\ port . "5.10")
+  :type 'list
+  :group 'mac)
+
+
+;; ligatures, based on `mac-auto-operator-composition-mode'
+(define-minor-mode pk/mac-auto-operator-composition-mode
+  "Toggle Mac Auto Operator Composition mode.
+With a prefix argument ARG, enable Mac Auto Operator Composition
+mode if ARG is positive, and disable it otherwise.  If called
+from Lisp, enable the mode if ARG is omitted or nil.
+
+Mac Auto Operator Composition mode automatically composes
+consecutive occurrences of characters consisting of the elements
+of `pk/mac-auto-operator-composition-characters' if the font
+supports such a composition.  Some fonts provide ligatures for
+several combinations of symbolic characters so such a combination
+looks like a single unit of an operator symbol in a programming
+language."
+  :init-value nil
+  :global t
+  :group 'mac
+  :package-version '(Mac\ port . "5.10")
+  (if pk/mac-auto-operator-composition-mode
+      (when (eq (terminal-live-p (frame-terminal)) 'mac)
+        (let ((char-strings-alist '()))
+          (mapc (lambda (string)
+                  (let* ((char (string-to-char string))
+                         (strings (assq char char-strings-alist)))
+                    (if strings
+                        (setcdr strings (push string (cdr strings)))
+                      (add-to-list 'char-strings-alist (cons char (list string))))))
+                pk/mac-auto-operator-composition-strings)
+          (mapc (lambda (char-strings)
+                  (let ((new-rules `([,(regexp-opt (cdr char-strings)) 0
+                                      mac-auto-operator-composition-shape-gstring]))
+                        (old-rules (aref composition-function-table (car char-strings))))
+                    (set-char-table-range composition-function-table
+                                          (car char-strings)
+                                          (if (listp old-rules)
+                                              (append old-rules new-rules)
+                                            rules))))
+                char-strings-alist))
+        (set-char-table-range composition-function-table
+                              ?0
+                              '(["\\(?:0x[a-fA-F0-9]\\)" 0
+                                 mac-auto-operator-composition-shape-gstring]))
+        (global-auto-composition-mode 1))
+    (map-char-table
+     (lambda (c rules)
+       (when (consp rules)
+         (let (new-rules removed-p)
+           (dolist (rule rules)
+             (if (eq (aref rule 2) 'mac-auto-operator-composition-shape-gstring)
+                 (setq removed-p t)
+               (push rule new-rules)))
+           (if removed-p
+               (set-char-table-range composition-function-table c
+                                     (nreverse new-rules))))))
+     composition-function-table)
+    (clrhash mac-auto-operator-composition-cache)))
+(pk/mac-auto-operator-composition-mode)
