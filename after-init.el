@@ -235,15 +235,14 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 (setq org-confirm-babel-evaluate nil)
 
 (defcustom pk/mac-auto-operator-composition-strings
-  ;;
   '(;; c++
     "!=" "%" "%=" "&" "&&" "&&=" "&=" "*" "**" "***" "*/" "*=" "++" "+="
-    "--" "-=" "->" ".*" "..." "/" "/*" "//" "///" "/=" "::" "<" "<<" "<<<"
-    "<<=" "<=" "<=>" "=" "==" ">" ">=" ">>" ">>=" ">>>" "?:" "\\" "^=" "|"
-    "|=" "||" "||=" "~" "~="
+    "--" "-=" "->" ".*" "..." "/" "/*" "/**" "//" "///" "/=" "::" "<" "<<"
+    "<<<" "<<=" "<=" "<=>" "=" "==" ">" ">=" ">>" ">>=" ">>>" "?:" "\\\\"
+    "\\\\\\" "^=" "|" "|=" "||" "||=" "~" "~=" "[]"
     ;; programming in non-c++ and nice stuff
-    "__" "@" "@@" "!!" "===" "!==" "=>" ":=" "[:]"  "/>" "</>" "</" "<>" "<-"
-    ";;" "\n" "fl" "Fl" "Tl" "www"
+    "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
+    "<-" ";;" "\\n" "fl" "Fl" "Tl" "www" ".."
     ;; org-mode ballots
     "[ ]" "[X]"
     )
@@ -277,13 +276,16 @@ language."
         (let ((char-strings-alist '()))
           (mapc (lambda (string)
                   (let* ((char (string-to-char string))
-                         (strings (assq char char-strings-alist)))
-                    (if strings
-                        (setcdr strings (push string (cdr strings)))
-                      (add-to-list 'char-strings-alist (cons char (list string))))))
+                         (char-strings (assq char char-strings-alist))
+                         (suffix (if (< (length string) 1)
+                                     ""
+                                   (substring string 1))))
+                    (if char-strings
+                        (setcdr char-strings (push suffix (cdr char-strings)))
+                      (add-to-list 'char-strings-alist (cons char (list suffix))))))
                 pk/mac-auto-operator-composition-strings)
           (mapc (lambda (char-strings)
-                  (let ((new-rules `([,(regexp-opt (cdr char-strings)) 0
+                  (let ((new-rules `([,(concat "." (regexp-opt (cdr char-strings))) 0
                                       mac-auto-operator-composition-shape-gstring]))
                         (old-rules (aref composition-function-table (car char-strings))))
                     (set-char-table-range composition-function-table
@@ -294,7 +296,7 @@ language."
                 char-strings-alist))
         (set-char-table-range composition-function-table
                               ?0
-                              '(["\\(?:0x[a-fA-F0-9]\\)" 0
+                              '([".\\(?:x[a-fA-F0-9]\\)" 0
                                  mac-auto-operator-composition-shape-gstring]))
         (global-auto-composition-mode 1))
     (map-char-table
