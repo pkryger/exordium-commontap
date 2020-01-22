@@ -243,8 +243,8 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
     ;; programming in non-c++ and nice stuff
     "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
     "<-" ";;" "\\n" "fl" "Fl" "Tl" "www" ".."
-    ;; org-mode ballots
-    "[ ]" "[X]"
+    ;; org-mode ballots -> they are unicode chars, not glyphs
+    ;; "[ ]" "[X]"
     )
   "Sequence of strings used in automatic operator composition. Customised
 for FiraCode font: https://github.com/tonsky/FiraCode"
@@ -313,3 +313,10 @@ language."
      composition-function-table)
     (clrhash mac-auto-operator-composition-cache)))
 (pk/mac-auto-operator-composition-mode)
+
+(add-hook 'org-mode-hook
+          (lambda ()
+            (push '("[ ]" . "☐") prettify-symbols-alist)
+            (push '("[X]" . "☑") prettify-symbols-alist)
+            (push '("[-]" . "▣") prettify-symbols-alist)
+            (prettify-symbols-mode)))
