@@ -246,11 +246,9 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
     ;; org-mode ballots -> they are unicode chars, not glyphs
     ;; "[ ]" "[X]"
     )
-  "Sequence of strings used in automatic operator composition. Customised
-for FiraCode font: https://github.com/tonsky/FiraCode"
-  :package-version '(Mac\ port . "5.10")
-  :type 'list
-  :group 'mac)
+  "Sequence of strings used in automatic operator composition.
+Customised for FiraCode font: https://github.com/tonsky/FiraCode"
+  :type 'list)
 
 
 ;; ligatures, based on `mac-auto-operator-composition-mode'
@@ -269,20 +267,24 @@ looks like a single unit of an operator symbol in a programming
 language."
   :init-value nil
   :global t
-  :group 'mac
-  :package-version '(Mac\ port . "5.10")
   (if pk/mac-auto-operator-composition-mode
       (when (eq (terminal-live-p (frame-terminal)) 'mac)
-        (let ((char-strings-alist '()))
+        ;; Transform the `pk/mac-auto-operator-composition-strings' list into an alist.
+        ;; The transformation is as follows:
+        ;; - group all elements of the list by the first letter,
+        ;; - each car of an alist element is first letter for a given group,
+        ;; - each cdr of an alist element is list of substrings starting
+        ;;   from the 1st position for each string in a given group.
+        ;; i.e., ("ab" "a" "bc") -> ((?a "b" "") (?b "c"))
+        (let* ((char-strings-alist))
           (mapc (lambda (string)
                   (let* ((char (string-to-char string))
-                         (char-strings (assq char char-strings-alist))
-                         (suffix (if (< (length string) 1)
-                                     ""
-                                   (substring string 1))))
-                    (if char-strings
-                        (setcdr char-strings (push suffix (cdr char-strings)))
-                      (add-to-list 'char-strings-alist (cons char (list suffix))))))
+                         (strings (alist-get char char-strings-alist)))
+                    (setf (alist-get char char-strings-alist)
+                          (push (if (< (length string) 1)
+                                    ""
+                                  (substring string 1))
+                                strings))))
                 pk/mac-auto-operator-composition-strings)
           (mapc (lambda (char-strings)
                   (let ((new-rules `([,(concat "." (regexp-opt (cdr char-strings))) 0
@@ -292,7 +294,7 @@ language."
                                           (car char-strings)
                                           (if (listp old-rules)
                                               (append old-rules new-rules)
-                                            rules))))
+                                            new-rules))))
                 char-strings-alist))
         (set-char-table-range composition-function-table
                               ?0
@@ -314,9 +316,21 @@ language."
     (clrhash mac-auto-operator-composition-cache)))
 (pk/mac-auto-operator-composition-mode)
 
+;; Org mode are not a real ligatures - use prettify symbols for it
 (add-hook 'org-mode-hook
           (lambda ()
             (push '("[ ]" . "☐") prettify-symbols-alist)
             (push '("[X]" . "☑") prettify-symbols-alist)
             (push '("[-]" . "▣") prettify-symbols-alist)
             (prettify-symbols-mode)))
+
+;; Helm and ediff are having issues with ligatures
+(add-hook 'helm-major-mode-hook
+          (lambda ()
+            (setq auto-composition-mode nil)))
+;; Disabling ligatures in ediff mode only removes them in the ediff buffer
+;; itself(the small buffer underneath) and not the buffers you compare. Which
+;; is probably a preferred solution.
+(add-hook 'ediff-mode-hook
+          (lambda ()
+            (setq auto-composition-mode nil)))
