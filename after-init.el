@@ -334,3 +334,21 @@ language."
 (add-hook 'ediff-mode-hook
           (lambda ()
             (setq auto-composition-mode nil)))
+
+
+(require 'forge)
+(add-hook 'forge-post-mode-hook #'(lambda () (set-fill-column 100000)))
+(defun pk/forge-markdown-preview ()
+  "Preview current buffer as a `markdown-mode' would do."
+  (interactive)
+  (let ((temp-file (make-temp-file (file-name-base buffer-file-name)
+                                   nil ".md"
+                                   (buffer-string))))
+    (with-temp-buffer
+      (insert-file-contents temp-file t)
+      (markdown-preview)
+      (delete-file temp-file))))
+(define-key forge-post-mode-map (kbd "C-c p p") #'pk/forge-markdown-preview)
+
+
+;;
