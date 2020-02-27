@@ -346,9 +346,8 @@ language."
                                    (buffer-string))))
     (with-temp-buffer
       (insert-file-contents temp-file t)
-      (markdown-preview)
-      (delete-file temp-file))))
+      (markdown-preview))
+    (delete-file temp-file)))
 (define-key forge-post-mode-map (kbd "C-c p p") #'pk/forge-markdown-preview)
-
 
 ;;
