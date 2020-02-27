@@ -45,14 +45,14 @@
 ;; spell checks as suggested by
 ;; http://blog.binchen.org/posts/effective-spell-check-in-emacs.html
 ;; http://blog.binchen.org/posts/how-to-spell-check-functionvariable-in-emacs.html
+(require 'flyspell)
+(require 'ispell)
 (setq flyspell-issue-message-flag nil)
 (when (executable-find "aspell")
   (setq ispell-program-name "aspell")
   (setq ispell-extra-args (list
-        "--sug-mode=bad-spellers"
-        "--run-together")))
-        ;; "--run-together-limit=5"
-        ;; "--run-together-min=2"
+        "--sug-mode=ultra"
+        "--camel-case")))
 (setq ispell-dictionary "british")
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (add-hook 'git-commit-mode-hook 'flyspell-mode)
