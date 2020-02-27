@@ -58,6 +58,29 @@
 (add-hook 'git-commit-mode-hook 'flyspell-mode)
 (add-hook 'org-mode-hook 'turn-on-flyspell)
 (add-hook 'text-mode-hook 'turn-on-flyspell)
+(require 'helm-flyspell)
+(defun pk/flyspell-jump-and-correct-word (event)
+  (interactive "P")
+  (when-let ((cursor-pos (mouse-position))
+             (line (cddr cursor-pos))
+             (col  (cadr cursor-pos))
+             (p (save-excursion
+                  (goto-char (window-start))
+                  (forward-line line)
+                  (if (> (- (line-end-position) (line-beginning-position)) col)
+                      (progn  (move-to-column col) (1- (point)))
+                    nil))))
+    (goto-char p)
+    (flyspell-correct-word-before-point event p)))
+
+(eval-after-load "flyspell"
+  '(progn
+     (define-key flyspell-mouse-map [mouse-2] nil)
+     (define-key flyspell-mouse-map [H-mouse-1] 'pk/flyspell-jump-and-correct-word)
+     (define-key flyspell-mode-map flyspell-auto-correct-binding 'helm-flyspell-correct)
+     (define-key flyspell-mode-map [(control ?\,)] nil)
+     (define-key flyspell-mode-map [(control ?\.)] nil)))
+
 
 (set-time-zone-rule "/usr/share/zoneinfo/Europe/London")
 
