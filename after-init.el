@@ -61,6 +61,7 @@
 
 (set-time-zone-rule "/usr/share/zoneinfo/Europe/London")
 
+(require 'cc-mode)
 ;; Alias for C-c r [
 (define-key c-mode-base-map [(control <)] (function rtags-location-stack-back))
 ;; Alias for C-c r [
@@ -105,7 +106,7 @@
 (setq deft-use-filter-string-for-filename t)
 (setq deft-auto-save-interval 0)
 
-
+(require 'ace-window)
 ;; Use M-o for ace-window
 (global-set-key (kbd "M-o") #'ace-window)
 ;; Use bigger font for ace window
@@ -122,6 +123,7 @@
 (which-key-mode)
 (diminish 'which-key-mode)
 
+(require 'python)
 ;; Use python3 by default
 (setq python-shell-interpreter "python3")
 
