@@ -199,11 +199,11 @@
      (define-key helm-swoop-edit-map (kbd "C-c C-k") 'helm-swoop--edit-cancel)
      (define-key helm-swoop-edit-map (kbd "C-c C-q C-k") 'helm-swoop--edit-delete-all-lines)))
 
-
 ;; Diminish some modes
 (diminish 'eldoc-mode)
 (diminish 'auto-revert-mode)
 (diminish 'flyspell-mode)
+(diminish 'undo-tree-mode)
 
 ;; from https://github.com/alphapapa/unpackaged.el#hydra
 (require 'hydra)
