@@ -375,4 +375,56 @@ language."
     (delete-file temp-file)))
 (define-key forge-post-mode-map (kbd "C-c p p") #'pk/forge-markdown-preview)
 
+;; a couple statistical goodies
+(defun pk/quartile (sequence quartile &optional method)
+  "Return a given QUARTILE for the specified SEQUENCE.
+The value is returned according to Method 1 (`:exclude') from Wiki:
+`https://en.wikipedia.org/wiki/Quartile'.
+
+The optional METHOD can be `:include' to use Method 2 instead.
+
+Return nil unless one of:
+- QUARTILE is one of 1, 2, or 3,
+- SEQUENCE length is >=1 and QUARTILE is 2,
+- SEQUENCE length is >=2 and QUARTILE is one of 1 or 3."
+  (let* ((length (length sequence))
+         (offset (if (and (cl-oddp length)
+                          (eq method :include))
+                     1 0)))
+    (cl-flet ((median (sequence)
+                      (let* ((length (length sequence))
+                             (mid (/ length 2)))
+                        (if (cl-oddp length)
+                            (seq-elt sequence mid)
+                          (/ (+ (seq-elt sequence (1- mid))
+                                (seq-elt sequence mid))
+                             2.0)))))
+        (cond
+         ((and (< 1 length) (eq quartile 2))
+          (median sequence))
+         ((and (< 2 length) (eq quartile 1))
+          (median (seq-subseq sequence
+                              0
+                              (+ (/ length 2)
+                                 offset))))
+         ((and (< 2 length) (eq quartile 3))
+          (median (seq-subseq sequence
+                              (- (1+ (/ length 2))
+                                 offset))))))))
+
+(defun pk/median (sequence)
+  "Return a median for the specified SEQUENCE."
+  (pk/quartile sequence 2))
+
+(defun pk/five-nums (sequence &optional method)
+  "Return a list consisting of (min q1 med q3 max) for the specified SEQUENCE.
+The optional METHOD is the same as in `pk/quartile'.  When some values cannot be
+calculated they are set to nil."
+  (list (when sequence (seq-min sequence))
+        (pk/quartile sequence 1 method)
+        (pk/median sequence)
+        (pk/quartile sequence 3 method)
+        (when sequence (seq-max sequence))))
+
+
 ;;
