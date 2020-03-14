@@ -301,15 +301,13 @@ language."
         ;; - each cdr of an alist element is list of substrings starting
         ;;   from the 1st position for each string in a given group.
         ;; i.e., ("ab" "a" "bc") -> ((?a "b" "") (?b "c"))
-        (let* ((char-strings-alist))
+        (let ((char-strings-alist))
           (mapc (lambda (string)
-                  (let* ((char (string-to-char string))
-                         (strings (alist-get char char-strings-alist)))
-                    (setf (alist-get char char-strings-alist)
-                          (push (if (< (length string) 1)
-                                    ""
-                                  (substring string 1))
-                                strings))))
+                  (cl-callf append
+                      (alist-get (string-to-char string) char-strings-alist)
+                    (list (if (< (length string) 1)
+                              ""
+                            (substring string 1)))))
                 pk/mac-auto-operator-composition-strings)
           (mapc (lambda (char-strings)
                   (let ((new-rules `([,(concat "." (regexp-opt (cdr char-strings))) 0
