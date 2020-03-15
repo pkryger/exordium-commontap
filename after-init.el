@@ -259,6 +259,8 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 ;; Don't ask for confirmation for code blocks (rather use :eval no)
 (setq org-confirm-babel-evaluate nil)
 
+
+(require 'map)
 (defcustom pk/mac-auto-operator-composition-strings
   '(;; c++
     "!=" "%" "%=" "&" "&&" "&&=" "&=" "*" "**" "***" "*/" "*=" "++" "+="
@@ -269,7 +271,7 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
     "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
     "<-" ";;" "\\n" "fl" "Fl" "Tl" "www" ".."
     ;; org-mode ballots -> they are unicode chars, not glyphs
-    ;; "[ ]" "[X]"
+    ;; "[ ]" "[X]" "[-]"
     )
   "Sequence of strings used in automatic operator composition.
 Customised for FiraCode font: https://github.com/tonsky/FiraCode"
@@ -285,7 +287,7 @@ from Lisp, enable the mode if ARG is omitted or nil.
 
 Mac Auto Operator Composition mode automatically composes
 consecutive occurrences of characters consisting of the elements
-of `pk/mac-auto-operator-composition-characters' if the font
+of `pk/mac-auto-operator-composition-strings' if the font
 supports such a composition.  Some fonts provide ligatures for
 several combinations of symbolic characters so such a combination
 looks like a single unit of an operator symbol in a programming
@@ -301,13 +303,12 @@ language."
         ;; - each cdr of an alist element is list of substrings starting
         ;;   from the 1st position for each string in a given group.
         ;; i.e., ("ab" "a" "bc") -> ((?a "b" "") (?b "c"))
-        (let ((char-strings-alist))
+        (let (char-strings-alist)
           (mapc (lambda (string)
-                  (cl-callf append
-                      (alist-get (string-to-char string) char-strings-alist)
-                    (list (if (< (length string) 1)
-                              ""
-                            (substring string 1)))))
+                  (push (if (< (length string) 1)
+                            ""
+                          (substring string 1))
+                        (map-elt char-strings-alist (string-to-char string))))
                 pk/mac-auto-operator-composition-strings)
           (mapc (lambda (char-strings)
                   (let ((new-rules `([,(concat "." (regexp-opt (cdr char-strings))) 0
