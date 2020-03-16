@@ -179,6 +179,7 @@
 
 ;; Look up *F*unctions (excludes macros).
 ;;
+
 ;; By default, C-h F is bound to `Info-goto-emacs-command-node'. Helpful
 ;; already links to the manual, if a function is referenced there.
 (global-set-key (kbd "C-h F") #'helpful-function)
@@ -258,6 +259,8 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 (setq org-babel-python-command "python3")
 ;; Don't ask for confirmation for code blocks (rather use :eval no)
 (setq org-confirm-babel-evaluate nil)
+;; Make tabs work nativly in org mode's src blocks
+(setq org-src-tab-acts-natively t)
 
 (defcustom pk/mac-auto-operator-composition-strings
   '(;; c++
