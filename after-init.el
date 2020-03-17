@@ -270,26 +270,27 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 ;; Make tabs work nativly in org mode's src blocks
 (setq org-src-tab-acts-natively t)
 
-(defcustom pk/mac-auto-operator-composition-strings
-  '(;; c++
-    "!=" "%" "%=" "&" "&&" "&&=" "&=" "*" "**" "***" "*/" "*=" "++" "+="
-    "--" "-=" "->" ".*" "..." "/" "/*" "/**" "//" "///" "/=" "::" "<" "<<"
-    "<<<" "<<=" "<=" "<=>" "=" "==" ">" ">=" ">>" ">>=" ">>>" "?:" "\\\\"
-    "\\\\\\" "^=" "|" "|=" "||" "||=" "~" "~=" "[]"
-    ;; programming in non-c++ and nice stuff
-    "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
-    "<-" ";;" "\\n" "fl" "Fl" "Tl" "www" ".."
-    ;; org-mode ballots -> they are unicode chars, not glyphs
-    ;; "[ ]" "[X]"
-    )
-  "Sequence of strings used in automatic operator composition.
+
+(when (fboundp 'mac-auto-operator-composition-shape-gstring)
+  (defcustom pk/mac-auto-operator-composition-strings
+    '(;; c++
+      "!=" "%" "%=" "&" "&&" "&&=" "&=" "*" "**" "***" "*/" "*=" "++" "+="
+      "--" "-=" "->" ".*" "..." "/" "/*" "/**" "//" "///" "/=" "::" "<" "<<"
+      "<<<" "<<=" "<=" "<=>" "=" "==" ">" ">=" ">>" ">>=" ">>>" "?:" "\\\\"
+      "\\\\\\" "^=" "|" "|=" "||" "||=" "~" "~=" "[]"
+      ;; programming in non-c++ and nice stuff
+      "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
+      "<-" ";;" "\\n" "fl" "Fl" "Tl" "www" ".."
+      ;; org-mode ballots -> they are unicode chars, not glyphs
+      ;; "[ ]" "[X]"
+      )
+    "Sequence of strings used in automatic operator composition.
 Customised for FiraCode font: https://github.com/tonsky/FiraCode"
-  :type 'list)
+    :type 'list)
 
-
-;; ligatures, based on `mac-auto-operator-composition-mode'
-(define-minor-mode pk/mac-auto-operator-composition-mode
-  "Toggle Mac Auto Operator Composition mode.
+  ;; ligatures, based on `mac-auto-operator-composition-mode'
+  (define-minor-mode pk/mac-auto-operator-composition-mode
+    "Toggle Mac Auto Operator Composition mode.
 With a prefix argument ARG, enable Mac Auto Operator Composition
 mode if ARG is positive, and disable it otherwise.  If called
 from Lisp, enable the mode if ARG is omitted or nil.
@@ -301,54 +302,54 @@ supports such a composition.  Some fonts provide ligatures for
 several combinations of symbolic characters so such a combination
 looks like a single unit of an operator symbol in a programming
 language."
-  :init-value nil
-  :global t
-  (if pk/mac-auto-operator-composition-mode
-      (when (eq (terminal-live-p (frame-terminal)) 'mac)
-        ;; Transform the `pk/mac-auto-operator-composition-strings' list into an alist.
-        ;; The transformation is as follows:
-        ;; - group all elements of the list by the first letter,
-        ;; - each car of an alist element is first letter for a given group,
-        ;; - each cdr of an alist element is list of substrings starting
-        ;;   from the 1st position for each string in a given group.
-        ;; i.e., ("ab" "a" "bc") -> ((?a "b" "") (?b "c"))
-        (let ((char-strings-alist))
-          (mapc (lambda (string)
-                  (cl-callf append
-                      (alist-get (string-to-char string) char-strings-alist)
-                    (list (if (< (length string) 1)
-                              ""
-                            (substring string 1)))))
-                pk/mac-auto-operator-composition-strings)
-          (mapc (lambda (char-strings)
-                  (let ((new-rules `([,(concat "." (regexp-opt (cdr char-strings))) 0
-                                      mac-auto-operator-composition-shape-gstring]))
-                        (old-rules (aref composition-function-table (car char-strings))))
-                    (set-char-table-range composition-function-table
-                                          (car char-strings)
-                                          (if (listp old-rules)
-                                              (append old-rules new-rules)
-                                            new-rules))))
-                char-strings-alist))
-        (set-char-table-range composition-function-table
-                              ?0
-                              '([".\\(?:x[a-fA-F0-9]\\)" 0
-                                 mac-auto-operator-composition-shape-gstring]))
-        (global-auto-composition-mode 1))
-    (map-char-table
-     (lambda (c rules)
-       (when (consp rules)
-         (let (new-rules removed-p)
-           (dolist (rule rules)
-             (if (eq (aref rule 2) 'mac-auto-operator-composition-shape-gstring)
-                 (setq removed-p t)
-               (push rule new-rules)))
-           (if removed-p
-               (set-char-table-range composition-function-table c
-                                     (nreverse new-rules))))))
-     composition-function-table)
-    (clrhash mac-auto-operator-composition-cache)))
-(pk/mac-auto-operator-composition-mode)
+    :init-value nil
+    :global t
+    (if pk/mac-auto-operator-composition-mode
+        (when (eq (terminal-live-p (frame-terminal)) 'mac)
+          ;; Transform the `pk/mac-auto-operator-composition-strings' list into an alist.
+          ;; The transformation is as follows:
+          ;; - group all elements of the list by the first letter,
+          ;; - each car of an alist element is first letter for a given group,
+          ;; - each cdr of an alist element is list of substrings starting
+          ;;   from the 1st position for each string in a given group.
+          ;; i.e., ("ab" "a" "bc") -> ((?a "b" "") (?b "c"))
+          (let ((char-strings-alist))
+            (mapc (lambda (string)
+                    (cl-callf append
+                        (alist-get (string-to-char string) char-strings-alist)
+                      (list (if (< (length string) 1)
+                                ""
+                              (substring string 1)))))
+                  pk/mac-auto-operator-composition-strings)
+            (mapc (lambda (char-strings)
+                    (let ((new-rules `([,(concat "." (regexp-opt (cdr char-strings))) 0
+                                        mac-auto-operator-composition-shape-gstring]))
+                          (old-rules (aref composition-function-table (car char-strings))))
+                      (set-char-table-range composition-function-table
+                                            (car char-strings)
+                                            (if (listp old-rules)
+                                                (append old-rules new-rules)
+                                              new-rules))))
+                  char-strings-alist))
+          (set-char-table-range composition-function-table
+                                ?0
+                                '([".\\(?:x[a-fA-F0-9]\\)" 0
+                                   mac-auto-operator-composition-shape-gstring]))
+          (global-auto-composition-mode 1))
+      (map-char-table
+       (lambda (c rules)
+         (when (consp rules)
+           (let (new-rules removed-p)
+             (dolist (rule rules)
+               (if (eq (aref rule 2) 'mac-auto-operator-composition-shape-gstring)
+                   (setq removed-p t)
+                 (push rule new-rules)))
+             (if removed-p
+                 (set-char-table-range composition-function-table c
+                                       (nreverse new-rules))))))
+       composition-function-table)
+      (clrhash mac-auto-operator-composition-cache)))
+  (pk/mac-auto-operator-composition-mode))
 
 ;; Org mode are not a real ligatures - use prettify symbols for it
 (add-hook 'org-mode-hook
