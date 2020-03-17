@@ -16,6 +16,14 @@
   (setq mac-right-option-modifier 'meta)
   (setq mac-command-modifier 'hyper))
 
+;; ITERM2 MOUSE SUPPORT from https://www.emacswiki.org/emacs/iTerm2
+(unless window-system
+  (require 'mouse)
+  (xterm-mouse-mode t)
+  (defun track-mouse (e))
+  (setq mouse-sel-mode t)
+)
+
 (global-set-key
  (kbd "<f5>")
  (lambda (&optional force-reverting)
