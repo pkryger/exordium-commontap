@@ -385,6 +385,9 @@ language."
     (delete-file temp-file)))
 (define-key forge-post-mode-map (kbd "C-c p p") #'pk/forge-markdown-preview)
 
+(add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
+(add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium")))
+
 ;; a couple statistical goodies
 (defun pk/quartile (sequence quartile &optional method)
   "Return a given QUARTILE for the specified SEQUENCE.
