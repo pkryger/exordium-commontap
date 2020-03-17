@@ -438,6 +438,26 @@ calculated they are set to nil."
         (pk/median sequence)
         (pk/quartile sequence 3 method)
         (when sequence (seq-max sequence))))
+; Adapted from http://stackoverflow.com/questions/9656311/conflict-resolution-with-emacs-ediff-how-can-i-take-the-changes-of-both-version
+(defun pk/ediff-copy-both-to-C (first second)
+  (interactive
+   (let ((first-string (completing-read "First: " '("A" "B") nil t "A"))
+         (second-string (completing-read "Second: " '("A" "B") nil t "B")))
+     (list (intern first-string) (intern second-string))))
+  (let ((first (or first 'A))
+        (second (or second 'B)))
+  (ediff-copy-diff ediff-current-difference nil 'C nil
+                   (concat
+                    (ediff-get-region-contents ediff-current-difference first ediff-control-buffer)
+                    (ediff-get-region-contents ediff-current-difference second ediff-control-buffer)))))
 
+(defun pk/add-AB-to-ediff-mode-map ()
+  (define-key ediff-mode-map "A" #'(lambda ()
+                                         (interactive)
+                                         (pk/ediff-copy-both-to-C 'A 'B)))
+  (define-key ediff-mode-map "B" #'(lambda ()
+                                         (interactive)
+                                         (pk/ediff-copy-both-to-C 'B 'A))))
+(add-hook 'ediff-keymap-setup-hook 'pk/add-AB-to-ediff-mode-map)
 
 ;;
