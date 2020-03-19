@@ -389,17 +389,9 @@ language."
 (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium")))
 
 ;; a couple statistical goodies
-(defun pk/quartile (sequence quartile &optional method)
-  "Return a given QUARTILE for the specified SEQUENCE.
-The value is returned according to Method 1 (`:exclude') from Wiki:
-`https://en.wikipedia.org/wiki/Quartile'.
-
-The optional METHOD can be `:include' to use Method 2 instead.
-
-Return nil unless one of:
-- QUARTILE is one of 1, 2, or 3,
-- SEQUENCE length is >=1 and QUARTILE is 2,
-- SEQUENCE length is >=2 and QUARTILE is one of 1 or 3."
+(defun pk/quartile--internal (sequence quartile &optional method)
+  "Return a given QUARTILE of a sorted SEQUENCE.
+The optional METHOD is the same as in `pk/quartile'."
   (let* ((length (length sequence))
          (offset (if (and (cl-oddp length)
                           (eq method :include))
@@ -425,27 +417,50 @@ Return nil unless one of:
                               (- (1+ (/ length 2))
                                  offset))))))))
 
-(defun pk/median (sequence)
-  "Return a median for the specified SEQUENCE."
-  (pk/quartile sequence 2))
+(defun pk/quartile (sequence quartile &optional method sorted)
+  "Return a given QUARTILE for the specified SEQUENCE.
 
-(defun pk/five-nums (sequence &optional method)
+When the optional METHOD is nil or `:exclude', the value is returned according
+to Method 1 from Wiki: `https://en.wikipedia.org/wiki/Quartile'.
+
+The METHOD can be `:include' to use Method 2 instead.
+
+When SORTED is t it indicates the sequence is already sorted.
+
+Return nil unless one of:
+- QUARTILE is one of 1, 2, or 3,
+- SEQUENCE length is >=1 and QUARTILE is 2,
+- SEQUENCE length is >=2 and QUARTILE is one of 1 or 3."
+  (pk/quartile--internal (if sorted
+                             sequence
+                           (cl-sort sequence '<))
+                         quartile method))
+
+(defun pk/median (sequence &optional sorted)
+  "Return a median for the specified SEQUENCE.
+The optional SORTED is the same as in `pk/quartile'"
+  (pk/quartile sequence 2 nil sorted))
+
+(defun pk/five-nums (sequence &optional method sorted)
   "Return a list consisting of (min q1 med q3 max) for the specified SEQUENCE.
-The optional METHOD is the same as in `pk/quartile'.  When some values cannot be
-calculated they are set to nil."
+The optional METHOD and SORTED are the same as in `pk/quartile'.
+When some values cannot be calculated they are set to nil."
+  (if (and (not sorted) sequence)
+      (setq sequence (cl-sort sequence '<)))
   (list (when sequence (seq-min sequence))
-        (pk/quartile sequence 1 method)
-        (pk/median sequence)
-        (pk/quartile sequence 3 method)
+        (pk/quartile sequence 1 method t)
+        (pk/median sequence t)
+        (pk/quartile sequence 3 method t)
         (when sequence (seq-max sequence))))
 
-(defun pk/five-nums-with-header (sequence &optional method)
+(defun pk/five-nums-with-header (sequence &optional method sorted)
   "Return a result of `pk/five-nums' for the specified SEQUENCE with a header.
 This is meant as a convenience function for `org-mode' code block to be used
-with ':output table'.  The optional METHOD is the same as in `pk/quartile'."
+with ':output table'.  The optional METHOD and SORTED are the same as in
+`pk/quartile'."
   (list (list "min" "q1" "med" "q3" "max")
         'hline
-        (pk/five-nums sequence method)))
+        (pk/five-nums sequence method sorted)))
 
 
 ; Adapted from http://stackoverflow.com/questions/9656311/conflict-resolution-with-emacs-ediff-how-can-i-take-the-changes-of-both-version
