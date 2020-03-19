@@ -438,6 +438,16 @@ calculated they are set to nil."
         (pk/median sequence)
         (pk/quartile sequence 3 method)
         (when sequence (seq-max sequence))))
+
+(defun pk/five-nums-with-header (sequence &optional method)
+  "Return a result of `pk/five-nums' for the specified SEQUENCE with a header.
+This is meant as a convenience function for `org-mode' code block to be used
+with ':output table'.  The optional METHOD is the same as in `pk/quartile'."
+  (list (list "min" "q1" "med" "q3" "max")
+        'hline
+        (pk/five-nums sequence method)))
+
+
 ; Adapted from http://stackoverflow.com/questions/9656311/conflict-resolution-with-emacs-ediff-how-can-i-take-the-changes-of-both-version
 (defun pk/ediff-copy-both-to-C (first second)
   (interactive

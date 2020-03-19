@@ -135,5 +135,19 @@
            (pk/five-nums '(6 7 15 36 39 40 41 42 43 47 49) :include)
            '(6 25.5 40 42.5 49))))
 
+(ert-deftest stats-tests-fice-nums-with-header ()
+  (should (equal
+           (pk/five-nums-with-header '(6 7 15 36 39 40 41 42 43 47 49))
+           '(("min" "q1" "med" "q3" "max")
+             hline
+             (6 15 40 43 49)))))
+
+(ert-deftest stats-tests-fice-nums-with-header-include ()
+  (should (equal
+           (pk/five-nums-with-header '(6 7 15 36 39 40 41 42 43 47 49) :include)
+           '(("min" "q1" "med" "q3" "max")
+             hline
+             (6 25.5 40 42.5 49)))))
+
 (provide 'stats.t)
 ;;; stats.t ends here
