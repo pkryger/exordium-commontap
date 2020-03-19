@@ -270,6 +270,11 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 ;; Make tabs work nativly in org mode's src blocks
 (setq org-src-tab-acts-natively t)
 
+;; Load R as well
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ (append org-babel-load-languages
+         '((R . t))))
 
 (when (fboundp 'mac-auto-operator-composition-shape-gstring)
   (defcustom pk/mac-auto-operator-composition-strings
