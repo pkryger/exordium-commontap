@@ -16,6 +16,14 @@
   (setq mac-right-option-modifier 'meta)
   (setq mac-command-modifier 'hyper))
 
+;; ITERM2 MOUSE SUPPORT from https://www.emacswiki.org/emacs/iTerm2
+(unless window-system
+  (require 'mouse)
+  (xterm-mouse-mode t)
+  (defun track-mouse (e))
+  (setq mouse-sel-mode t)
+)
+
 (global-set-key
  (kbd "<f5>")
  (lambda (&optional force-reverting)
@@ -179,6 +187,7 @@
 
 ;; Look up *F*unctions (excludes macros).
 ;;
+
 ;; By default, C-h F is bound to `Info-goto-emacs-command-node'. Helpful
 ;; already links to the manual, if a function is referenced there.
 (global-set-key (kbd "C-h F") #'helpful-function)
@@ -258,29 +267,36 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 (setq org-babel-python-command "python3")
 ;; Don't ask for confirmation for code blocks (rather use :eval no)
 (setq org-confirm-babel-evaluate nil)
+;; Make tabs work nativly in org mode's src blocks
+(setq org-src-tab-acts-natively t)
 
+;; Load R as well
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ (append org-babel-load-languages
+         '((R . t))))
 
 (require 'map)
-(defcustom pk/mac-auto-operator-composition-strings
-  '(;; c++
-    "!=" "%" "%=" "&" "&&" "&&=" "&=" "*" "**" "***" "*/" "*=" "++" "+="
-    "--" "-=" "->" ".*" "..." "/" "/*" "/**" "//" "///" "/=" "::" "<" "<<"
-    "<<<" "<<=" "<=" "<=>" "=" "==" ">" ">=" ">>" ">>=" ">>>" "?:" "\\\\"
-    "\\\\\\" "^=" "|" "|=" "||" "||=" "~" "~=" "[]"
-    ;; programming in non-c++ and nice stuff
-    "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
-    "<-" ";;" "\\n" "fl" "Fl" "Tl" "www" ".."
-    ;; org-mode ballots -> they are unicode chars, not glyphs
-    ;; "[ ]" "[X]" "[-]"
-    )
-  "Sequence of strings used in automatic operator composition.
+(when (fboundp 'mac-auto-operator-composition-shape-gstring)
+  (defcustom pk/mac-auto-operator-composition-strings
+    '(;; c++
+      "!=" "%" "%=" "&" "&&" "&&=" "&=" "*" "**" "***" "*/" "*=" "++" "+="
+      "--" "-=" "->" ".*" "..." "/" "/*" "/**" "//" "///" "/=" "::" "<" "<<"
+      "<<<" "<<=" "<=" "<=>" "=" "==" ">" ">=" ">>" ">>=" ">>>" "?:" "\\\\"
+      "\\\\\\" "^=" "|" "|=" "||" "||=" "~" "~=" "[]"
+      ;; programming in non-c++ and nice stuff
+      "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
+      "<-" ";;" "\\n" "fl" "Fl" "Tl" "www" ".."
+      ;; org-mode ballots -> they are unicode chars, not glyphs
+      ;; "[ ]" "[X]" "[-]"
+      )
+    "Sequence of strings used in automatic operator composition.
 Customised for FiraCode font: https://github.com/tonsky/FiraCode"
-  :type 'list)
+    :type 'list)
 
-
-;; ligatures, based on `mac-auto-operator-composition-mode'
-(define-minor-mode pk/mac-auto-operator-composition-mode
-  "Toggle Mac Auto Operator Composition mode.
+  ;; ligatures, based on `mac-auto-operator-composition-mode'
+  (define-minor-mode pk/mac-auto-operator-composition-mode
+    "Toggle Mac Auto Operator Composition mode.
 With a prefix argument ARG, enable Mac Auto Operator Composition
 mode if ARG is positive, and disable it otherwise.  If called
 from Lisp, enable the mode if ARG is omitted or nil.
@@ -338,7 +354,7 @@ language."
                                      (nreverse new-rules))))))
      composition-function-table)
     (clrhash mac-auto-operator-composition-cache)))
-(pk/mac-auto-operator-composition-mode)
+(pk/mac-auto-operator-composition-mode))
 
 ;; Org mode are not a real ligatures - use prettify symbols for it
 (add-hook 'org-mode-hook
@@ -374,18 +390,13 @@ language."
     (delete-file temp-file)))
 (define-key forge-post-mode-map (kbd "C-c p p") #'pk/forge-markdown-preview)
 
+(add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
+(add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium")))
+
 ;; a couple statistical goodies
-(defun pk/quartile (sequence quartile &optional method)
-  "Return a given QUARTILE for the specified SEQUENCE.
-The value is returned according to Method 1 (`:exclude') from Wiki:
-`https://en.wikipedia.org/wiki/Quartile'.
-
-The optional METHOD can be `:include' to use Method 2 instead.
-
-Return nil unless one of:
-- QUARTILE is one of 1, 2, or 3,
-- SEQUENCE length is >=1 and QUARTILE is 2,
-- SEQUENCE length is >=2 and QUARTILE is one of 1 or 3."
+(defun pk/quartile--internal (sequence quartile &optional method)
+  "Return a given QUARTILE of a sorted SEQUENCE.
+The optional METHOD is the same as in `pk/quartile'."
   (let* ((length (length sequence))
          (offset (if (and (cl-oddp length)
                           (eq method :include))
@@ -411,19 +422,72 @@ Return nil unless one of:
                               (- (1+ (/ length 2))
                                  offset))))))))
 
-(defun pk/median (sequence)
-  "Return a median for the specified SEQUENCE."
-  (pk/quartile sequence 2))
+(defun pk/quartile (sequence quartile &optional method sorted)
+  "Return a given QUARTILE for the specified SEQUENCE.
 
-(defun pk/five-nums (sequence &optional method)
+When the optional METHOD is nil or `:exclude', the value is returned according
+to Method 1 from Wiki: `https://en.wikipedia.org/wiki/Quartile'.
+
+The METHOD can be `:include' to use Method 2 instead.
+
+When SORTED is t it indicates the sequence is already sorted.
+
+Return nil unless one of:
+- QUARTILE is one of 1, 2, or 3,
+- SEQUENCE length is >=1 and QUARTILE is 2,
+- SEQUENCE length is >=2 and QUARTILE is one of 1 or 3."
+  (pk/quartile--internal (if sorted
+                             sequence
+                           (cl-sort sequence '<))
+                         quartile method))
+
+(defun pk/median (sequence &optional sorted)
+  "Return a median for the specified SEQUENCE.
+The optional SORTED is the same as in `pk/quartile'"
+  (pk/quartile sequence 2 nil sorted))
+
+(defun pk/five-nums (sequence &optional method sorted)
   "Return a list consisting of (min q1 med q3 max) for the specified SEQUENCE.
-The optional METHOD is the same as in `pk/quartile'.  When some values cannot be
-calculated they are set to nil."
+The optional METHOD and SORTED are the same as in `pk/quartile'.
+When some values cannot be calculated they are set to nil."
+  (if (and (not sorted) sequence)
+      (setq sequence (cl-sort sequence '<)))
   (list (when sequence (seq-min sequence))
-        (pk/quartile sequence 1 method)
-        (pk/median sequence)
-        (pk/quartile sequence 3 method)
+        (pk/quartile sequence 1 method t)
+        (pk/median sequence t)
+        (pk/quartile sequence 3 method t)
         (when sequence (seq-max sequence))))
 
+(defun pk/five-nums-with-header (sequence &optional method sorted)
+  "Return a result of `pk/five-nums' for the specified SEQUENCE with a header.
+This is meant as a convenience function for `org-mode' code block to be used
+with ':output table'.  The optional METHOD and SORTED are the same as in
+`pk/quartile'."
+  (list (list "min" "q1" "med" "q3" "max")
+        'hline
+        (pk/five-nums sequence method sorted)))
+
+
+; Adapted from http://stackoverflow.com/questions/9656311/conflict-resolution-with-emacs-ediff-how-can-i-take-the-changes-of-both-version
+(defun pk/ediff-copy-both-to-C (first second)
+  (interactive
+   (let ((first-string (completing-read "First: " '("A" "B") nil t "A"))
+         (second-string (completing-read "Second: " '("A" "B") nil t "B")))
+     (list (intern first-string) (intern second-string))))
+  (let ((first (or first 'A))
+        (second (or second 'B)))
+  (ediff-copy-diff ediff-current-difference nil 'C nil
+                   (concat
+                    (ediff-get-region-contents ediff-current-difference first ediff-control-buffer)
+                    (ediff-get-region-contents ediff-current-difference second ediff-control-buffer)))))
+
+(defun pk/add-AB-to-ediff-mode-map ()
+  (define-key ediff-mode-map "A" #'(lambda ()
+                                         (interactive)
+                                         (pk/ediff-copy-both-to-C 'A 'B)))
+  (define-key ediff-mode-map "B" #'(lambda ()
+                                         (interactive)
+                                         (pk/ediff-copy-both-to-C 'B 'A))))
+(add-hook 'ediff-keymap-setup-hook 'pk/add-AB-to-ediff-mode-map)
 
 ;;
