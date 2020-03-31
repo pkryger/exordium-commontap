@@ -119,7 +119,7 @@
 
 ;; garbage collect magic hack from https://gitlab.com/koral/gcmh
 (use-package gcmh
-  :diminish GCMH
+  :diminish
   :config
   (gcmh-mode 1))
 
