@@ -123,11 +123,6 @@
   :config
   (gcmh-mode 1))
 
-;; Allegedly this also helps
-;; https://emacs.stackexchange.com/questions/28736/emacs-pointcursor-movement-lag/28746
-(setq auto-window-vscroll nil)
-
-;; Don't auto save files in deft
 (require 'deft)
 (setq deft-extensions '("org" "txt" "md"))
 (setq deft-default-extension "org")
