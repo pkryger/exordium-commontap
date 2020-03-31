@@ -1,3 +1,4 @@
+(setq exordium-desktop t)
 (setq exordium-helm-everywhere t)
 (setq exordium-theme 'solarized-light)
 (setq exordium-fci-mode :prog)

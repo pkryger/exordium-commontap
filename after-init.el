@@ -140,8 +140,16 @@
      (:foreground "red" :bold t :height 2.5)))))
 (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
 
-;; save state on exit
-(desktop-save-mode 1)
+(use-package desktop
+  :ensure nil
+  :config
+  ;; Don't save some buffers in desktop
+  (add-to-list 'desktop-modes-not-to-save 'dired-mode)
+  (add-to-list 'desktop-modes-not-to-save 'Info-mode)
+  (add-to-list 'desktop-modes-not-to-save 'info-lookup-mode)
+  (add-to-list 'desktop-modes-not-to-save 'fundamental-mode)
+  (add-to-list 'desktop-modes-not-to-save 'helpful-mode)
+  (add-to-list 'desktop-modes-not-to-save 'helm-major-mode))
 
 (require 'which-key)
 (which-key-mode)
