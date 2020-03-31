@@ -123,12 +123,13 @@
   :config
   (gcmh-mode 1))
 
-(require 'deft)
-(setq deft-extensions '("org" "txt" "md"))
-(setq deft-default-extension "org")
-(setq deft-use-filename-as-title t)
-(setq deft-use-filter-string-for-filename t)
-(setq deft-auto-save-interval 0)
+(use-package 'deft
+  :config
+  (setq deft-extensions '("org" "txt" "md"))
+  (setq deft-default-extension "org")
+  (setq deft-use-filename-as-title t)
+  (setq deft-use-filter-string-for-filename t)
+  (setq deft-auto-save-interval 0))
 
 (require 'ace-window)
 ;; Use M-o for ace-window
