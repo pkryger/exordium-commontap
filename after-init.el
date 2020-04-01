@@ -48,45 +48,50 @@
  (kbd "<C-f5>")
  'revert-all-buffers)
 
-;; spell checks as suggested by
-;; http://blog.binchen.org/posts/effective-spell-check-in-emacs.html
-;; http://blog.binchen.org/posts/how-to-spell-check-functionvariable-in-emacs.html
-(require 'flyspell)
-(require 'ispell)
-(setq flyspell-issue-message-flag nil)
-(when (executable-find "aspell")
+(use-package use-package-ensure-system-package
+  :ensure t)
+
+(use-package ispell
+  :ensure-system-package aspell
+  :config
+  ;; spell checks as suggested by
+  ;; http://blog.binchen.org/posts/effective-spell-check-in-emacs.html
+  ;; http://blog.binchen.org/posts/how-to-spell-check-functionvariable-in-emacs.html
   (setq ispell-program-name "aspell")
   (setq ispell-extra-args (list
-        "--sug-mode=ultra"
-        "--camel-case")))
-(setq ispell-dictionary "british")
-(add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
-(add-hook 'git-commit-mode-hook 'flyspell-mode)
-(add-hook 'org-mode-hook 'turn-on-flyspell)
-(add-hook 'text-mode-hook 'turn-on-flyspell)
-(require 'helm-flyspell)
-(defun pk/flyspell-jump-and-correct-word (event)
-  (interactive "P")
-  (when-let ((cursor-pos (mouse-position))
-             (line (cddr cursor-pos))
-             (col  (cadr cursor-pos))
-             (p (save-excursion
-                  (goto-char (window-start))
-                  (forward-line line)
-                  (if (> (- (line-end-position) (line-beginning-position)) col)
-                      (progn  (move-to-column col) (1- (point)))
-                    nil))))
-    (goto-char p)
-    (flyspell-correct-word-before-point event p)))
+                           "--sug-mode=ultra"
+                           "--camel-case"))
+  (setq ispell-dictionary "british"))
 
-(eval-after-load "flyspell"
-  '(progn
-     (define-key flyspell-mouse-map [mouse-2] nil)
-     (define-key flyspell-mouse-map [H-mouse-1] 'pk/flyspell-jump-and-correct-word)
-     (define-key flyspell-mode-map flyspell-auto-correct-binding 'helm-flyspell-correct)
-     (define-key flyspell-mode-map [(control ?\,)] nil)
-     (define-key flyspell-mode-map [(control ?\.)] nil)))
+(use-package flyspell
+  :diminish
+  :init
+  (use-package flyspell-correct-helm
+    :config
+    (setq flyspell-correct-interface #'flyspell-correct-helm))
 
+  (defun pk/flyspell-jump-and-correct-word (event)
+    (interactive "e")
+    (deactivate-mark)
+    (mouse-set-point event)
+    (redisplay)
+    (flyspell-correct-word-before-point event (point)))
+
+  :config
+  (setq flyspell-issue-message-flag nil)
+
+  :hook
+  ((git-commit-mode . flyspell-mode)
+   (org-mode        . flyspell-mode)
+   (text-mode       . flyspell-mode))
+
+  :bind (:map flyspell-mouse-map
+         ([mouse-2] . nil)
+         ([H-mouse-1] . pk/flyspell-jump-and-correct-word)
+         :map flyspell-mode-map
+         ("C-;" . flyspell-correct-wrapper)
+         ([(control ?\,)] . nil)
+         ([(control ?\.)] . nil)))
 
 (set-time-zone-rule "/usr/share/zoneinfo/Europe/London")
 
@@ -212,7 +217,6 @@
 ;; Diminish some modes
 (diminish 'eldoc-mode)
 (diminish 'auto-revert-mode)
-(diminish 'flyspell-mode)
 (diminish 'undo-tree-mode)
 
 ;; from https://github.com/alphapapa/unpackaged.el#hydra
@@ -370,13 +374,14 @@ language."
           (lambda ()
             (setq auto-composition-mode nil)))
 ;; Disabling ligatures in ediff mode only removes them in the ediff buffer
-;; itself(the small buffer underneath) and not the buffers you compare. Which
+;; itself (the small buffer underneath) and not the buffers you compare. Which
 ;; is probably a preferred solution.
 (add-hook 'ediff-mode-hook
           (lambda ()
             (setq auto-composition-mode nil)))
 
 
+(add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (require 'forge)
 (add-hook 'forge-post-mode-hook #'(lambda () (set-fill-column 100000)))
 (defun pk/forge-markdown-preview ()
