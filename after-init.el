@@ -260,12 +260,11 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
                                         (when smerge-mode
                                           (smerge-hydra/body))))
 
-(use-package swiper
-  ;; Use swiper - the swiper-helm seems to be less usable
+(use-package swiper-helm
   :demand t
   :bind (
-  ("C-s" . #'swiper)
-  ("C-r" . #'swiper)))
+  ("C-s" . #'swiper-helm)
+  ("C-r" . #'swiper-helm)))
 
 ;; Disable some ido hooks for helm mode
 (when exordium-helm-everywhere
