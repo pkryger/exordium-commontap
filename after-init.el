@@ -20,9 +20,7 @@
 (unless window-system
   (require 'mouse)
   (xterm-mouse-mode t)
-  (defun track-mouse (e))
-  (setq mouse-sel-mode t)
-)
+  (defun track-mouse (e)))
 
 (global-set-key
  (kbd "<f5>")
