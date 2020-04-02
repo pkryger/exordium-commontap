@@ -153,7 +153,13 @@
   (add-to-list 'desktop-modes-not-to-save 'info-lookup-mode)
   (add-to-list 'desktop-modes-not-to-save 'fundamental-mode)
   (add-to-list 'desktop-modes-not-to-save 'helpful-mode)
-  (add-to-list 'desktop-modes-not-to-save 'helm-major-mode))
+  (add-to-list 'desktop-modes-not-to-save 'helm-major-mode)
+  (setq desktop-files-not-to-save
+        (rx-let ((path (+ (or alnum digit "." "/" "-" "_"))))
+          (rx (or (seq string-start "/" (zero-or-more (not (any "/" ":"))) ":")
+                  (seq "(ftp)" string-end)
+                  (seq string-start "/usr/local/Cellar/" path "/emacs/"
+                       path "/lisp/" path ".el.gz" string-end))))))
 
 (require 'which-key)
 (which-key-mode)
