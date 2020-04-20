@@ -225,46 +225,36 @@
 (diminish 'auto-revert-mode)
 (diminish 'undo-tree-mode)
 
-;; from https://github.com/alphapapa/unpackaged.el#hydra
-(require 'hydra)
-(require 'magit)
-(defhydra smerge-hydra
-  (:color pink :hint nil :post (smerge-auto-leave))
-  "
-^Move^       ^Keep^               ^Diff^                 ^Other^
-^^-----------^^-------------------^^---------------------^^-------
-_n_ext       _b_ase               _<_: upper/base        _C_ombine
-_p_rev       _u_pper              _=_: upper/lower       _r_esolve
-^^           _l_ower              _>_: base/lower        _k_ill current
-^^           _a_ll                _R_efine
-^^           _RET_: current       _E_diff
-"
-  ("n" smerge-next)
-  ("p" smerge-prev)
-  ("b" smerge-keep-base)
-  ("u" smerge-keep-upper)
-  ("l" smerge-keep-lower)
-  ("a" smerge-keep-all)
-  ("RET" smerge-keep-current)
-  ("\C-m" smerge-keep-current)
-  ("<" smerge-diff-base-upper)
-  ("=" smerge-diff-upper-lower)
-  (">" smerge-diff-base-lower)
-  ("R" smerge-refine)
-  ("E" smerge-ediff)
-  ("C" smerge-combine-with-next)
-  ("r" smerge-resolve)
-  ("k" smerge-kill-current)
-  ("ZZ" (lambda ()
-          (interactive)
-          (save-buffer)
-          (bury-buffer))
-   "Save and bury buffer" :color blue)
-  ("q" nil "cancel" :color blue))
+
+;;;###autoload
+(define-transient-command pk/magit-smerge ()
+  "Dispatch smerge command."
+  :transient-suffix     'transient--do-stay
+  :transient-non-suffix 'transient--do-warn
+  [["Movement"
+    ("n" "next hunk" smerge-next)
+    ("p" "prev hunk" smerge-prev)]
+   ["Merge action"
+    ("b" "keep base" smerge-keep-base)
+    ("u" "keep upper" smerge-keep-upper)
+    ("l" "keep lower" smerge-keep-lower)
+    ("a" "keep all"   smerge-keep-all)
+    ("c" "keep current" smerge-keep-current)]
+   ["Diff action"
+    ("= <" "upper/base" smerge-diff-base-upper)
+    ("= =" "upper/lower" smerge-diff-upper-lower)
+    ("= >" "base/lower" smerge-diff-base-lower)
+    ("R" "refine" smerge-refine)]
+    ;; crashes emacs :/ ("E" "ediff" smerge-ediff)]
+   ["Other"
+    ("C" "combine with next" smerge-combine-with-next)
+    ("r" "resolve" smerge-resolve)
+    ("k" "kill current" smerge-kill-current)
+    ("z" "undo" undo)]])
 
 (add-hook 'magit-diff-visit-file-hook (lambda ()
                                         (when smerge-mode
-                                          (smerge-hydra/body))))
+                                          (pk/magit-smerge))))
 
 (use-package swiper-helm
   :demand t
