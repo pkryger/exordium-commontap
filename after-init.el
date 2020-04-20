@@ -158,8 +158,8 @@
         (rx-let ((path (+ (or alnum digit "." "/" "-" "_"))))
           (rx (or (seq string-start "/" (zero-or-more (not (any "/" ":"))) ":")
                   (seq "(ftp)" string-end)
-                  (seq string-start "/usr/local/Cellar/" path "/emacs/"
-                       path "/lisp/" path ".el.gz" string-end))))))
+                  (seq string-start path "/emacs/" path "/lisp/" path
+                       ".el.gz" string-end))))))
 
 (require 'which-key)
 (which-key-mode)
