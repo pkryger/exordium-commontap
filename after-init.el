@@ -235,7 +235,10 @@
   :transient-non-suffix 'transient--do-warn
   [["Movement"
     ("n" "next hunk" smerge-next)
-    ("p" "prev hunk" smerge-prev)]
+    ("p" "prev hunk" smerge-prev)
+    ("C-n" "next line" next-line)
+    ("C-p" "prev line" previous-line)
+    ("C-l" "recenter" recenter-top-bottom)]
    ["Merge action"
     ("b" "keep base" smerge-keep-base)
     ("u" "keep upper" smerge-keep-upper)
@@ -246,17 +249,20 @@
     ("= <" "upper/base" smerge-diff-base-upper)
     ("= =" "upper/lower" smerge-diff-upper-lower)
     ("= >" "base/lower" smerge-diff-base-lower)
-    ("R" "refine" smerge-refine)]
-    ;; crashes emacs :/ ("E" "ediff" smerge-ediff)]
+    ("R" "refine" smerge-refine)
+    ("E" "ediff" smerge-ediff)] ;; TODO: this SIGSEGVs when the `pk/mac-auto-operator-composition-mode' is on
    ["Other"
     ("C" "combine with next" smerge-combine-with-next)
     ("r" "resolve" smerge-resolve)
     ("k" "kill current" smerge-kill-current)
     ("z" "undo" undo)]])
 
-(add-hook 'magit-diff-visit-file-hook (lambda ()
-                                        (when smerge-mode
-                                          (pk/magit-smerge))))
+(add-hook 'magit-diff-visit-file-hook
+          (lambda ()
+            (when smerge-mode
+              (define-key smerge-mode-map
+                (kbd (concat smerge-command-prefix "t")) #'pk/magit-smerge)
+              (pk/magit-smerge))))
 
 (use-package swiper-helm
   :demand t
