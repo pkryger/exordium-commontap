@@ -405,6 +405,31 @@ language."
 (add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
 (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium")))
 
+;; Tab navigation just like in iTerm
+(defun pk/mac-goto-tab (n)
+  "Go to N-th open tab."
+  (interactive
+   (list (completing-read "Go to Tab: "
+                          (or (seq-map-indexed
+                               (lambda (_ idx)
+                                 (number-to-string idx))
+                               (mac-frame-tab-group-property nil :frames))
+                              '("0"))
+                          nil t)))
+  (let ((frame (nth
+                (if (stringp n)
+                    (string-to-number n)
+                  n)
+                (mac-frame-tab-group-property nil :frames))))
+    (when frame
+      (mac-set-frame-tab-group-property nil :selected-frame frame))))
+
+(dolist (num '(0 1 2 3 4 5 6 7 8 9))
+  (global-set-key (kbd (concat "H-"
+                               (number-to-string (mod (1+ num) 10))))
+                  `(lambda () (interactive) (pk/mac-goto-tab ,num))))
+
+
 ;; a couple statistical goodies
 (defun pk/quartile--internal (sequence quartile &optional method)
   "Return a given QUARTILE of a sorted SEQUENCE.
