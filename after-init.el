@@ -229,7 +229,6 @@
 (diminish 'auto-revert-mode)
 (diminish 'undo-tree-mode)
 
-
 ;;;###autoload
 (define-transient-command pk/magit-smerge ()
   "Dispatch smerge command."
@@ -284,6 +283,8 @@
 (setq org-src-tab-acts-natively t)
 
 ;; Load R as well
+(use-package ess-r-mode
+  :demand t)
 (org-babel-do-load-languages
  'org-babel-load-languages
  (append org-babel-load-languages
@@ -387,7 +388,6 @@ language."
 (add-hook 'ediff-mode-hook
           (lambda ()
             (setq auto-composition-mode nil)))
-
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (require 'forge)
