@@ -283,6 +283,8 @@
 (setq org-src-tab-acts-natively t)
 
 ;; Load R as well
+(use-package ess
+  :ensure t)
 (use-package ess-r-mode
   :demand t)
 (org-babel-do-load-languages
