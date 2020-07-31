@@ -169,21 +169,25 @@
 (which-key-mode)
 (diminish 'which-key-mode)
 
-(require 'python)
-;; Use python3 by default
-(setq python-shell-interpreter "python3")
+(use-package python
+  :init
+  (setq python-shell-interpreter "python3"))
 
-;; Apply PEP8 to python files
-(add-hook 'python-mode-hook 'py-autopep8-enable-on-save)
+(use-package py-autopep8
+  :ensure t
+  :hook (python-mode . py-autopep8-enable-on-save))
 
-;; Turn anaconda on, this required at least jedi and factory_service python modules
-(require 'anaconda-mode)
-(add-hook 'python-mode-hook 'anaconda-mode)
-(setq anaconda-mode-lighter nil)
+(use-package python-pytest
+  :ensure t
+  :bind (:map python-mode-map
+              ("C-c C-y" . python-pytest-popup))
+  :init
+  (setq python-pytest-executable
+        (concat python-shell-interpreter " -m pytest")))
 
-;; Use anaconda for company
-(eval-after-load "company"
-  '(add-to-list 'company-backends 'company-anaconda))
+(use-package pyvenv
+  :config
+  (add-hook 'pyvenv-post-activate-hooks #'pyvenv-restart-python))
 
 ;; Note that the built-in `describe-function' includes both functions
 ;; and macros. `helpful-function' is functions only, so we provide
