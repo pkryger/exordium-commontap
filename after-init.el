@@ -143,6 +143,8 @@
    ((t
      (:foreground "red" :bold t :height 2.5)))))
 (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+;; Limit scope to a frame, as the neither global nor visible play nice with tabs
+(setq aw-scope 'frame)
 
 (use-package desktop
   :ensure nil
