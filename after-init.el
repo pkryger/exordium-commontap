@@ -186,8 +186,27 @@
         (concat python-shell-interpreter " -m pytest")))
 
 (use-package pyvenv
+  :ensure t
+  :init
+  (defun pk/pyvenv-activate (&optional prefix)
+    (interactive "P")
+    (if-let* ((dir (file-name-as-directory
+                    (concat
+                     (file-name-as-directory (projectile-project-root))
+                     "venv")))
+              (directory
+               (when (and (not prefix)
+                          (file-exists-p (concat
+                                          (file-name-as-directory
+                                           (concat dir "bin"))
+                                          "activate")))
+                 dir)))
+        (pyvenv-activate directory)
+      (call-interactively #'pyvenv-activate)))
   :config
-  (add-hook 'pyvenv-post-activate-hooks #'pyvenv-restart-python))
+  (add-hook 'pyvenv-post-activate-hooks #'pyvenv-restart-python)
+  :bind (:map python-mode-map
+              ("C-c C-n" . pk/pyvenv-activate)))
 
 ;; Note that the built-in `describe-function' includes both functions
 ;; and macros. `helpful-function' is functions only, so we provide
