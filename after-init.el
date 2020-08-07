@@ -16,6 +16,12 @@
   (setq mac-right-option-modifier 'meta)
   (setq mac-command-modifier 'hyper))
 
+;; A shorter list of packages
+(when (string= exordium-melpa-package-repo exordium-pinned-melpa-package-repo)
+  (cl-delete-if (lambda (elt)
+                  (string= "melpa" (car elt)))
+                package-archives))
+
 ;; ITERM2 MOUSE SUPPORT from https://www.emacswiki.org/emacs/iTerm2
 (unless window-system
   (require 'mouse)
