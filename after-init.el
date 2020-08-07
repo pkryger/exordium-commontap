@@ -191,28 +191,22 @@
   (setq python-pytest-executable
         (concat python-shell-interpreter " -m pytest")))
 
-(use-package pyvenv
+;; See https://blog.adam-uhlir.me/python-virtual-environments-made-super-easy-with-direnv-307611c3a49a
+;; for layout thing
+(use-package direnv
+  :ensure-system-package direnv
   :ensure t
-  :init
-  (defun pk/pyvenv-activate (&optional prefix)
-    (interactive "P")
-    (if-let* ((dir (file-name-as-directory
-                    (concat
-                     (file-name-as-directory (projectile-project-root))
-                     "venv")))
-              (directory
-               (when (and (not prefix)
-                          (file-exists-p (concat
-                                          (file-name-as-directory
-                                           (concat dir "bin"))
-                                          "activate")))
-                 dir)))
-        (pyvenv-activate directory)
-      (call-interactively #'pyvenv-activate)))
   :config
-  (add-hook 'pyvenv-post-activate-hooks #'pyvenv-restart-python)
-  :bind (:map python-mode-map
-              ("C-c C-n" . pk/pyvenv-activate)))
+  (direnv-mode)
+  (defun pk/direnv-create-python-envrc ()
+    (interactive)
+    (if-let ((python (when (string-match "python\[23\]" python-shell-interpreter)
+                      (match-string 0 python-shell-interpreter))))
+        (progn
+          (with-temp-file (f-join (projectile-project-root) ".envrc")
+            (insert (concat "layout_" python "\n"))
+            (direnv-allow)))
+      (message "Cannot create .envrc for %s" python-shell-interpreter))))
 
 ;; Note that the built-in `describe-function' includes both functions
 ;; and macros. `helpful-function' is functions only, so we provide
