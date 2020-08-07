@@ -126,7 +126,7 @@
   :config
   (gcmh-mode 1))
 
-(use-package 'deft
+(use-package deft
   :config
   (setq deft-extensions '("org" "txt" "md"))
   (setq deft-default-extension "org")
