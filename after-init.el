@@ -325,7 +325,7 @@
       "\\\\\\" "^=" "|" "|=" "||" "||=" "~" "~=" "[]"
       ;; programming in non-c++ and nice stuff
       "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
-      "<-" ";;" "\\n" "fl" "Fl" "Tl" "www" ".."
+      "<-" ";;" "\\n" "www" ".."
       ;; org-mode ballots -> they are unicode chars, not glyphs
       ;; "[ ]" "[X]" "[-]"
       )
