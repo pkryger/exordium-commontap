@@ -186,7 +186,7 @@
 (use-package python-pytest
   :ensure t
   :bind (:map python-mode-map
-              ("C-c C-y" . python-pytest-popup))
+              ("C-c t" . python-pytest-popup))
   :init
   (setq python-pytest-executable
         (concat python-shell-interpreter " -m pytest")))
