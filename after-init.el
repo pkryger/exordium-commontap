@@ -191,22 +191,36 @@
   (setq python-pytest-executable
         (concat python-shell-interpreter " -m pytest")))
 
+(use-package company-jedi
+  :ensure t
+  :hook
+  (python-mode . jedi-mode) ;; needs `jedi' and `epc' to be available
+  :config
+  (add-to-list 'company-backends 'company-jedi)
+  (setq jedi:server-command
+        (list python-shell-interpreter jedi:server-script)))
+
 ;; See https://blog.adam-uhlir.me/python-virtual-environments-made-super-easy-with-direnv-307611c3a49a
 ;; for layout thing
 (use-package direnv
   :ensure-system-package direnv
   :ensure t
   :config
-  (direnv-mode)
-  (defun pk/direnv-create-python-envrc ()
-    (interactive)
-    (if-let ((python (when (string-match "python\[23\]" python-shell-interpreter)
-                      (match-string 0 python-shell-interpreter))))
-        (progn
-          (with-temp-file (f-join (projectile-project-root) ".envrc")
-            (insert (concat "layout_" python "\n"))
-            (direnv-allow)))
-      (message "Cannot create .envrc for %s" python-shell-interpreter))))
+  (direnv-mode))
+
+(defun pk/bootstrap-python (dir)
+  "In a given `DIR' create `direnv' python project with `jedi' completion support."
+  (interactive (list (read-directory-name
+                      (concat "Boostrap python in directory: ")
+                      (projectile-project-root))))
+  (if-let ((python (when (string-match "python\[23\]" python-shell-interpreter)
+                     (match-string 0 python-shell-interpreter)))
+           (pip-command (concat python-shell-interpreter " -m pip ")))
+      (progn (with-temp-file (f-join dir ".envrc")
+               (insert (concat "layout_" python "\n")))
+             (direnv-allow)
+             (shell-command (concat pip-command "install epc jedi")))
+    (message "Cannot create .envrc for %s" python-shell-interpreter)))
 
 ;; Note that the built-in `describe-function' includes both functions
 ;; and macros. `helpful-function' is functions only, so we provide
