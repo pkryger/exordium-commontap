@@ -214,12 +214,25 @@
                       (concat "Boostrap python in directory: ")
                       (projectile-project-root))))
   (if-let ((python (when (string-match "python\[23\]" python-shell-interpreter)
-                     (match-string 0 python-shell-interpreter)))
-           (pip-command (concat python-shell-interpreter " -m pip ")))
-      (progn (with-temp-file (f-join dir ".envrc")
-               (insert (concat "layout_" python "\n")))
-             (direnv-allow)
-             (shell-command (concat pip-command "install epc jedi")))
+                     (match-string 0 python-shell-interpreter))))
+      (let ((pip-command (concat python-shell-interpreter " -m pip install "))
+            (reporter (make-progress-reporter
+                       (format "Bootstrapping python direnv in %s" dir)
+                       0 4)))
+        (when-let ((envrc-file (f-join dir ".envrc"))
+                   (_cont (or (not (file-exists-p envrc-file))
+                              (y-or-n-p
+                               (format "%s already exists.  Overwrite it before continuing? "
+                                       envrc-file)))))
+          (with-temp-file envrc-file
+            (insert (concat "layout_" python "\n"))))
+        (progress-reporter-update reporter 1 " [allowing direnv...]")
+        (direnv-allow)
+        (progress-reporter-update reporter 2 " [installing epc...]")
+        (shell-command (concat pip-command "epc"))
+        (progress-reporter-update reporter 3 " [installing jedi...]")
+        (shell-command (concat pip-command "jedi"))
+        (progress-reporter-done reporter))
     (message "Cannot create .envrc for %s" python-shell-interpreter)))
 
 ;; Note that the built-in `describe-function' includes both functions
