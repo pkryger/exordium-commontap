@@ -175,18 +175,34 @@
 (which-key-mode)
 (diminish 'which-key-mode)
 
+(defcustom pk/python-bootstrap-packages
+  '("epc" "jedi" "pytest")
+  "List of packages to install as a part of `python-bootstrap'.
+N.B. The `epc' and `jedi' are required for completion support.
+     The `pytest' is optional but necessary for `python-pytest'."
+  :type 'list)
+
+(defcustom pk/python-bootstrap-requirements
+  '("requirements.txt" "requirements-dev.txt")
+  "List of requirements files to use as a part of `python-bootstrap'.
+The first file found in a project will be used."
+  :type 'list)
+
 (use-package python
+  :ensure nil
   :init
   (setq python-shell-interpreter "python3"))
 
 (use-package py-autopep8
+  ;; TODO: add if requested
+  :ensure-system-package autopep8
   :ensure t
   :hook (python-mode . py-autopep8-enable-on-save))
 
 (use-package python-pytest
   :ensure t
   :bind (:map python-mode-map
-              ("C-c t" . python-pytest-popup))
+              ("C-c t" . python-pytest-dispatch))
   :init
   (setq python-pytest-executable
         (concat python-shell-interpreter " -m pytest")))
@@ -208,30 +224,54 @@
   :config
   (direnv-mode))
 
-(defun pk/bootstrap-python (dir)
-  "In a given `DIR' create `direnv' python project with `jedi' completion support."
+(defun pk/python-bootstrap (dir)
+  "In a given `DIR' bootstrap python environment.
+Such a bootstrap will provide a dedicated virtual environment via `direnv'
+python layout with:
+- `jedi' completion support,
+- `pytest' for running tests,
+- install packages from `pk/python-bootstrap-packages',
+- install packages from the first requirements file from
+  `pk/python-bootstrap-requirements'."
   (interactive (list (read-directory-name
                       (concat "Boostrap python in directory: ")
                       (projectile-project-root))))
   (if-let ((python (when (string-match "python\[23\]" python-shell-interpreter)
                      (match-string 0 python-shell-interpreter))))
-      (let ((pip-command (concat python-shell-interpreter " -m pip install "))
-            (reporter (make-progress-reporter
-                       (format "Bootstrapping python direnv in %s" dir)
-                       0 4)))
+      (let* ((pip-command (concat python-shell-interpreter " -m pip install "))
+             (requirements
+              (when-let ((root (projectile-project-root))
+                         (match
+                          (seq-find
+                           (lambda (elt)
+                             (file-exist-p (f-join root elt)))
+                           pk/python-bootstrap-requirements)))
+                (f-join root match)))
+             (progress 0)
+             (reporter (make-progress-reporter
+                        (format "Bootstrapping python direnv in %s " dir)
+                        progress (+ 2 ;; 1 for `.envrc' file, 2 for `direnv-allow'
+                                    (length pk/python-bootstrap-packages)
+                                    (if requirements 1 0)))))
         (when-let ((envrc-file (f-join dir ".envrc"))
-                   (_cont (or (not (file-exists-p envrc-file))
-                              (y-or-n-p
-                               (format "%s already exists.  Overwrite it before continuing? "
-                                       envrc-file)))))
+                   (_continue
+                    (or (not (file-exists-p envrc-file))
+                        (y-or-n-p
+                         (format "%s already exists.  Overwrite it before continuing? "
+                                 envrc-file)))))
           (with-temp-file envrc-file
             (insert (concat "layout_" python "\n"))))
-        (progress-reporter-update reporter 1 " [allowing direnv...]")
+        (progress-reporter-update
+         reporter (incf progress) "[allowing direnv...]")
         (direnv-allow)
-        (progress-reporter-update reporter 2 " [installing epc...]")
-        (shell-command (concat pip-command "epc"))
-        (progress-reporter-update reporter 3 " [installing jedi...]")
-        (shell-command (concat pip-command "jedi"))
+        (dolist (package pk/python-bootstrap-packages)
+          (progress-reporter-update
+           reporter (incf progress) (format " [installing %s...]" package)))
+        (when requirements
+          (progress-reporter-update
+           reporter (incf progress) (format "[installing from %s...]"
+                                            (file-name-base requirements)))
+          (shell-command (concat pip-command "-r " requirements)))
         (progress-reporter-done reporter))
     (message "Cannot create .envrc for %s" python-shell-interpreter)))
 
