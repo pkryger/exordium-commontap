@@ -275,35 +275,35 @@ python layout with:
         (progress-reporter-done reporter))
     (message "Cannot create .envrc for %s" python-shell-interpreter)))
 
-;; Note that the built-in `describe-function' includes both functions
-;; and macros. `helpful-function' is functions only, so we provide
-;; `helpful-callable' as a drop-in replacement.
-(global-set-key (kbd "C-h f") #'helpful-callable)
 
-(global-set-key (kbd "C-h v") #'helpful-variable)
-(global-set-key (kbd "C-h k") #'helpful-key)
+(use-package helpful
+  :ensure t
+  :bind (:map global-map
+              ;; Note that the built-in `describe-function' includes both functions
+              ;; and macros. `helpful-function' is functions only, so we provide
+              ;; `helpful-callable' as a drop-in replacement.
+              ("C-h f" . #'helpful-callable)
+              ;; Look up *F*unctions (excludes macros).
+              ;; By default, C-h F is bound to `Info-goto-emacs-command-node'. Helpful
+              ;; already links to the manual, if a function is referenced there.
+              ("C-h F" . #'helpful-function)
+              ("C-h v" . #'helpful-variable)
+              ("C-h k" . #'helpful-key)
+              ;; Look up *C*ommands.
+              ;; By default, C-h C is bound to describe `describe-coding-system'. I
+              ;; don't find this very useful, but it's frequently useful to only
+              ;; look at interactive functions.
+              ("C-h C" . #'helpful-command)
+              ;; Lookup the current symbol at point. C-c C-d is a common keybinding
+              ;; for this in lisp modes.
+              :map emacs-lisp-mode-map
+              ("C-c C-d" . #'helpful-at-point)))
 
-;; Lookup the current symbol at point. C-c C-d is a common keybinding
-;; for this in lisp modes.
-(global-set-key (kbd "C-c C-d") #'helpful-at-point)
-
-;; Turn on page-break-lines-mode
-(add-to-list 'page-break-lines-modes 'helpful-mode)
-(global-page-break-lines-mode)
-
-;; Look up *F*unctions (excludes macros).
-;;
-
-;; By default, C-h F is bound to `Info-goto-emacs-command-node'. Helpful
-;; already links to the manual, if a function is referenced there.
-(global-set-key (kbd "C-h F") #'helpful-function)
-
-;; Look up *C*ommands.
-;;
-;; By default, C-h C is bound to describe `describe-coding-system'. I
-;; don't find this very useful, but it's frequently useful to only
-;; look at interactive functions.
-(global-set-key (kbd "C-h C") #'helpful-command)
+(use-package page-break-lines
+  :ensure t
+  :config
+  (add-to-list 'page-break-lines-modes 'helpful-mode)
+  (global-page-break-lines-mode))
 
 ;; Use the same keys for helm-swoop-edit as in magit-commit and
 ;; helm-projectile-ag
@@ -343,6 +343,7 @@ python layout with:
     ("R" "refine" smerge-refine)
     ("E" "ediff" smerge-ediff)] ;; TODO: this SIGSEGVs when the `pk/mac-auto-operator-composition-mode' is on
    ["Other"
+    ;; TODO: add save and back to magit-status
     ("C" "combine with next" smerge-combine-with-next)
     ("r" "resolve" smerge-resolve)
     ("k" "kill current" smerge-kill-current)
