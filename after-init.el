@@ -179,9 +179,10 @@
                   (seq string-start path "/.emacs.d/elpa/" path
                        ".el" string-end))))))
 
-(require 'which-key)
-(which-key-mode)
-(diminish 'which-key-mode)
+(use-package which-key
+  :config
+  (which-key-mode)
+  (diminish 'which-key-mode))
 
 (defcustom pk/python-bootstrap-packages
   '("epc" "jedi" "pytest")
