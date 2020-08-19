@@ -132,6 +132,14 @@
   :config
   (gcmh-mode 1))
 
+;; Alternative approach to gcmh
+;; (defun dotfiles--gc-on-last-frame-out-of-focus ()
+;;   "GC if all frames are inactive."
+;;    (if (seq-every-p #'null (mapcar #'frame-focus-state (frame-list)))
+;;         (garbage-collect)))
+;; (add-function :after after-focus-change-function
+;;               #'dotfiles--gc-on-last-frame-out-of-focus)
+
 (use-package deft
   :config
   (setq deft-extensions '("org" "txt" "md"))
