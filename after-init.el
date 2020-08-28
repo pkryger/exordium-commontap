@@ -496,6 +496,15 @@ language."
           (lambda ()
             (setq auto-composition-mode nil)))
 
+(use-package mixed-pitch
+  :config
+  (custom-set-faces '(variable-pitch ((t (:family "San Francisco" :height 135)))))
+  (setq mixed-pitch-set-height t)
+  :hook
+  ((org-mode . mixed-pitch-mode)
+   (text-mode . mixed-pitch-mode)
+   (markdown-mode . mixed-pitch-mode)))
+
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (require 'forge)
 (add-hook 'forge-post-mode-hook #'(lambda () (set-fill-column 100000)))
