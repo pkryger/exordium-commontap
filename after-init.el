@@ -253,7 +253,7 @@ python layout with:
                          (match
                           (seq-find
                            (lambda (elt)
-                             (file-exist-p (f-join root elt)))
+                             (file-exists-p (f-join root elt)))
                            pk/python-bootstrap-requirements)))
                 (f-join root match)))
              (progress 0)
@@ -269,13 +269,17 @@ python layout with:
                          (format "%s already exists.  Overwrite it before continuing? "
                                  envrc-file)))))
           (with-temp-file envrc-file
+            (when-let ((srcdir (f-join dir "src"))
+                       (file-directory-p srcdir))
+              (insert (concat "export PYTHONPATH=" srcdir "\n")))
             (insert (concat "layout_" python "\n"))))
         (progress-reporter-update
          reporter (incf progress) "[allowing direnv...]")
         (direnv-allow)
         (dolist (package pk/python-bootstrap-packages)
           (progress-reporter-update
-           reporter (incf progress) (format " [installing %s...]" package)))
+           reporter (incf progress) (format " [installing %s...]" package))
+          (shell-command (concat pip-command package)))
         (when requirements
           (progress-reporter-update
            reporter (incf progress) (format "[installing from %s...]"
