@@ -541,6 +541,17 @@ language."
               ("M-S-<tab>" . #'tab-previous)
               ("H-t" . #'tab-new)))
 
+;; evil likes to turn itself on, let's disable it so no surprises
+(use-package evil
+  :init
+  (defun pk/disable-evil-mode ()
+    (unless exordium-enable-evil-mode
+      (when evil-mode
+        (turn-off-evil-mode))))
+  :hook
+  ((evil-mode . pk/disable-evil-mode)
+   (evil-local-mode . pk/disable-evil-mode)))
+
 ;; a couple statistical goodies
 (defun pk/quartile--internal (sequence quartile &optional method)
   "Return a given QUARTILE of a sorted SEQUENCE.
