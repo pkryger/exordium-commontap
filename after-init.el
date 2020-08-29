@@ -501,13 +501,51 @@ language."
             (setq auto-composition-mode nil)))
 
 (use-package mixed-pitch
+  :init
+  (defcustom mixed-pitch-fixed-pitch-cursor 'box
+    "TODO: If non-nil, function `mixed-pitch-mode' changes the cursor.
+When disabled, switch back to what it was before.
+
+See `cursor-type' for a list of acceptable types."
+    :type 'symbol
+    :group 'mixed-pitch)
+
+  (defun mixed-pitch--set-cursor ()
+    (if (let ((face (get-text-property (point) 'face)))
+          (if (listp face)
+              ;; So now, the face can be a plist with `:inherit' property
+              ;; being a list of faces (i.e., in an `example' in `org-mode'),
+              ;; or just a list of faces.
+              (let ((faces (or (plist-get face :inherit)
+                               face)))
+                ;; The performance of `seq-intersection' should be fine
+                ;;(set-intersection face mixed-pitch-faces)
+                ;; but let's micro-optimise :)
+                (while (and faces
+                            (not (memq (car faces) mixed-pitch-fixed-pitch-faces)))
+                  (pop faces))
+                faces)
+            (memq face mixed-pitch-fixed-pitch-faces)))
+        (setq cursor-type mixed-pitch-fixed-pitch-cursor)
+      (setq cursor-type mixed-pitch-variable-pitch-cursor)))
+
+  (defun pk/mixed-pitch---post-command-hook ()
+    (if mixed-pitch-mode
+        ;; TODO: only install this when variable and fixed cursors are different
+        (add-hook 'post-command-hook #'mixed-pitch--set-cursor nil :local)
+      (remove-hook 'post-command-hook #'mixed-pitch--set-cursor)))
+
   :config
-  (custom-set-faces '(variable-pitch ((t (:family "San Francisco" :height 135)))))
+  (custom-set-faces '(variable-pitch ((t (:family "Fira Sans" :height 125)))))
   (setq mixed-pitch-set-height t)
+  ;; TODO: move this to mode
+  (add-hook 'mixed-pitch-mode-hook #'pk/mixed-pitch---post-command-hook)
+
   :hook
   ((org-mode . mixed-pitch-mode)
    (text-mode . mixed-pitch-mode)
-   (markdown-mode . mixed-pitch-mode)))
+   (markdown-mode . mixed-pitch-mode)
+   (gfm-mode . mixed-pitch-mode)))
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (require 'forge)
