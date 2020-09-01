@@ -502,6 +502,7 @@ language."
 
 (use-package mixed-pitch
   :init
+  ;; TODO: move to mixed pitch mode
   (defcustom mixed-pitch-fixed-pitch-cursor 'box
     "TODO: If non-nil, function `mixed-pitch-mode' changes the cursor.
 When disabled, switch back to what it was before.
@@ -510,6 +511,15 @@ See `cursor-type' for a list of acceptable types."
     :type 'symbol
     :group 'mixed-pitch)
 
+  ;; TODO: move to exordium
+  (defcustom pk/mixed-pitch--inhibit-modes
+    '(yaml-mode)
+    "TODO: List of major modes that the `mixed-pitch-mode' should not be activated.
+This is useful, when certain modes are derived from modes that `mixed-pitch-mode'
+is activated."
+    :type 'list)
+
+  ;; TODO: move to mixed-pitch-mode
   (defun mixed-pitch--set-cursor ()
     (if (let ((face (get-text-property (point) 'face)))
           (if (listp face)
@@ -529,23 +539,32 @@ See `cursor-type' for a list of acceptable types."
         (setq cursor-type mixed-pitch-fixed-pitch-cursor)
       (setq cursor-type mixed-pitch-variable-pitch-cursor)))
 
+  ;; TODO: move to mixed pitch mode
   (defun pk/mixed-pitch---post-command-hook ()
     (if mixed-pitch-mode
         ;; TODO: only install this when variable and fixed cursors are different
         (add-hook 'post-command-hook #'mixed-pitch--set-cursor nil :local)
       (remove-hook 'post-command-hook #'mixed-pitch--set-cursor :local)))
 
+  ;; TODO: move this to exordium
+  (defun pk/mixed-pitch--enable-mode-maybe ()
+    (unless (memq major-mode pk/mixed-pitch--inhibit-modes)
+      (mixed-pitch-mode)))
   :config
-  (custom-set-faces '(variable-pitch ((t (:family "Fira Sans" :height 125)))))
+  ;; TODO: move to exordium and make configurable
+  (custom-set-faces '(variable-pitch ((t (:family "Fira Sans" :height 135)))))
   (setq mixed-pitch-set-height t)
-  ;; TODO: move this to mode
+  ;; TODO: move this to mixed-pitch-mode
   (add-hook 'mixed-pitch-mode-hook #'pk/mixed-pitch---post-command-hook)
 
   :hook
-  ((org-mode . mixed-pitch-mode)
-   (text-mode . mixed-pitch-mode)
-   (markdown-mode . mixed-pitch-mode)
-   (gfm-mode . mixed-pitch-mode)))
+  ;;TODO: move to exordium and make a configurable list
+  ((org-mode . pk/mixed-pitch--enable-mode-maybe)
+   (text-mode . pk/mixed-pitch--enable-mode-maybe)
+   ;; markdown-mode is derived from text-mode
+   ;; (markdown-mode . pk/mixed-pitch--enable-mode-maybe)
+   (gfm-mode . pk/mixed-pitch--enable-mode-maybe)))
+
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (require 'forge)
