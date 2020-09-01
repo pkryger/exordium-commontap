@@ -533,7 +533,7 @@ See `cursor-type' for a list of acceptable types."
     (if mixed-pitch-mode
         ;; TODO: only install this when variable and fixed cursors are different
         (add-hook 'post-command-hook #'mixed-pitch--set-cursor nil :local)
-      (remove-hook 'post-command-hook #'mixed-pitch--set-cursor)))
+      (remove-hook 'post-command-hook #'mixed-pitch--set-cursor :local)))
 
   :config
   (custom-set-faces '(variable-pitch ((t (:family "Fira Sans" :height 125)))))
