@@ -605,7 +605,7 @@ is activated."
   :init
   (defun pk/disable-evil-mode ()
     (unless exordium-enable-evil-mode
-      (when evil-mode
+      (when (or evil-mode evil-local-mode)
         (turn-off-evil-mode))))
   :hook
   ((evil-mode . pk/disable-evil-mode)
