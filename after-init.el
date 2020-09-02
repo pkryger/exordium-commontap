@@ -548,8 +548,10 @@ is activated."
 
   ;; TODO: move this to exordium
   (defun pk/mixed-pitch--enable-mode-maybe ()
-    (unless (memq major-mode pk/mixed-pitch--inhibit-modes)
+    (unless (or (memq major-mode pk/mixed-pitch--inhibit-modes)
+                (seq-intersection minor-mode-list pk/mixed-pitch--inhibit-modes))
       (mixed-pitch-mode)))
+
   :config
   ;; TODO: move to exordium and make configurable
   (custom-set-faces '(variable-pitch ((t (:family "Fira Sans" :height 135)))))
