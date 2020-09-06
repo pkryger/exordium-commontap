@@ -563,6 +563,21 @@ is activated."
   ;; TODO: move this to mixed-pitch-mode
   (add-hook 'mixed-pitch-mode-hook #'pk/mixed-pitch---post-command-hook)
 
+  ;; TODO: move this to exordium
+  (defface exordium-org-strike-through '((t (:strike-through t)))
+    "Face to be used as a strike through in `org-mode'.
+The default definition of a face for `+' is `(:strike-through)'.
+However this makes `org-mode' to pick up some random font,
+and not the one set as a `variable-pitch'. Making this a proper
+face seems to fix the issue.")
+  ;; TODO: move this to exordium
+  (custom-set-variables '(org-emphasis-alist
+                          (append
+                           (seq-filter (lambda (elt)
+                                         (not (string= "+" (car elt))))
+                                       org-emphasis-alist)
+                           '(("+" exordium-org-strike-through (:strike-through t))))))
+
   :hook
   ;;TODO: move to exordium and make a configurable list
   ((org-mode . pk/mixed-pitch--enable-mode-maybe)
@@ -570,7 +585,6 @@ is activated."
    ;; markdown-mode is derived from text-mode
    ;; (markdown-mode . pk/mixed-pitch--enable-mode-maybe)
    (gfm-mode . pk/mixed-pitch--enable-mode-maybe)))
-
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (require 'forge)
