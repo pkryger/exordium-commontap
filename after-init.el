@@ -552,7 +552,11 @@ is activated."
       (mixed-pitch-mode)))
   :config
   ;; TODO: move to exordium and make configurable
-  (custom-set-faces '(variable-pitch ((t (:family "Fira Sans" :height 135)))))
+  ;; Using `set-face-attribute' as it seems to have no issues with zooming text
+  ;; either with `text-scale-mode' nor with `default-text-scale-mode'.
+  (set-face-attribute 'variable-pitch
+                      :family (caar exordium-preferred-variable-fonts)
+                      :height (cdar exordium-preferred-variable-fonts))
   (setq mixed-pitch-set-height t)
   ;; TODO: move this to mixed-pitch-mode
   (add-hook 'mixed-pitch-mode-hook #'pk/mixed-pitch---post-command-hook)
