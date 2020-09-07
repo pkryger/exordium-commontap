@@ -576,9 +576,12 @@ face seems to fix the issue.")
    ;; (markdown-mode . pk/mixed-pitch--enable-mode-maybe)
    (gfm-mode . pk/mixed-pitch--enable-mode-maybe)))
 
+
+
+
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (require 'forge)
-(add-hook 'forge-post-mode-hook #'(lambda () (set-fill-column 100000)))
+(add-hook 'forge-post-mode-hook #'(lambda () (set-fill-column 1000)))
 (defun pk/forge-markdown-preview ()
   "Preview current buffer as a `markdown-mode' would do."
   (interactive)
