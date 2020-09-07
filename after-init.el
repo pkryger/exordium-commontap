@@ -543,13 +543,13 @@ is activated."
 
   :config
   ;; TODO: move to exordium and make configurable
-  ;; Using `set-face-attribute' as it seems to have no issues with zooming text
-  ;; either with `text-scale-mode' nor with `default-text-scale-mode'.
   (set-face-attribute 'variable-pitch nil
                       :family (caar exordium-preferred-variable-fonts)
                       :height (cdar exordium-preferred-variable-fonts)
                       :weight 'normal)
-  (setq mixed-pitch-set-height t)
+  ;; TODO: Using `mixed-pitch-set-height' has issues with zooming text
+  ;; either with `text-scale-mode' nor with `default-text-scale-mode'.
+  ;; (setq mixed-pitch-set-height t)
   ;; TODO: move this to mixed-pitch-mode
   (add-hook 'mixed-pitch-mode-hook #'pk/mixed-pitch---post-command-hook)
 
