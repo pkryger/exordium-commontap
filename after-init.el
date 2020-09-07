@@ -540,7 +540,8 @@ is activated."
 
   ;; TODO: move this to exordium
   (defun pk/mixed-pitch--enable-mode-maybe ()
-    (unless (or (memq major-mode pk/mixed-pitch--inhibit-modes)
+    (unless (or mixed-pitch-mode
+                (memq major-mode pk/mixed-pitch--inhibit-modes)
                 (seq-intersection minor-mode-list pk/mixed-pitch--inhibit-modes))
       (mixed-pitch-mode)))
 
