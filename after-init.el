@@ -524,7 +524,10 @@ is activated."
     (when (get-buffer-window nil 'visible)
       (if (font-match-p
            (font-spec :name (face-attribute 'variable-pitch :family))
-           (font-at (point)))
+           (font-at (max
+                     (min (point)
+                          (- (point-max) 1))
+                     (point-min))))
           (setq cursor-type mixed-pitch-variable-pitch-cursor)
         (setq cursor-type mixed-pitch-fixed-pitch-cursor))))
 
