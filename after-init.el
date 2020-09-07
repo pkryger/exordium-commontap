@@ -576,8 +576,10 @@ face seems to fix the issue.")
    ;; (markdown-mode . pk/mixed-pitch--enable-mode-maybe)
    (gfm-mode . pk/mixed-pitch--enable-mode-maybe)))
 
-
-
+;; TODO: move to exordium and likely hide behind the
+;; `exordium-use-variable-pitch' and `exordium-complete-mode' set to `:company'
+(use-package company-box
+  :hook (company-mode . company-box-mode))
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (require 'forge)
