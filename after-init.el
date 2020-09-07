@@ -573,10 +573,10 @@ face seems to fix the issue.")
 
   :hook
   ;;TODO: move to exordium and make a configurable list
-  ((org-mode . pk/mixed-pitch--enable-mode-maybe)
-   (text-mode . pk/mixed-pitch--enable-mode-maybe)
-   ;; markdown-mode is derived from text-mode
+  ((text-mode . pk/mixed-pitch--enable-mode-maybe)
+   ;; markdown-mode and org-mode inherit from text-mode
    ;; (markdown-mode . pk/mixed-pitch--enable-mode-maybe)
+   ;; (org-mode . pk/mixed-pitch--enable-mode-maybe)
    (gfm-mode . pk/mixed-pitch--enable-mode-maybe)))
 
 ;; TODO: move to exordium and likely hide behind the
