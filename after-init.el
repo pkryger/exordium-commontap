@@ -521,23 +521,12 @@ is activated."
 
   ;; TODO: move to mixed-pitch-mode
   (defun mixed-pitch--set-cursor ()
-    (if (let ((face (get-text-property (point) 'face)))
-          (if (listp face)
-              ;; So now, the face can be a plist with `:inherit' property
-              ;; being a list of faces (i.e., in an `example' in `org-mode'),
-              ;; or just a list of faces.
-              (let ((faces (or (plist-get face :inherit)
-                               face)))
-                ;; The performance of `seq-intersection' should be fine
-                ;;(set-intersection face mixed-pitch-faces)
-                ;; but let's micro-optimise :)
-                (while (and faces
-                            (not (memq (car faces) mixed-pitch-fixed-pitch-faces)))
-                  (pop faces))
-                faces)
-            (memq face mixed-pitch-fixed-pitch-faces)))
-        (setq cursor-type mixed-pitch-fixed-pitch-cursor)
-      (setq cursor-type mixed-pitch-variable-pitch-cursor)))
+    (when (get-buffer-window nil 'visible)
+      (if (font-match-p
+           (font-spec :name (face-attribute 'variable-pitch :family))
+           (font-at (point)))
+          (setq cursor-type mixed-pitch-variable-pitch-cursor)
+        (setq cursor-type mixed-pitch-fixed-pitch-cursor))))
 
   ;; TODO: move to mixed pitch mode
   (defun pk/mixed-pitch---post-command-hook ()
