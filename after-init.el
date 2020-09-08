@@ -583,6 +583,7 @@ face seems to fix the issue.")
 ;; TODO: move to exordium and likely hide behind the
 ;; `exordium-use-variable-pitch' and `exordium-complete-mode' set to `:company'
 (use-package company-box
+  :diminish
   :hook (company-mode . company-box-mode))
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
