@@ -393,9 +393,8 @@ python layout with:
 
 ;; Load R as well
 (use-package ess
-  :ensure t)
-(use-package ess-r-mode
-  :demand t)
+  :init (require 'ess-site))
+
 (org-babel-do-load-languages
  'org-babel-load-languages
  (append org-babel-load-languages
