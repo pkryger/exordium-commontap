@@ -64,9 +64,8 @@
   ;; http://blog.binchen.org/posts/effective-spell-check-in-emacs.html
   ;; http://blog.binchen.org/posts/how-to-spell-check-functionvariable-in-emacs.html
   (setq ispell-program-name "aspell")
-  (setq ispell-extra-args (list
-                           "--sug-mode=ultra"
-                           "--camel-case"))
+  (setq ispell-extra-args `("--sug-mode=ultra"
+                           ,@(when exordium-osx '("--camel-case"))))
   (setq ispell-dictionary "british"))
 
 (use-package flyspell
