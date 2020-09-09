@@ -500,6 +500,7 @@ language."
             (setq auto-composition-mode nil)))
 
 (use-package mixed-pitch
+  :when exordium-osx
   :init
   ;; TODO: move to mixed pitch mode
   (defcustom mixed-pitch-fixed-pitch-cursor 'box
@@ -582,6 +583,7 @@ face seems to fix the issue.")
 ;; TODO: move to exordium and likely hide behind the
 ;; `exordium-use-variable-pitch' and `exordium-complete-mode' set to `:company'
 (use-package company-box
+  :when exordium-osx
   :diminish
   :hook (company-mode . company-box-mode))
 
