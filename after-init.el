@@ -412,6 +412,8 @@ python layout with:
       "<-" ";;" "\\n" "www" ".."
       ;; org-mode ballots -> they are unicode chars, not glyphs
       ;; "[ ]" "[X]" "[-]"
+      ;; fira sans
+      "fi" "fl"
       )
     "Sequence of strings used in automatic operator composition.
 Customised for FiraCode font: https://github.com/tonsky/FiraCode"
