@@ -512,7 +512,7 @@ See `cursor-type' for a list of acceptable types."
     :type 'symbol
     :group 'mixed-pitch)
 
-  ;; TODO: move to exordium
+  ;; TODO: move to exordium or to mixed-pitch-mode
   (defcustom pk/mixed-pitch--inhibit-modes
     '(yaml-mode)
     "TODO: List of major modes that the `mixed-pitch-mode' should not be activated.
@@ -541,7 +541,8 @@ is activated."
 
   ;; TODO: move this to exordium
   (defun pk/mixed-pitch--enable-mode-maybe ()
-    (unless (or mixed-pitch-mode
+    (unless (or (and (boundp 'mixed-pitch-mode)
+                     mixed-pitch-mode)
                 (memq major-mode pk/mixed-pitch--inhibit-modes)
                 (seq-intersection minor-mode-list pk/mixed-pitch--inhibit-modes))
       (mixed-pitch-mode)))
@@ -558,14 +559,14 @@ is activated."
   ;; TODO: move this to mixed-pitch-mode
   (add-hook 'mixed-pitch-mode-hook #'pk/mixed-pitch---post-command-hook)
 
-  ;; TODO: move this to exordium
+  ;; TODO: move this to exordium theme
   (defface exordium-org-strike-through '((t (:strike-through t)))
     "Face to be used as a strike through in `org-mode'.
 The default definition of a face for `+' is `(:strike-through)'.
 However this makes `org-mode' to pick up some random font,
 and not the one set as a `variable-pitch'. Making this a proper
 face seems to fix the issue.")
-  ;; TODO: move this to exordium
+  ;; TODO: move this to exordium theme
   (custom-set-variables '(org-emphasis-alist
                           (append
                            (seq-filter (lambda (elt)
