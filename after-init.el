@@ -574,6 +574,12 @@ face seems to fix the issue.")
                                        org-emphasis-alist)
                            '(("+" exordium-org-strike-through (:strike-through t))))))
 
+  ;; TODO: move this to exordium
+  (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-todo)
+  (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-done)
+  (add-to-list 'mixed-pitch-fixed-pitch-faces 'exordium-org-wait)
+  (add-to-list 'mixed-pitch-fixed-pitch-faces 'exordium-org-work)
+
   :hook
   ;;TODO: move to exordium and make a configurable list
   ((text-mode . pk/mixed-pitch--enable-mode-maybe)
