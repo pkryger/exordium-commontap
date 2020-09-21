@@ -516,7 +516,8 @@ See `cursor-type' for a list of acceptable types."
 
   ;; TODO: move to exordium or to mixed-pitch-mode
   (defcustom pk/mixed-pitch--inhibit-modes
-    '(yaml-mode)
+    '(yaml-mode
+      nxml-mode)
     "TODO: List of major modes that the `mixed-pitch-mode' should not be activated.
 This is useful, when certain modes are derived from modes that `mixed-pitch-mode'
 is activated."
