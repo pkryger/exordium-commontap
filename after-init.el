@@ -401,6 +401,17 @@ python layout with:
    (append org-babel-load-languages
            '((R . t)))))
 
+(use-package restclient)
+(use-package restclient-helm)
+(use-package ob-restclient
+  :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   (append org-babel-load-languages
+           '((restclient . t)))))
+(use-package company-restclient
+  :config
+  (add-to-list 'company-backends 'company-restclient))
 
 (require 'map)
 (when (fboundp 'mac-auto-operator-composition-shape-gstring)
