@@ -394,12 +394,13 @@ python layout with:
 
 ;; Load R as well
 (use-package ess
-  :init (require 'ess-site))
+  :config
+  (require 'ess-site)
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   (append org-babel-load-languages
+           '((R . t)))))
 
-(org-babel-do-load-languages
- 'org-babel-load-languages
- (append org-babel-load-languages
-         '((R . t))))
 
 (require 'map)
 (when (fboundp 'mac-auto-operator-composition-shape-gstring)
