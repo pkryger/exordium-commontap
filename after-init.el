@@ -404,9 +404,8 @@ python layout with:
 (use-package url
   :ensure nil
   :config
-  (defun pk/url-netrc-auth (url &rest _ignore)
-    "TODO: use this as a one of `url-registered-auth-schemes', likely with
-`url-register-auth-scheme'"
+  (defun pk/url-netrc-auth (url &optional _prompt _overwrite _realm _args)
+    "Get the token stored in `netrc' for the given URL."
     (let* ((href (if (stringp url)
 		             (url-generic-parse-url url)
 		           url))
@@ -427,22 +426,11 @@ python layout with:
                 (encode-coding-string (if (functionp secret)
                                           (funcall secret)
                                         secret)
-                                      'utf-8))))))
+                                      'utf-8)))))
+  (url-register-auth-scheme "netrc" #'pk/url-netrc-auth 1))
 
-(use-package restclient
-  :config
-  (define-advice restclient-http-do
-      (:around (fn method url headers entity &rest handle-args) pk/restclient--netrc-auth)
-    "Add an `Authorization' header (from `netrc') when one is not present in HEADERS."
-    (unless (cl-find-if (lambda (header)
-                          (string= "authorization" (downcase (car header))))
-                        headers)
-      (when-let ((auth (pk/url-netrc-auth url)))
-        (setq headers (append headers `(("Authorization" . ,auth))))))
-    (apply fn method url headers entity handle-args)))
-
+(use-package restclient)
 (use-package restclient-helm)
-
 (use-package ob-restclient
   :config
   (org-babel-do-load-languages
