@@ -405,7 +405,8 @@ python layout with:
   :ensure nil
   :config
   (defun pk/url-netrc-auth (url &rest _ignore)
-    "TODO: use this as a one of `url-registered-auth-schemes'"
+    "TODO: use this as a one of `url-registered-auth-schemes', likely with
+`url-register-auth-scheme'"
     (let* ((href (if (stringp url)
 		             (url-generic-parse-url url)
 		           url))
@@ -419,10 +420,14 @@ python layout with:
                                              :max 1))
                     :secret)))
       (when secret
-        (format "token %s"
-                (if (functionp secret)
-                    (funcall secret)
-                  secret))))))
+        ;; TODO: Update handling of `gitlab': see `ghub--auth'
+        ;; - Private-Token header
+        ;; - no "token" prefix
+        (concat "token "
+                (encode-coding-string (if (functionp secret)
+                                          (funcall secret)
+                                        secret)
+                                      'utf-8))))))
 
 (use-package restclient
   :config
@@ -437,12 +442,14 @@ python layout with:
     (apply fn method url headers entity handle-args)))
 
 (use-package restclient-helm)
+
 (use-package ob-restclient
   :config
   (org-babel-do-load-languages
    'org-babel-load-languages
    (append org-babel-load-languages
            '((restclient . t)))))
+
 (use-package company-restclient
   :config
   (add-to-list 'company-backends 'company-restclient))
