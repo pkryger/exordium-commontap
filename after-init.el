@@ -401,7 +401,41 @@ python layout with:
    (append org-babel-load-languages
            '((R . t)))))
 
-(use-package restclient)
+(use-package url
+  :ensure nil
+  :config
+  (defun pk/url-netrc-auth (url &rest _ignore)
+    "TODO: use this as a one of `url-registered-auth-schemes'"
+    (let* ((href (if (stringp url)
+		             (url-generic-parse-url url)
+		           url))
+	       (host (url-host href))
+	       (user (or (url-user href) user-login-name))
+           (secret (plist-get
+                    (car (auth-source-search :host host
+                                             :user user
+                                             :type 'netrc
+                                             :require '(:secret)
+                                             :max 1))
+                    :secret)))
+      (when secret
+        (format "token %s"
+                (if (functionp secret)
+                    (funcall secret)
+                  secret))))))
+
+(use-package restclient
+  :config
+  (define-advice restclient-http-do
+      (:around (fn method url headers entity &rest handle-args) pk/restclient--netrc-auth)
+    "Add an `Authorization' header (from `netrc') when one is not present in HEADERS."
+    (unless (cl-find-if (lambda (header)
+                          (string= "authorization" (downcase (car header))))
+                        headers)
+      (when-let ((auth (pk/url-netrc-auth url)))
+        (setq headers (append headers `(("Authorization" . ,auth))))))
+    (apply fn method url headers entity handle-args)))
+
 (use-package restclient-helm)
 (use-package ob-restclient
   :config
