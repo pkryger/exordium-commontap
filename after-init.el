@@ -278,10 +278,14 @@ python layout with:
         (progress-reporter-update
          reporter (incf progress) "[allowing direnv...]")
         (direnv-allow)
+        (when-let ((buf (get-buffer "*Shell Command Output*")))
+          (with-current-buffer buf
+            (erase-buffer)))
         (dolist (package pk/python-bootstrap-packages)
           (progress-reporter-update
            reporter (incf progress) (format "[installing %s...]" package))
-          (shell-command (concat (s-join " " pip-command) " " package)))
+          (let ((shell-command-dont-erase-buffer 'end-last-out))
+            (shell-command (concat (s-join " " pip-command) " " package))))
         (when requirements
           (progress-reporter-update
            reporter (incf progress) (format "[installing from %s...]"
@@ -297,8 +301,10 @@ python layout with:
                                                      (buffer-name out-buffer))
                                   'font-lock-face 'magit-mode-line-process))))
             (with-current-buffer out-buffer
+              (read-only-mode 0)
               (erase-buffer)
-              (shell-mode))
+              (read-only-mode)
+              (comint-mode))
             (make-process :name "pk/python-bootstrapper"
                           :buffer out-buffer
                           :command `(,@pip-command "-r" ,requirements)
@@ -306,8 +312,9 @@ python layout with:
                           :filter #'comint-output-filter
                           :sentinel #'(lambda (_process _event)
                                         (dolist (buf buffers)
-                                          (with-current-buffer buf
-                                            (setq mode-line-process nil)))))))
+                                          (when (buffer-live-p buf)
+                                            (with-current-buffer buf
+                                              (setq mode-line-process nil))))))))
         (progress-reporter-done reporter))
     (message "Cannot create .envrc for %s" python-shell-interpreter)))
 
