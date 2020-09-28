@@ -271,8 +271,8 @@ python layout with:
                                  envrc-file)))))
           (with-temp-file envrc-file
             (when-let ((srcdir (f-join dir "src"))
-                       (file-directory-p srcdir))
-              (insert (concat "export PYTHONPATH=" srcdir "\n")))
+                       (_exists (file-directory-p srcdir)))
+              (insert (concat "export PYTHONPATH=" srcdir ":${PYTHONPATH}\n")))
             (insert (concat "layout_" python "\n"))))
         (progress-reporter-update
          reporter (incf progress) "[allowing direnv...]")
