@@ -248,7 +248,7 @@ python layout with:
                       (projectile-project-root))))
   (if-let ((python (when (string-match "python\[23\]" python-shell-interpreter)
                      (match-string 0 python-shell-interpreter))))
-      (let* ((pip-command (concat python-shell-interpreter " -m pip install "))
+      (let* ((pip-command `(,python-shell-interpreter "-m" "pip" "install"))
              (requirements
               (when-let ((root (projectile-project-root))
                          (match
@@ -257,9 +257,10 @@ python layout with:
                              (file-exists-p (f-join root elt)))
                            pk/python-bootstrap-requirements)))
                 (f-join root match)))
+             (project (or (projectile-project-name) (f-filename dir)))
              (progress 0)
              (reporter (make-progress-reporter
-                        (format "Bootstrapping python direnv in %s " dir)
+                        (format "Bootstrapping python direnv in %s " project)
                         progress (+ 2 ;; 1 for `.envrc' file, 2 for `direnv-allow'
                                     (length pk/python-bootstrap-packages)
                                     (if requirements 1 0)))))
@@ -279,13 +280,34 @@ python layout with:
         (direnv-allow)
         (dolist (package pk/python-bootstrap-packages)
           (progress-reporter-update
-           reporter (incf progress) (format " [installing %s...]" package))
-          (shell-command (concat pip-command package)))
+           reporter (incf progress) (format "[installing %s...]" package))
+          (shell-command (concat (s-join " " pip-command) " " package)))
         (when requirements
           (progress-reporter-update
            reporter (incf progress) (format "[installing from %s...]"
                                             (file-name-base requirements)))
-          (shell-command (concat pip-command "-r " requirements)))
+          (lexical-let ((out-buffer (get-buffer-create
+                                     (concat "*python-bootstrapper*<" project ">")))
+                        (buffers (projectile-project-buffers)))
+            (dolist (buf buffers)
+              (with-current-buffer buf
+                (setq mode-line-process
+                      (propertize " [bootstrapping]"
+                                  'help-echo (format "See progress in %s"
+                                                     (buffer-name out-buffer))
+                                  'font-lock-face 'magit-mode-line-process))))
+            (with-current-buffer out-buffer
+              (erase-buffer)
+              (shell-mode))
+            (make-process :name "pk/python-bootstrapper"
+                          :buffer out-buffer
+                          :command `(,@pip-command "-r" ,requirements)
+                          :noquery t
+                          :filter #'comint-output-filter
+                          :sentinel #'(lambda (_process _event)
+                                        (dolist (buf buffers)
+                                          (with-current-buffer buf
+                                            (setq mode-line-process nil)))))))
         (progress-reporter-done reporter))
     (message "Cannot create .envrc for %s" python-shell-interpreter)))
 
