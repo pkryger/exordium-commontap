@@ -580,7 +580,8 @@ language."
     "TODO: If non-nil, function `mixed-pitch-mode' changes the cursor.
 When disabled, switch back to what it was before.
 
-See `cursor-type' for a list of acceptable types."
+See `cursor-type' for a list of acceptable types.
+TODO: decide if hook needs to be installed afters set... and same in the other cursor"
     :type 'symbol
     :group 'mixed-pitch)
 
