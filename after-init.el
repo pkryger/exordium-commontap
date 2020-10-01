@@ -691,11 +691,11 @@ face seems to fix the issue.")
 ;; Configure tabs
 (use-package tab-bar
   :ensure nil
-  :config
-  (custom-set-variables '(tab-bar-separator "⎞⎛")
-                        '(tab-bar-tab-hints t)
-                        '(tab-bar-select-tab-modifiers '(hyper))
-                        '(tab-bar-show t t))
+  :custom
+  (tab-bar-separator "⎞⎛")
+  (tab-bar-tab-hints t)
+  (tab-bar-select-tab-modifiers '(hyper))
+  (tab-bar-show t)
   :bind (:map global-map
               ("M-<tab>" . #'tab-next)
               ("M-S-<tab>" . #'tab-previous)
