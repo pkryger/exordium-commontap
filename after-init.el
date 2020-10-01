@@ -712,6 +712,13 @@ face seems to fix the issue.")
   ((evil-mode . pk/disable-evil-mode)
    (evil-local-mode . pk/disable-evil-mode)))
 
+(use-package so-long
+  :config
+  (setq-default bidi-paragraph-direction 'left-to-right)
+  (when (version<= "27.1" emacs-version)
+    (setq bidi-inhibit-bpa t))
+  (global-so-long-mode))
+
 ;; a couple statistical goodies
 (defun pk/quartile--internal (sequence quartile &optional method)
   "Return a given QUARTILE of a sorted SEQUENCE.
