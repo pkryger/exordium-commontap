@@ -600,11 +600,7 @@ is activated."
       (if (font-match-p
            (font-spec :name (face-attribute 'variable-pitch :family))
            (font-at (max
-                     (min (let ((pt (point)))
-                            (if (and (eq pt (point-at-eol))
-                                     (< (point-min) pt))
-                                (- pt 1)
-                              pt))
+                     (min (point)
                           (- (point-max) 1))
                      (point-min))))
           (setq cursor-type mixed-pitch-variable-pitch-cursor)
