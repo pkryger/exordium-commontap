@@ -411,8 +411,6 @@ python layout with:
 
 ;; Use python3 for org
 (setq org-babel-python-command "python3")
-;; Don't ask for confirmation for code blocks (rather use :eval no)
-(setq org-confirm-babel-evaluate nil)
 ;; Make tabs work nativly in org mode's src blocks
 (setq org-src-tab-acts-natively t)
 

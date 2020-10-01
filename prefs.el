@@ -15,4 +15,5 @@
 (setq exordium-height-plus-3 1.225)
 (setq exordium-height-plus-4 1.3)
 (setq avy-all-windows 'all-frames)
+(setq exordium-no-org-babel-confirm t)
 (setq flycheck-global-modes '(not c++-mode c-mode))
