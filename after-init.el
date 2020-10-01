@@ -646,7 +646,8 @@ face seems to fix the issue.")
                            (seq-filter (lambda (elt)
                                          (not (string= "+" (car elt))))
                                        org-emphasis-alist)
-                           '(("+" exordium-org-strike-through (:strike-through t))))))
+                           '(("+" exordium-org-strike-through (:strike-through t)))))
+                        '(org-fontify-whole-heading-line t))
 
   ;; TODO: move this to exordium
   (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-todo)
@@ -668,6 +669,7 @@ face seems to fix the issue.")
   :when exordium-osx
   :diminish
   :hook (company-mode . company-box-mode))
+
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (require 'forge)
