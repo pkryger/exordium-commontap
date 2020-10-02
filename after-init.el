@@ -668,7 +668,9 @@ face seems to fix the issue.")
   :diminish
   :bind
   (:map company-posframe-active-map
-        ("C-h" . #'company-posframe-quickhelp-toggle))
+        ("C-h" . #'company-posframe-quickhelp-toggle)
+        ("C-n" . #'company-select-next)
+        ("C-p" . #'company-select-previous))
   :config
   (company-posframe-mode 1)
   ;; TODO: move this to desktop configuration
