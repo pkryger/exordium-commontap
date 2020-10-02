@@ -663,11 +663,16 @@ face seems to fix the issue.")
 
 ;; TODO: move to exordium and likely hide behind the
 ;; `exordium-use-variable-pitch' and `exordium-complete-mode' set to `:company'
-(use-package company-box
+(use-package company-posframe
   :when exordium-osx
   :diminish
-  :hook (company-mode . company-box-mode))
-
+  :bind
+  (:map company-posframe-active-map
+        ("C-h" . #'company-posframe-quickhelp-toggle))
+  :config
+  (company-posframe-mode 1)
+  ;; TODO: move this to desktop configuration
+  (add-to-list 'desktop-minor-mode-table '(company-posframe-mode nil)))
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (require 'forge)
