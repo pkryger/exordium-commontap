@@ -399,11 +399,10 @@ python layout with:
                 (kbd (concat smerge-command-prefix "t")) #'pk/magit-smerge)
               (pk/magit-smerge))))
 
-(use-package swiper-helm
-  :demand t
-  :bind (
-  ("C-s" . #'swiper-helm)
-  ("C-r" . #'swiper-helm)))
+(use-package swiper
+  :bind
+  (("C-s" . #'swiper-isearch)
+   ("C-r" . #'swiper-isearch)))
 
 ;; Disable some ido hooks for helm mode
 (when exordium-helm-everywhere
