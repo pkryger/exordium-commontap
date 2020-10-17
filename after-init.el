@@ -583,17 +583,9 @@ language."
 
 (use-package mixed-pitch
   :when exordium-osx
+  :custom
+  (mixed-pitch-fixed-pitch-cursor 'box)
   :init
-  ;; TODO: move to mixed pitch mode
-  (defcustom mixed-pitch-fixed-pitch-cursor 'box
-    "TODO: If non-nil, function `mixed-pitch-mode' changes the cursor.
-When disabled, switch back to what it was before.
-
-See `cursor-type' for a list of acceptable types.
-TODO: decide if hook needs to be installed afters set... and same in the other cursor"
-    :type 'symbol
-    :group 'mixed-pitch)
-
   ;; TODO: move to exordium or to mixed-pitch-mode
   (defcustom pk/mixed-pitch--inhibit-modes
     '(yaml-mode
@@ -602,25 +594,6 @@ TODO: decide if hook needs to be installed afters set... and same in the other c
 This is useful, when certain modes are derived from modes that `mixed-pitch-mode'
 is activated."
     :type 'list)
-
-  ;; TODO: move to mixed-pitch-mode
-  (defun mixed-pitch--set-cursor ()
-    (when (get-buffer-window nil 'visible)
-      (if (font-match-p
-           (font-spec :name (face-attribute 'variable-pitch :family))
-           (font-at (max
-                     (min (point)
-                          (- (point-max) 1))
-                     (point-min))))
-          (setq cursor-type mixed-pitch-variable-pitch-cursor)
-        (setq cursor-type mixed-pitch-fixed-pitch-cursor))))
-
-  ;; TODO: move to mixed pitch mode
-  (defun pk/mixed-pitch---post-command-hook ()
-    (if mixed-pitch-mode
-        ;; TODO: only install this when variable and fixed cursors are different
-        (add-hook 'post-command-hook #'mixed-pitch--set-cursor nil :local)
-      (remove-hook 'post-command-hook #'mixed-pitch--set-cursor :local)))
 
   ;; TODO: move this to exordium
   (defun pk/mixed-pitch--enable-mode-maybe ()
@@ -639,8 +612,6 @@ is activated."
   ;; TODO: Using `mixed-pitch-set-height' has issues with zooming text
   ;; either with `text-scale-mode' nor with `default-text-scale-mode'.
   ;; (setq mixed-pitch-set-height t)
-  ;; TODO: move this to mixed-pitch-mode
-  (add-hook 'mixed-pitch-mode-hook #'pk/mixed-pitch---post-command-hook)
 
   ;; TODO: move this to exordium theme
   (defface exordium-org-strike-through '((t (:strike-through t)))
