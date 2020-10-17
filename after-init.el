@@ -14,7 +14,8 @@
 
   (setq mac-option-modifier 'meta)
   (setq mac-right-option-modifier 'meta)
-  (setq mac-command-modifier 'hyper))
+  (setq mac-command-modifier 'hyper)
+  (setq mac-frame-tabbing nil))
 
 ;; A shorter list of packages
 (when (string= exordium-melpa-package-repo exordium-pinned-melpa-package-repo)
