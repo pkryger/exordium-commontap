@@ -630,6 +630,7 @@ face seems to fix the issue.")
                         '(org-fontify-whole-heading-line t))
 
   ;; TODO: move this to exordium
+  (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-date)
   (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-todo)
   (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-done)
   (add-to-list 'mixed-pitch-fixed-pitch-faces 'exordium-org-wait)
