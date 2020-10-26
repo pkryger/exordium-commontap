@@ -409,25 +409,27 @@ If the input is empty, select the previous history element instead."
     (if (string= ivy-text "")
         (ivy-previous-history-element 1)
       (ivy-previous-line arg)))
-  (defun pk/swiper-iedit ()
-    (interactive)
-    (unless (string= ivy-text "")
-      (ivy-exit-with-action
-       (lambda (_)
-         ;; This lambda is basically a copy of `iedit-mode-from-isearch'
-         (setq mark-active nil)
-         (run-hooks 'deactivate-mark-hook)
-         (when iedit-mode
-           (iedit-lib-cleanup))
-         (let ((result
-	            (catch 'not-same-length
-	              (iedit-start ivy-text (point-min) (point-max)))))
-           (cond ((not iedit-occurrences-overlays)
-                  (message "No matches found for %s" ivy-text)
-                  (iedit-done))
-                 ((equal result 'not-same-length)
-                  (message "Matches are not the same length.")
-                  (iedit-done))))))))
+  (use-package iedit
+    :init
+    (defun pk/swiper-iedit ()
+      (interactive)
+      (unless (string= ivy-text "")
+        (ivy-exit-with-action
+         (lambda (_)
+           ;; This lambda is basically a copy of `iedit-mode-from-isearch'
+           (setq mark-active nil)
+           (run-hooks 'deactivate-mark-hook)
+           (when iedit-mode
+             (iedit-lib-cleanup))
+           (let ((result
+	              (catch 'not-same-length
+	                (iedit-start ivy-text (point-min) (point-max)))))
+             (cond ((not iedit-occurrences-overlays)
+                    (message "No matches found for %s" ivy-text)
+                    (iedit-done))
+                   ((equal result 'not-same-length)
+                    (message "Matches are not the same length.")
+                    (iedit-done)))))))))
   :bind
   (:map global-map
         ("C-s" . #'swiper-isearch)
