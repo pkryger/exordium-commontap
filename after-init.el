@@ -512,11 +512,11 @@ If the input is empty, select the previous history element instead."
       "\\\\\\" "^=" "|" "|=" "||" "||=" "~" "~=" "[]"
       ;; programming in non-c++ and nice stuff
       "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
-      "<-" ";;" "\\n" "www" ".."
+      "<-" "-->" ";;" "\\n" "www" ".."
       ;; org-mode ballots -> they are unicode chars, not glyphs
       ;; "[ ]" "[X]" "[-]"
       ;; fira sans
-      "fi" "fl"
+      "ffi" "fi" "fl"
       )
     "Sequence of strings used in automatic operator composition.
 Customised for FiraCode font: https://github.com/tonsky/FiraCode"
