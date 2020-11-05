@@ -510,6 +510,12 @@ If the input is empty, select the previous history element instead."
   :config
   (add-to-list 'company-backends 'company-restclient))
 
+(use-package org-tree-slide
+  :bind
+  (:map org-mode-map
+        ("<f8>" . org-tree-slide-mode)
+        ("S-<f8>". org-tree-slide-skip-done-toggle)))
+
 (require 'map)
 (when (fboundp 'mac-auto-operator-composition-shape-gstring)
   (defcustom pk/mac-auto-operator-composition-strings
