@@ -326,7 +326,6 @@ python layout with:
 
 
 (use-package helpful
-  :ensure t
   :bind (:map global-map
               ;; Note that the built-in `describe-function' includes both functions
               ;; and macros. `helpful-function' is functions only, so we provide
@@ -346,10 +345,14 @@ python layout with:
               ;; Lookup the current symbol at point. C-c C-d is a common keybinding
               ;; for this in lisp modes.
               :map emacs-lisp-mode-map
-              ("C-c C-d" . #'helpful-at-point)))
+              ("C-c C-d" . #'helpful-at-point))
+  :config
+  (use-package helm
+    :custom
+    (helm-describe-variable-function #'helpful-variable)
+    (helm-describe-function-function #'helpful-function)))
 
 (use-package page-break-lines
-  :ensure t
   :config
   (add-to-list 'page-break-lines-modes 'helpful-mode)
   (global-page-break-lines-mode))
