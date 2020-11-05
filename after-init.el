@@ -201,13 +201,18 @@ The first file found in a project will be used."
 
 (use-package python
   :ensure nil
-  :init
-  (setq python-shell-interpreter "python3"))
+  :custom
+  (python-shell-interpreter  "python3")
+  :hook
+  (python-mode . (lambda ()
+                   (setq fill-column 100))))
 
 (use-package py-autopep8
   ;; TODO: add if requested
   :ensure-system-package autopep8
   :ensure t
+  :custom
+  (py-autopep8-options  '("--max-line-length" "100"))
   :hook (python-mode . py-autopep8-enable-on-save))
 
 (use-package python-pytest
