@@ -455,10 +455,10 @@ If the input is empty, select the previous history element instead."
 ;; Make tabs work nativly in org mode's src blocks
 (setq org-src-tab-acts-natively t)
 
-(use-package magit-todos
-  :ensure-system-package (rg . ripgrep)
-  :config
-  (magit-todos-mode))
+;; (use-package magit-todos
+;;   :ensure-system-package (rg . ripgrep)
+;;   :config
+;;   (magit-todos-mode))
 
 ;; Load R as well
 (use-package ess
