@@ -526,8 +526,8 @@ If the input is empty, select the previous history element instead."
       "\\\\\\" "^=" "|" "|=" "||" "||=" "~" "~=" "[]"
       ;; programming in non-c++ and nice stuff
       "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
-      "<-" "-->" ";;" "\\n" "www" ".."
-      ;; org-mode ballots -> they are unicode chars, not glyphs
+      "<-" "-->" "->>" ";;" "\\n" "www" ".."
+      ;; org-mode ballots -> they are unicode chars, not glyph
       ;; "[ ]" "[X]" "[-]"
       ;; fira sans
       "ffi" "fi" "fl"
