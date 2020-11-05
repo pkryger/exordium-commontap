@@ -357,15 +357,6 @@ python layout with:
   (add-to-list 'page-break-lines-modes 'helpful-mode)
   (global-page-break-lines-mode))
 
-;; Use the same keys for helm-swoop-edit as in magit-commit and
-;; helm-projectile-ag
-(require 'helm-swoop)
-(eval-after-load "helm-swoop"
-  '(progn
-     (define-key helm-swoop-edit-map (kbd "C-c C-c") 'helm-swoop--edit-complete)
-     (define-key helm-swoop-edit-map (kbd "C-c C-k") 'helm-swoop--edit-cancel)
-     (define-key helm-swoop-edit-map (kbd "C-c C-q C-k") 'helm-swoop--edit-delete-all-lines)))
-
 ;; Diminish some modes
 (diminish 'eldoc-mode)
 (diminish 'auto-revert-mode)
