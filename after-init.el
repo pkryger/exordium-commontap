@@ -583,6 +583,10 @@ language."
             (setq auto-composition-mode nil)))
 
 (use-package mixed-pitch
+  :quelpa ((mixed-pitch :fetcher git
+                        :url "https://gitlab.com/pkryger/mixed-pitch.git"
+                        :branch "different-cursor")
+           :upgrade t)
   :when exordium-osx
   :custom
   (mixed-pitch-fixed-pitch-cursor 'box)
