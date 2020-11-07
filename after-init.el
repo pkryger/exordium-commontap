@@ -29,8 +29,8 @@
   (xterm-mouse-mode t)
   (defun track-mouse (e)))
 
-(use-package use-package-ensure-system-package
-  :ensure t)
+(use-package use-package-ensure-system-package)
+(use-package quelpa-use-package)
 
 (use-package ispell
   :ensure-system-package aspell
