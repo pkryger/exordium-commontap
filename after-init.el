@@ -299,6 +299,12 @@ python layout with:
     (message "Cannot create .envrc for %s" python-shell-interpreter)))
 
 
+(defun pk/open-url-at-point ()
+  "Open an URL at point."
+  (interactive)
+  (when-let ((url (thing-at-point 'url)))
+    (browse-url url)))
+
 (use-package helpful
   :bind (:map global-map
               ;; Note that the built-in `describe-function' includes both functions
@@ -319,12 +325,20 @@ python layout with:
               ;; Lookup the current symbol at point. C-c C-d is a common keybinding
               ;; for this in lisp modes.
               :map emacs-lisp-mode-map
-              ("C-c C-d" . #'helpful-at-point))
+              ("C-c C-d" . #'helpful-at-point)
+        (:map helpful-mode-map
+              ("C-c C-o" . #'pk/open-url-at-point)))
   :config
   (use-package helm
     :custom
     (helm-describe-variable-function #'helpful-variable)
     (helm-describe-function-function #'helpful-function)))
+
+(use-package help-mode
+  :ensure nil
+  :bind
+  (:map help-mode-map
+        ("C-c C-o" . #'pk/open-url-at-point)))
 
 (use-package page-break-lines
   :config
