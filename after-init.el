@@ -17,6 +17,15 @@
   (setq mac-command-modifier 'hyper)
   (setq mac-frame-tabbing nil))
 
+;; copy string to iTerm clipboard
+(defun iterm-cut-base64 (text)
+  "Take TEXT and send it to iterm to copy."
+  (interactive)
+  (let ((base-64 (base64-encode-string text :no-line-break)))
+    (send-string-to-terminal (concat "\e]1337;Copy=:" base-64 "\a"))))
+(unless (display-graphic-p)
+  (setq interprogram-cut-function #'iterm-cut-base64))
+
 ;; A shorter list of packages
 (when (string= exordium-melpa-package-repo exordium-pinned-melpa-package-repo)
   (cl-delete-if (lambda (elt)
