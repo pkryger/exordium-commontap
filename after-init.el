@@ -436,7 +436,8 @@ If the input is empty, select the previous history element instead."
 
 ;; Disable some ido hooks for helm mode
 (when exordium-helm-everywhere
-  (advice-remove 'call-interactively #'call-interactively@ido-cr+-record-current-command))
+  (advice-remove 'call-interactively #'call-interactively@ido-cr+-record-current-command)
+  (remove-hook 'minibuffer-setup-hook #'ido-minibuffer-setup))
 
 ;; Use python3 for org
 (setq org-babel-python-command "python3")
