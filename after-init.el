@@ -109,19 +109,37 @@
       ac-auto-show-menu nil ;; original 0.8
       ac-delay 0.3)         ;; original 0.1
 
+(defconst pk/gc-cons-threshold (* 16 1024 1024))
+;; From DOOM FAQ:
+;; https://github.com/hlissner/doom-emacs/blob/64922dd/docs/faq.org#L215-L225
+(defun pk/defer-garbage-collection ()
+  "Use max value for gc, when in minibuffer.
+It's so it won't slow expensive commands and completion frameworks."
+  (setq gc-cons-threshold most-positive-fixnum))
+
+(defun pk/restore-garbage-collection ()
+  "Get back to the original gc threshold.
+Defer it so that commands launched immediately after will enjoy the benefits."
+  (run-at-time
+   1 nil (lambda () (setq gc-cons-threshold pk/gc-cons-threshold))))
+
+(add-hook 'minibuffer-setup-hook #'pk/defer-garbage-collection)
+(add-hook 'minibuffer-exit-hook #'pk/restore-garbage-collection)
+
 ;; garbage collect magic hack from https://gitlab.com/koral/gcmh
+;; tuned like in DOOM:
+;; https://github.com/hlissner/doom-emacs/blob/db16e5c/core/core.el#L350-L351
+;; https://github.com/hlissner/doom-emacs/blob/ed1996e/modules/lang/org/config.el#L548
 (use-package gcmh
   :diminish
-  :config
-  (gcmh-mode 1))
-
-;; Alternative approach to gcmh
-;; (defun dotfiles--gc-on-last-frame-out-of-focus ()
-;;   "GC if all frames are inactive."
-;;    (if (seq-every-p #'null (mapcar #'frame-focus-state (frame-list)))
-;;         (garbage-collect)))
-;; (add-function :after after-focus-change-function
-;;               #'dotfiles--gc-on-last-frame-out-of-focus)
+  :custom
+  (gcmh-idle-delay 5)
+  (gcmh-high-cons-threshold pk/gc-cons-threshold)
+  :hook
+  (org-mode . (lambda ()
+                (setq-local gcmh-high-cons-threshold (* 2 pk/gc-cons-threshold))))
+  (after-init . (lambda ()
+                  (gcmh-mode 1))))
 
 (use-package deft
   :config
