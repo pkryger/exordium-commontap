@@ -43,14 +43,16 @@
 
 (use-package ispell
   :ensure-system-package aspell
-  :config
+  :custom
   ;; spell checks as suggested by
   ;; http://blog.binchen.org/posts/effective-spell-check-in-emacs.html
   ;; http://blog.binchen.org/posts/how-to-spell-check-functionvariable-in-emacs.html
-  (setq ispell-program-name "aspell")
-  (setq ispell-extra-args `("--sug-mode=ultra"
+  (ispell-program-name "aspell")
+  (ispell-extra-args `("--sug-mode=ultra"
+                            "--run-together"
+                            "--run-together-limit=6"
                            ,@(when exordium-osx '("--camel-case"))))
-  (setq ispell-dictionary "british"))
+  (ispell-dictionary "british"))
 
 (use-package flyspell
   :diminish
@@ -136,7 +138,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (gcmh-idle-delay 5)
   (gcmh-high-cons-threshold pk/gc-cons-threshold)
   :hook
-  (org-mode . (lambda ()
+  (org-mode . (lambda () ;; TODO: this also needs to be after a buffer switch, including current value of `gc-cons-threshold'
                 (setq-local gcmh-high-cons-threshold (* 2 pk/gc-cons-threshold))))
   (after-init . (lambda ()
                   (gcmh-mode 1))))
