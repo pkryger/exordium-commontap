@@ -86,6 +86,12 @@
 
 (set-time-zone-rule "/usr/share/zoneinfo/Europe/London")
 
+(use-package flycheck
+  :custom
+  (flycheck-global-modes '(not c++-mode c-mode org-mode))
+  :hook
+  (after-init . global-flycheck-mode))
+
 (require 'cc-mode)
 ;; Alias for C-c r [
 (define-key c-mode-base-map [(control <)] (function rtags-location-stack-back))
