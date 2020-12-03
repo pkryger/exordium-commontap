@@ -26,6 +26,12 @@
 (unless (display-graphic-p)
   (setq interprogram-cut-function #'iterm-cut-base64))
 
+;; https://ylluminarious.github.io/2019/05/23/how-to-fix-the-emacs-mac-port-for-multi-tty-access/
+(use-package mac-pseudo-daemon
+  :hook
+  (after-init . mac-pseudo-daemon-mode)
+  (after-init . server-start))
+
 ;; A shorter list of packages
 (when (string= exordium-melpa-package-repo exordium-pinned-melpa-package-repo)
   (cl-delete-if (lambda (elt)
