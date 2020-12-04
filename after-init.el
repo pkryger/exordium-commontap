@@ -129,13 +129,13 @@
 (defun pk/defer-garbage-collection ()
   "Use max value for gc, when in minibuffer.
 It's so it won't slow expensive commands and completion frameworks."
-  (setq gc-cons-threshold most-positive-fixnum))
+  (setf gc-cons-threshold most-positive-fixnum))
 
 (defun pk/restore-garbage-collection ()
   "Get back to the original gc threshold.
 Defer it so that commands launched immediately after will enjoy the benefits."
   (run-at-time
-   1 nil (lambda () (setq gc-cons-threshold pk/gc-cons-threshold))))
+   1 nil (lambda () (setf gc-cons-threshold pk/gc-cons-threshold))))
 
 (add-hook 'minibuffer-setup-hook #'pk/defer-garbage-collection)
 (add-hook 'minibuffer-exit-hook #'pk/restore-garbage-collection)
@@ -152,8 +152,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   :hook
   (org-mode . (lambda () ;; TODO: this also needs to be after a buffer switch, including current value of `gc-cons-threshold'
                 (setq-local gcmh-high-cons-threshold (* 2 pk/gc-cons-threshold))))
-  (after-init . (lambda ()
-                  (gcmh-mode 1))))
+  (after-init . gcmh-mode))
 
 (use-package deft
   :config
