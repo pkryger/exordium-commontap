@@ -17,14 +17,20 @@
   (setq mac-command-modifier 'hyper)
   (setq mac-frame-tabbing nil))
 
-;; copy string to iTerm clipboard
-(defun iterm-cut-base64 (text)
-  "Take TEXT and send it to iterm to copy."
+(defun pk/iterm-cut-base64 (text)
+  "Take TEXT and send it to iTerm2 to copy."
   (interactive)
   (let ((base-64 (base64-encode-string text :no-line-break)))
     (send-string-to-terminal (concat "\e]1337;Copy=:" base-64 "\a"))))
-(unless (display-graphic-p)
-  (setq interprogram-cut-function #'iterm-cut-base64))
+(defconst pk/interprogram-cut-function interprogram-cut-function
+  "Save the default value of `interprogram-cut-function'.
+This will be used in be used in `pk/dispatch-cut-function'")
+(defun pk/dispatch-cut-function (text)
+  "Dispatch the TEXT to the appropriate `interprogram-cut-function'."
+  (if (display-graphic-p)
+      (funcall pk/interprogram-cut-function text)
+    (pk/iterm-cut-base64 text)))
+(setq interprogram-cut-function #'pk/dispatch-cut-function)
 
 ;; https://ylluminarious.github.io/2019/05/23/how-to-fix-the-emacs-mac-port-for-multi-tty-access/
 (use-package mac-pseudo-daemon
