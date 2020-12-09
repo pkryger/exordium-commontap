@@ -743,6 +743,23 @@ face seems to fix the issue.")
     (delete-file temp-file)))
 (define-key forge-post-mode-map (kbd "C-c p p") #'pk/forge-markdown-preview)
 
+(defun pk/forge--add-draft (alist)
+  "Add draft to ALIST."
+  (append alist '((draft . "t"))))
+
+(defun pk/forge-post-submit-draft()
+  "Submit the post that is being edited in the current buffer as a draft.
+This relies on implementation of `forge--topic-parse-buffer', that requires
+a key `draft' to have a value of t."
+  (interactive)
+  (advice-add 'forge--topic-parse-buffer :filter-return #'pk/forge--add-draft)
+  (condition-case err
+      (forge-post-submit)
+    (t
+     (advice-remove 'forge--topic-parse-buffer #'pk/forge--add-draft)
+     (signal (car err) (cdr err))))
+  (advice-remove 'forge--topic-parse-buffer #'pk/forge--add-draft))
+
 (add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
 (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium")))
 
