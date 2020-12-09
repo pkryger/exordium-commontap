@@ -38,6 +38,9 @@ This will be used in be used in `pk/dispatch-cut-function'")
   (after-init . mac-pseudo-daemon-mode)
   (after-init . server-start))
 
+(setq disabled-command-function nil)
+(setq confirm-kill-emacs 'y-or-n-p)
+
 ;; A shorter list of packages
 (when (string= exordium-melpa-package-repo exordium-pinned-melpa-package-repo)
   (cl-delete-if (lambda (elt)
