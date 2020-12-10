@@ -747,7 +747,7 @@ face seems to fix the issue.")
   "Add draft to ALIST."
   (append alist '((draft . "t"))))
 
-(defun pk/forge-post-submit-draft()
+(defun pk/forge-post-submit-draft ()
   "Submit the post that is being edited in the current buffer as a draft.
 This relies on implementation of `forge--topic-parse-buffer', that requires
 a key `draft' to have a value of t."
@@ -759,6 +759,18 @@ a key `draft' to have a value of t."
      (advice-remove 'forge--topic-parse-buffer #'pk/forge--add-draft)
      (signal (car err) (cdr err))))
   (advice-remove 'forge--topic-parse-buffer #'pk/forge--add-draft))
+
+(defun pk/forge-mark-ready-for-rewiew ()
+  "Mark the thing at point as ready for review."
+  (interactive)
+  (if-let ((url (forge-get-url (or (forge-post-at-point)
+                                   (forge-current-topic))))
+           (_ (string-match "/\\([^/]+\\)/\\([^/]+\\)/pull/\\([0-9]+\\)$" url)))
+      (shell-command (concat "mark-pull-request-ready-for-review.py"
+                             " --owner " (match-string 1 url)
+                             " --repo " (match-string 2 url)
+                             " --number " (match-string 3 url)))
+    (user-error "Nothing at point that is a PR")))
 
 (add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
 (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium")))
