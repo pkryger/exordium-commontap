@@ -763,15 +763,13 @@ a key `draft' to have a value of t."
 (cl-defun pk/ghub-graphql--pull-request-id (owner name number &key username auth host)
   "Return the id of the PR specified by OWNER, NAME, and NUMBER.
 USERNAME, AUTH, and HOST behave as for `ghub-request'."
-  (let-alist (ghub-request "POST" "/graphql" nil :payload
-              (json-encode `(("query" .
-                             "query($owner:String!, $name:String!, $number:Int!) {
-                                repository(owner:$owner, name:$name) {
-                                  pullRequest(number:$number) { id }}}")
-                             ("variables" .
-                              ((owner . ,owner)
-                               (name . ,name)
-                               (number . ,number)))))
+  (let-alist (ghub-graphql
+              "query($owner:String!, $name:String!, $number:Int!) {
+                 repository(owner:$owner, name:$name) {
+                   pullRequest(number:$number) { id }}}"
+              `((owner . ,owner)
+                (name . ,name)
+                (number . ,number))
               :username username :auth auth :host host)
     .data.repository.pullRequest.id))
 
@@ -787,7 +785,8 @@ USERNAME, AUTH, and HOST behave as for `ghub-request'."
                              ("variables" .
                               ((id . ,id)))))
               :username username :auth auth :host host
-              :headers '(("Accept" . "application/vnd.github.shadow-cat-preview+json"))) ; because of GHE 2.20
+              ; because of GHE 2.20 and lack of :headers in `ghub-graphql'
+              :headers '(("Accept" . "application/vnd.github.shadow-cat-preview+json")))
     .data.markPullRequestReadyForReview.pullRequest.isDraft))
 
 (defun pk/forge-mark-ready-for-rewiew ()
