@@ -760,17 +760,54 @@ a key `draft' to have a value of t."
      (signal (car err) (cdr err))))
   (advice-remove 'forge--topic-parse-buffer #'pk/forge--add-draft))
 
+(cl-defun pk/ghub-graphql--pull-request-id (owner name number &key username auth host)
+  "Return the id of the PR specified by OWNER, NAME, and NUMBER.
+USERNAME, AUTH, and HOST behave as for `ghub-request'."
+  (let-alist (ghub-request "POST" "/graphql" nil :payload
+              (json-encode `(("query" .
+                             "query($owner:String!, $name:String!, $number:Int!) {
+                                repository(owner:$owner, name:$name) {
+                                  pullRequest(number:$number) { id }}}")
+                             ("variables" .
+                              ((owner . ,owner)
+                               (name . ,name)
+                               (number . ,number)))))
+              :username username :auth auth :host host)
+    .data.repository.pullRequest.id))
+
+(cl-defun pk/ghub-grqphql--mark-pull-request-ready-for-review (id &key username auth host)
+  "Mark the pull request with the specified ID as ready for review.
+Return t if pull request is a draft.  Return nil otherwise.
+USERNAME, AUTH, and HOST behave as for `ghub-request'."
+  (let-alist (ghub-request "POST" "/graphql" nil :payload
+              (json-encode `(("query" .
+                             "mutation($id:String!) {
+                                markPullRequestReadyForReview(input:{pullRequestId:$id}) {
+                                  pullRequest { isDraft }}}")
+                             ("variables" .
+                              ((id . ,id)))))
+              :username username :auth auth :host host
+              :headers '(("Accept" . "application/vnd.github.shadow-cat-preview+json"))) ; because of GHE 2.20
+    .data.markPullRequestReadyForReview.pullRequest.isDraft))
+
 (defun pk/forge-mark-ready-for-rewiew ()
-  "Mark the thing at point as ready for review."
+  "Mark the thing (the PR) at point as ready for review."
   (interactive)
   (if-let ((url (forge-get-url (or (forge-post-at-point)
                                    (forge-current-topic))))
-           (_ (string-match "/\\([^/]+\\)/\\([^/]+\\)/pull/\\([0-9]+\\)$" url)))
-      (shell-command (concat "mark-pull-request-ready-for-review.py"
-                             " --owner " (match-string 1 url)
-                             " --repo " (match-string 2 url)
-                             " --number " (match-string 3 url)))
-    (user-error "Nothing at point that is a PR")))
+           (_ (string-match "//\\([^/]+\\)/\\([^/]+\\)/\\([^/]+\\)/pull/\\([0-9]+\\)$" url))
+           (host (car (alist-get (match-string 1 url) forge-alist nil nil #'string=)))
+           (username (magit-git-string "config" (concat "github." host ".user")))
+           (id (pk/ghub-graphql--pull-request-id
+                (match-string 2 url) (match-string 3 url) (string-to-number
+                                                           (match-string 4 url))
+                :username username :auth 'forge :host host))
+           (not-draft (not
+                       (pk/ghub-grqphql--mark-pull-request-ready-for-review
+                        id
+                        :username username :auth 'forge :host host))))
+      (message "PR %s marked as ready for review." url)
+    (user-error "Nothing at point that is a PR or mark failed")))
 
 (add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
 (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium")))
