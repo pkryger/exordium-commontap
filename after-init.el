@@ -729,8 +729,10 @@ face seems to fix the issue.")
   (add-to-list 'desktop-minor-mode-table '(company-posframe-mode nil)))
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
-(add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
-(add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium")))
+(use-package forge
+   :config
+   (add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
+   (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium"))))
 
 
 ;; Configure tabs
