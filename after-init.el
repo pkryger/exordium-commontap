@@ -204,11 +204,6 @@ Defer it so that commands launched immediately after will enjoy the benefits."
                        ".el" string-end)))))
   (desktop-restore-eager 8))
 
-(use-package which-key
-  :config
-  (which-key-mode)
-  (diminish 'which-key-mode))
-
 (defcustom pk/python-bootstrap-packages
   '("epc" "jedi" "pytest")
   "List of packages to install as a part of `python-bootstrap'.
@@ -346,53 +341,6 @@ python layout with:
                                               (setq mode-line-process nil))))))))
         (progress-reporter-done reporter))
     (message "Cannot create .envrc for %s" python-shell-interpreter)))
-
-
-(defun pk/open-url-at-point ()
-  "Open an URL at point."
-  (interactive)
-  (when-let ((url (thing-at-point 'url)))
-    (browse-url url)))
-
-(use-package helpful
-  :bind (:map global-map
-              ;; Note that the built-in `describe-function' includes both functions
-              ;; and macros. `helpful-function' is functions only, so we provide
-              ;; `helpful-callable' as a drop-in replacement.
-              ("C-h f" . #'helpful-callable)
-              ;; Look up *F*unctions (excludes macros).
-              ;; By default, C-h F is bound to `Info-goto-emacs-command-node'. Helpful
-              ;; already links to the manual, if a function is referenced there.
-              ("C-h F" . #'helpful-function)
-              ("C-h v" . #'helpful-variable)
-              ("C-h k" . #'helpful-key)
-              ;; Look up *C*ommands.
-              ;; By default, C-h C is bound to describe `describe-coding-system'. I
-              ;; don't find this very useful, but it's frequently useful to only
-              ;; look at interactive functions.
-              ("C-h C" . #'helpful-command)
-              ;; Lookup the current symbol at point. C-c C-d is a common keybinding
-              ;; for this in lisp modes.
-              :map emacs-lisp-mode-map
-              ("C-c C-d" . #'helpful-at-point)
-        (:map helpful-mode-map
-              ("C-c C-o" . #'pk/open-url-at-point)))
-  :config
-  (use-package helm
-    :custom
-    (helm-describe-variable-function #'helpful-variable)
-    (helm-describe-function-function #'helpful-function)))
-
-(use-package help-mode
-  :ensure nil
-  :bind
-  (:map help-mode-map
-        ("C-c C-o" . #'pk/open-url-at-point)))
-
-(use-package page-break-lines
-  :config
-  (add-to-list 'page-break-lines-modes 'helpful-mode)
-  (global-page-break-lines-mode))
 
 ;; Diminish some modes
 (diminish 'eldoc-mode)
