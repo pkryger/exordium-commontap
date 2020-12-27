@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 ;; emacs mac ports customisations, per
 ;; https://github.com/railwaycat/homebrew-emacsmacport
 ;; Keybonds
@@ -100,6 +101,43 @@ This will be used in be used in `pk/dispatch-cut-function'")
          ([(control ?\.)] . nil)))
 
 (set-time-zone-rule "/usr/share/zoneinfo/Europe/London")
+
+(defun exordium-helm-projectile--do-ag (&optional dir)
+  (interactive)
+  (message "dir: %s" dir)
+  (let ((project (or dir (projectile-project-root) (error "You're not in a project"))))
+    (message "project: %s" project)
+    (funcall #'run-with-timer 0.01 nil
+             #'(lambda (project)
+                 (message "project in lambda %s" project)
+                 (let ((projectile-switch-project-action #'helm-projectile-ag))
+                   (projectile-switch-project-by-name project)))
+             project)))
+
+(use-package helm-projectile
+  :bind
+  (:map helm-projectile-projects-map
+        ("C-A" . #'exordium-helm-projectile--do-ag)
+        ("C-R" . #'helm-projectile-rg))
+  :config
+  (setq helm-source-projectile-projects-actions
+        (append helm-source-projectile-projects-actions
+                (helm-make-actions
+                 "Ag in project `C-A'" #'exordium-helm-projectile--do-ag
+                 "Rg in project `C-R'" #'helm-projectile-rg))))
+
+;; (setq helm-source-projectile-projects-actions
+;;       (helm-make-actions
+;;        "Switch to project" (lambda (project)
+;;                              (let ((projectile-completion-system 'helm))
+;;                                (projectile-switch-project-by-name project)))
+;;        "Open Dired in project's directory `C-d'" #'dired
+;;        "Open project root in vc-dir or magit `M-g'" #'helm-projectile-vc
+;;        "Switch to Eshell `M-e'" #'helm-projectile-switch-to-shell
+;;        "Grep in projects `C-s'" #'helm-projectile-grep
+;;        "Compile project `M-c'. With C-u, new compile command" #'helm-projectile-compile-project
+;;        "Remove project(s) from project list `M-D'" #'helm-projectile-remove-known-project))
+
 
 (use-package flycheck
   :custom
