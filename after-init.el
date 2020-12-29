@@ -164,12 +164,6 @@ This will be used in be used in `pk/dispatch-cut-function'")
       (unless rtags-diagnostics-process
         (rtags-diagnostics)))))
 
-;; tune auto-complete
-(require 'auto-complete)
-(setq ac-auto-start nil     ;; original 0.3
-      ac-auto-show-menu nil ;; original 0.8
-      ac-delay 0.3)         ;; original 0.1
-
 (defconst pk/gc-cons-threshold (* 16 1024 1024))
 ;; From DOOM FAQ:
 ;; https://github.com/hlissner/doom-emacs/blob/64922dd/docs/faq.org#L215-L225
