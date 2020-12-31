@@ -423,6 +423,7 @@ python layout with:
               (pk/magit-smerge))))
 
 (use-package jenkinsfile-mode)
+(use-package yaml-mode)
 
 (use-package swiper
   :init
