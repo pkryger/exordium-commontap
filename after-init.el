@@ -422,6 +422,8 @@ python layout with:
                 (kbd (concat smerge-command-prefix "t")) #'pk/magit-smerge)
               (pk/magit-smerge))))
 
+(use-package jenkinsfile-mode)
+
 (use-package swiper
   :init
   (defun pk/swiper-C-r (&optional arg)
