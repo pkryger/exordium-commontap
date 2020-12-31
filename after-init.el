@@ -54,6 +54,12 @@ This will be used in be used in `pk/dispatch-cut-function'")
   (xterm-mouse-mode t)
   (defun track-mouse (e)))
 
+(use-package helm
+  :diminish
+  :bind
+  (:map helm-command-map
+        ("g" . #'helm-google-suggest)))
+
 (use-package use-package-ensure-system-package)
 (use-package quelpa-use-package)
 
