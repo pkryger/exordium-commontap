@@ -210,7 +210,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 (custom-set-faces
  '(aw-leading-char-face
    ((t
-     (:foreground "red" :bold t :height 2.5)))))
+     (:foreground "red" :bold t :height 1.5)))))
 (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
 ;; Limit scope to a frame, as the neither global nor visible play nice with tabs
 (setq aw-scope 'frame)
