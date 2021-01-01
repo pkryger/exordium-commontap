@@ -221,6 +221,17 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 ;; Limit scope to a frame, as the neither global nor visible play nice with tabs
 (setq aw-scope 'frame)
 
+(defconst pk/desktop-files-not-to-save
+  (if (version< "27" emacs-version)
+      (rx-let ((path (+ (or alnum digit "." "/" "-" "_" "~"))))
+        (rx (or (seq string-start "/" (zero-or-more (not (any "/" ":"))) ":")
+                (seq "(ftp)" string-end)
+                (seq string-start path "/emacs/" path "/lisp/" path
+                     ".el.gz" string-end)
+                (seq string-start path "/.emacs.d/elpa/" path
+                     ".el" string-end))))
+    "\\(\\`/[^/:]*:\\|(ftp)\\'\\)"))
+
 (use-package desktop
   :ensure nil
   :config
@@ -232,14 +243,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (add-to-list 'desktop-modes-not-to-save 'helpful-mode)
   (add-to-list 'desktop-modes-not-to-save 'helm-major-mode)
   :custom
-  (desktop-files-not-to-save
-        (rx-let ((path (+ (or alnum digit "." "/" "-" "_" "~"))))
-          (rx (or (seq string-start "/" (zero-or-more (not (any "/" ":"))) ":")
-                  (seq "(ftp)" string-end)
-                  (seq string-start path "/emacs/" path "/lisp/" path
-                       ".el.gz" string-end)
-                  (seq string-start path "/.emacs.d/elpa/" path
-                       ".el" string-end)))))
+  (desktop-files-not-to-save pk/desktop-files-not-to-save)
   (desktop-restore-eager 8))
 
 (defcustom pk/python-bootstrap-packages
