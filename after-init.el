@@ -63,6 +63,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
 (use-package use-package-ensure-system-package)
 (use-package quelpa-use-package)
 
+
 (use-package ispell
   :ensure-system-package aspell
   :custom
@@ -106,8 +107,13 @@ This will be used in be used in `pk/dispatch-cut-function'")
          ([(control ?\,)] . nil)
          ([(control ?\.)] . nil)))
 
+
+
 (set-time-zone-rule "/usr/share/zoneinfo/Europe/London")
 
+
+;; TODO: - this doesn't work yet
+;; try to mimic what `helm-projectile-grep' is doing
 (defun exordium-helm-projectile--do-ag (&optional dir)
   (interactive)
   (message "dir: %s" dir)
@@ -123,14 +129,14 @@ This will be used in be used in `pk/dispatch-cut-function'")
 (use-package helm-projectile
   :bind
   (:map helm-projectile-projects-map
-        ("C-A" . #'exordium-helm-projectile--do-ag)
-        ("C-R" . #'helm-projectile-rg))
+        ("C-A" . #'exordium-helm-projectile--do-ag) ;; <- TODO: this
+        ("C-R" . #'helm-projectile-rg)) ;; <- TODO: this
   :config
   (setq helm-source-projectile-projects-actions
         (append helm-source-projectile-projects-actions
                 (helm-make-actions
                  "Ag in project `C-A'" #'exordium-helm-projectile--do-ag
-                 "Rg in project `C-R'" #'helm-projectile-rg))))
+                 "Rg in project `C-R'" #'helm-projectile-rg)))) ;; <- TODO: this
 
 ;; (setq helm-source-projectile-projects-actions
 ;;       (helm-make-actions
@@ -144,6 +150,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
 ;;        "Compile project `M-c'. With C-u, new compile command" #'helm-projectile-compile-project
 ;;        "Remove project(s) from project list `M-D'" #'helm-projectile-remove-known-project))
 
+
 
 (use-package flycheck
   :custom
@@ -160,16 +167,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
 ;; update version control status (git) in mode line
 ;;(setq auto-revert-check-vc-info t)
 
-;; use f8 to start/stop rtags
-(global-set-key
- (kbd "<f8>")
- '(lambda (&optional ARG)
-    (interactive "P")
-    (if ARG (rtags-stop)
-      (rtags-start)
-      (unless rtags-diagnostics-process
-        (rtags-diagnostics)))))
-
+
 (defconst pk/gc-cons-threshold (* 16 1024 1024))
 ;; From DOOM FAQ:
 ;; https://github.com/hlissner/doom-emacs/blob/64922dd/docs/faq.org#L215-L225
@@ -200,6 +198,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (org-mode . (lambda () ;; TODO: this also needs to be after a buffer switch, including current value of `gc-cons-threshold'
                 (setq-local gcmh-high-cons-threshold (* 2 pk/gc-cons-threshold))))
   (after-init . gcmh-mode))
+
 
 (use-package deft
   :config
@@ -221,6 +220,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 ;; Limit scope to a frame, as the neither global nor visible play nice with tabs
 (setq aw-scope 'frame)
 
+
 (defconst pk/desktop-files-not-to-save
   (if (version< "27" emacs-version)
       (rx-let ((path (+ (or alnum digit "." "/" "-" "_" "~"))))
@@ -246,6 +246,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (desktop-files-not-to-save pk/desktop-files-not-to-save)
   (desktop-restore-eager 8))
 
+
 (defcustom pk/python-bootstrap-packages
   '("epc" "jedi" "pytest")
   "List of packages to install as a part of `python-bootstrap'.
@@ -383,6 +384,7 @@ python layout with:
                                               (setq mode-line-process nil))))))))
         (progress-reporter-done reporter))
     (message "Cannot create .envrc for %s" python-shell-interpreter)))
+
 
 ;; Diminish some modes
 (diminish 'eldoc-mode)
@@ -463,7 +465,7 @@ when hitting RET on a file with merge conflict `magit-status'."
 
 (use-package jenkinsfile-mode)
 (use-package yaml-mode)
-
+
 (use-package swiper
   :init
   (defun pk/swiper-C-r (&optional arg)
@@ -501,6 +503,7 @@ If the input is empty, select the previous history element instead."
    :map swiper-map
         ("C-r" . #'pk/swiper-C-r)
         ("C-c ;" . #'pk/swiper-iedit)))
+
 
 ;; Disable some ido hooks for helm mode
 (when exordium-helm-everywhere
@@ -573,6 +576,7 @@ If the input is empty, select the previous history element instead."
         ("<f8>" . org-tree-slide-mode)
         ("S-<f8>". org-tree-slide-skip-done-toggle)))
 
+
 (require 'map)
 (when (fboundp 'mac-auto-operator-composition-shape-gstring)
   (defcustom pk/mac-auto-operator-composition-strings
@@ -674,6 +678,7 @@ language."
           (lambda ()
             (setq auto-composition-mode nil)))
 
+
 (use-package mixed-pitch
   :quelpa ((mixed-pitch :fetcher git
                         :url "https://gitlab.com/pkryger/mixed-pitch.git"
@@ -755,13 +760,13 @@ face seems to fix the issue.")
   (company-posframe-mode 1)
   ;; TODO: move this to desktop configuration
   (add-to-list 'desktop-minor-mode-table '(company-posframe-mode nil)))
+
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (use-package forge
    :config
    (add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
    (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium"))))
-
 
 ;; Configure tabs
 (use-package tab-bar
