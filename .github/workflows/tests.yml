@@ -1,0 +1,35 @@
+name: CI Tests
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+  push:
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+
+jobs:
+  ci-tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            emacs_version: 26.3
+          - os: macos-latest
+            emacs_version: snapshot
+    steps:
+      - uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs_version }}
+      - uses: actions/checkout@v2
+        with:
+          repository: 'emacs-exordium/exordium'
+          path: '.emacs.d'
+      - uses: actions/checkout@v2
+        with:
+          path: '.emacs.d/taps/commontap'
+      - name: First start # So most modules are pulled in from melpa and gnu
+        run: '.emacs.d/.ci/first-start.sh .emacs.d'
