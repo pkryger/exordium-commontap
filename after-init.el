@@ -443,7 +443,7 @@ when hitting RET on a file with merge conflict `magit-status'."
      :transient nil)
     ("C-c C-k" "revert & status" pk/magit-smerge--revert-and-status
      :transient nil)
-    ("C-c C-e" "ediff" smerge-ediff
+    ("E" "ediff" smerge-ediff
      :transient nil)
     ("C-z" "undo" undo)]])
 
@@ -451,7 +451,7 @@ when hitting RET on a file with merge conflict `magit-status'."
   :ensure nil
   :bind
   (:map smerge-mode-map
-        ("t" . pk/magit-smerge-mode-dispatch)))
+        ("C-c ^ d" . pk/magit-smerge-dispatch)))
 
 (defun pk/magit-smerge-dispatch-maybe ()
   "Display `pk/magit-smerge-dispatch' when buffer is in `smerge-mode'."
@@ -460,7 +460,7 @@ when hitting RET on a file with merge conflict `magit-status'."
 
 (use-package magit
   :hook
-  (magit-diff-visit-file-hook . pk/magit-smerge-dispatch-maybe))
+  (magit-diff-visit-file . pk/magit-smerge-dispatch-maybe))
 
 
 (use-package jenkinsfile-mode)
