@@ -410,7 +410,6 @@ when hitting RET on a file with merge conflict `magit-status'."
   (revert-buffer nil t)
   (magit-status))
 
-;;;###autoload
 (define-transient-command pk/magit-smerge-dispatch ()
   "Dispatch for `smerge-mode' commands."
   :transient-suffix     'transient--do-stay
