@@ -353,77 +353,6 @@ python layout with:
 (diminish 'undo-tree-mode)
 
 
-(defcustom pk/magit-smerge-show-dispatch t
-  "When non nil automatically show `pk/magit-smerge-dispatch'
-when hitting RET on a file with merge conflict `magit-status'."
-  :type 'boolean
-  :group 'exordium)
-
-(defun pk/magit-smerge--save-and-status ()
-  "Save current buffer and run `magit-status'."
-  (interactive)
-  (save-buffer)
-  (magit-status))
-
-(defun pk/magit-smerge--revert-and-status ()
-  "Revert current buffer and run `magit-status'."
-  (interactive)
-  (revert-buffer nil t)
-  (magit-status))
-
-(use-package transient
-  :config
-  (define-transient-command pk/magit-smerge-dispatch ()
-    "Dispatch for `smerge-mode' commands."
-    :transient-suffix     'transient--do-stay
-    :transient-non-suffix 'transient--do-warn
-    [["Movement"
-      ("n" "next hunk" smerge-next)
-      ("p" "prev hunk" smerge-prev)
-      ("C-n" "next line" next-line)
-      ("C-p" "prev line" previous-line)
-      ("C-v" "scroll up" scroll-up-command)
-      ("M-v" "scroll up" scroll-down-command)
-      ("C-l" "recenter" recenter-top-bottom)]
-     ["Merge action"
-      ("b" "keep base" smerge-keep-base)
-      ("u" "keep upper" smerge-keep-upper)
-      ("l" "keep lower" smerge-keep-lower)
-      ("a" "keep all"   smerge-keep-all)
-      ("c" "keep current" smerge-keep-current)
-      ("r" "resolve" smerge-resolve)]
-     ["Diff action"
-      ("= <" "upper/base" smerge-diff-base-upper)
-      ("= =" "upper/lower" smerge-diff-upper-lower)
-      ("= >" "base/lower" smerge-diff-base-lower)
-      ("R" "refine" smerge-refine)
-      ("C" "combine with next" smerge-combine-with-next)
-      ("k" "kill current" smerge-kill-current)]
-     ["Other"
-      ("C-c C-s" "save" save-buffer)
-      ("C-c C-c" "save & status" pk/magit-smerge--save-and-status
-       :transient nil)
-      ("C-c C-k" "revert & status" pk/magit-smerge--revert-and-status
-       :transient nil)
-      ("E" "ediff" smerge-ediff
-       :transient nil)
-      ("C-z" "undo" undo)]]))
-
-(use-package smerge-mode
-  :ensure nil
-  :bind
-  (:map smerge-mode-map
-        ("C-c ^ d" . pk/magit-smerge-dispatch)))
-
-(defun pk/magit-smerge-dispatch-maybe ()
-  "Display `pk/magit-smerge-dispatch' when buffer is in `smerge-mode'."
-  (when (and smerge-mode pk/magit-smerge-show-dispatch)
-    (pk/magit-smerge-dispatch)))
-
-(use-package magit
-  :hook
-  (magit-diff-visit-file . pk/magit-smerge-dispatch-maybe))
-
 
 (use-package jenkinsfile-mode)
 (use-package yaml-mode)
