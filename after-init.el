@@ -113,42 +113,68 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 
 ;; TODO: - this doesn't work yet
-;; try to mimic what `helm-projectile-grep' is doing
-(defun exordium-helm-projectile--do-ag (&optional dir)
-  (interactive)
-  (message "dir: %s" dir)
-  (let ((project (or dir (projectile-project-root) (error "You're not in a project"))))
-    (message "project: %s" project)
-    (funcall #'run-with-timer 0.01 nil
-             #'(lambda (project)
-                 (message "project in lambda %s" project)
-                 (let ((projectile-switch-project-action #'helm-projectile-ag))
-                   (projectile-switch-project-by-name project)))
-             project)))
+(unless (fboundp 'exordium-helm-projectile--exit-helm-and-do-ag)
+  ;; try to mimic what `helm-projectile-grep' is doing
+  (defun pk/helm-projectile--exit-helm-and-do-ag ()
+    "Exit helm and run ag on first selected candidate."
+    (interactive)
+    (if-let ((project (car (helm-marked-candidates))))
+        (helm-run-after-exit #'helm-do-ag
+                             project)
+      (error "No candidates selected")))
 
-(use-package helm-projectile
-  :bind
-  (:map helm-projectile-projects-map
-        ("C-A" . #'exordium-helm-projectile--do-ag) ;; <- TODO: this
-        ("C-R" . #'helm-projectile-rg)) ;; <- TODO: this
-  :config
+  (defun pk/helm-projectile--switch-project-and-do-rg (project)
+    "Switch projct to PROJECT and run ripgrep there."
+    (interactive)
+    (let ((projectile-switch-project-action #'helm-projectile-rg))
+      (projectile-switch-project-by-name project)))
+
+  (defun pk/helm-projectile--exit-helm-and-do-rg ()
+    "Exit helm and switch project to first selected candidate and run rg there."
+    (interactive)
+    (if-let ((project (car (helm-marked-candidates))))
+        (helm-run-after-exit #'pk/helm-projectile--switch-project-and-do-rg
+                             project)
+      (error "No candidates selected")))
+
+  (use-package helm-projectile
+    :bind
+    (:map helm-projectile-projects-map
+          ("C-S-a" . #'pk/helm-projectile--exit-helm-and-do-ag)
+          ("C-S-r" . #'pk/helm-projectile--exit-helm-and-do-rg))
+    :config
+    (helm-add-action-to-source "Silver Searcher (ag) in project `C-S-a'"
+                               #'helm-do-ag
+                               helm-source-projectile-projects)
+
+    (helm-add-action-to-source "ripgrep (arg) in project `C-S-r'"
+                               #'pk/helm-projectile--switch-project-and-do-rg
+                               helm-source-projectile-projects)))
+
+(defun pk/debug-default-helm-source-projectile-projects ()
+  "TODO: this is a debug only."
+  (setq helm-source-projectile-projects
+        (helm-build-sync-source "Projectile projects"
+          :candidates (lambda () (with-helm-current-buffer projectile-known-projects))
+          :fuzzy-match helm-projectile-fuzzy-match
+          :keymap helm-projectile-projects-map
+          :mode-line helm-read-file-name-mode-line-string
+          :action 'helm-source-projectile-projects-actions)))
+(defun pk/debug-default-helm-source-projectile-projects-actions ()
+  "TODO: this is a debug only."
   (setq helm-source-projectile-projects-actions
-        (append helm-source-projectile-projects-actions
-                (helm-make-actions
-                 "Ag in project `C-A'" #'exordium-helm-projectile--do-ag
-                 "Rg in project `C-R'" #'helm-projectile-rg)))) ;; <- TODO: this
-
-;; (setq helm-source-projectile-projects-actions
-;;       (helm-make-actions
-;;        "Switch to project" (lambda (project)
-;;                              (let ((projectile-completion-system 'helm))
-;;                                (projectile-switch-project-by-name project)))
-;;        "Open Dired in project's directory `C-d'" #'dired
-;;        "Open project root in vc-dir or magit `M-g'" #'helm-projectile-vc
-;;        "Switch to Eshell `M-e'" #'helm-projectile-switch-to-shell
-;;        "Grep in projects `C-s'" #'helm-projectile-grep
-;;        "Compile project `M-c'. With C-u, new compile command" #'helm-projectile-compile-project
-;;        "Remove project(s) from project list `M-D'" #'helm-projectile-remove-known-project))
+        (helm-make-actions
+         "Switch to project" (lambda (project)
+                               (let ((projectile-completion-system 'helm))
+                                 (projectile-switch-project-by-name project)))
+         "Open Dired in project's directory `C-d'" #'dired
+         "Open project root in vc-dir or magit `M-g'" #'helm-projectile-vc
+         "Switch to Eshell `M-e'" #'helm-projectile-switch-to-shell
+         "Grep in projects `C-s'" #'helm-projectile-grep
+         "Compile project `M-c'. With C-u, new compile command" #'helm-projectile-compile-project
+         "Remove project(s) from project list `M-D'" #'helm-projectile-remove-known-project)))
+;; (pk/debug-default-helm-source-projectile-projects)
+;; (pk/debug-default-helm-source-projectile-projects-actions)
 
 
 
