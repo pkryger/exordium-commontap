@@ -113,9 +113,13 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 
 
+(use-package jenkinsfile-mode)
+(use-package yaml-mode)
 (use-package flycheck
   :custom
   (flycheck-global-modes '(not c++-mode c-mode org-mode))
+  :config
+  (flycheck-add-mode 'groovy 'jenkinsfile-mode)
   :hook
   (after-init . global-flycheck-mode))
 
@@ -352,10 +356,6 @@ python layout with:
 (diminish 'auto-revert-mode)
 (diminish 'undo-tree-mode)
 
-
-
-(use-package jenkinsfile-mode)
-(use-package yaml-mode)
 
 (use-package swiper
   :init
