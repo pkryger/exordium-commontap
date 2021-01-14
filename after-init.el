@@ -114,6 +114,15 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 
 (use-package jenkinsfile-mode)
+(use-package groovy-mode
+  :after yasnippet
+  :hook
+  (groovy-mode . yas-minor-mode)
+  :config
+  (add-to-list 'yas-snippet-dirs
+               (concat (file-name-directory (or load-file-name
+                                                buffer-file-name)) "snippets")))
+
 (use-package yaml-mode)
 (use-package flycheck
   :custom
@@ -160,7 +169,9 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (gcmh-idle-delay 5)
   (gcmh-high-cons-threshold pk/gc-cons-threshold)
   :hook
-  (org-mode . (lambda () ;; TODO: this also needs to be after a buffer switch, including current value of `gc-cons-threshold'
+  ;; TODO: this also needs to be after a buffer switch, including current value of `gc-cons-threshold'
+  ;; likely in `buffer-list-update-hook'
+  (org-mode . (lambda ()
                 (setq-local gcmh-high-cons-threshold (* 2 pk/gc-cons-threshold))))
   (after-init . gcmh-mode))
 

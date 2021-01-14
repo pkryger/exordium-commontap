@@ -1,0 +1,45 @@
+# -*- mode: snippet; require-final-newline: t -*-
+# name: groovy-test-file
+# key: .groovy-test
+# condition: (string-suffix-p "Test.groovy" (buffer-file-name))
+# type: command
+# --
+;; Top line
+(let* ((class (s-left (- (length ".groovy"))
+                      (file-name-nondirectory (buffer-file-name))))
+       (class-under-test (s-left (- (length "Test")) class))
+       (dir (file-name-directory (buffer-file-name)))
+       (package (s-replace-all
+                 '(("/" . "."))
+                 (s-left -1
+                         (s-right
+                          (- (length dir)
+                             (+ (length (projectile-project-root))
+                                (length "test/")))
+                          dir)))))
+  ;; Top line
+  (insert (format "package %s\n" (s-replace-all '(("/" . ".")) package)))
+  (newline)
+  (insert (format "import %s.%s\n" package class-under-test))
+  (insert "import spock.lang.Specification\n")
+  (newline)
+  (insert (format "class %s extends Specification {
+
+    private Object pipeline = GroovyMock()
+
+    def \"TODO: This test will always fail\"()
+    {
+        given:
+        def underTest = new %s(pipeline)
+        when:
+        underTest()
+        then: \"Always fail\"
+        false
+    }
+}
+" class class-under-test)))
+
+;; Cursor position
+(beginning-of-buffer)
+(forward-line 9)
+(forward-char 8)

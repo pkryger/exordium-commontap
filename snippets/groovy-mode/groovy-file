@@ -1,0 +1,47 @@
+# -*- mode: snippet; require-final-newline: t -*-
+# name: groovy-file
+# key: .groovy
+# condition: (string-suffix-p ".groovy" (buffer-file-name))
+# type: command
+# --
+;; Top line
+(let* ((class (s-left (- (length ".groovy"))
+                      (file-name-nondirectory (buffer-file-name))))
+       (dir (file-name-directory (buffer-file-name)))
+       (package (s-replace-all
+                 '(("/" . "."))
+                 (s-left -1
+                         (s-right
+                          (- (length dir)
+                             (+ (length (projectile-project-root))
+                                (length "src/")))
+                          dir)))))
+  ;; Top line
+  (insert (format "package %s\n" package))
+  (newline)
+  (insert (format "class %s implements Serializable {
+
+    private def pipeline
+
+    %s(def pipeline)
+    {
+        this.pipeline = pipeline
+    }
+
+    def call() {
+        // TODO: do something
+    }
+
+    private def withPipeline(Closure cl)
+    {
+        cl.delegate = this.pipeline
+        cl.resolveStrategy = Closure.DELEGATE_FIRST
+        return cl.call()
+    }
+}
+" class class)))
+
+;; Cursor position
+(beginning-of-buffer)
+(forward-line 1)
+(forward-char 8)
