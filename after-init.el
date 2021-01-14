@@ -115,10 +115,21 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 (use-package jenkinsfile-mode)
 (use-package groovy-mode
-  :after yasnippet
+  :after (yasnippet projectile)
+  :init
+  (defun pk/groovy-mode--create-test-files ()
+    (setq-local projectile-create-missing-test-files t))
   :hook
   (groovy-mode . yas-minor-mode)
+  (groovy-mode . pk/groovy-mode--create-test-files)
   :config
+  (projectile-register-project-type 'pbnj '("pom.xml" "pbnj_lib_config.yaml")
+                                    :project-file "pom.xml"
+                                    :compile "mvn clean install"
+                                    :test "mvn verify"
+                                    :test-suffix "Test"
+                                    :src-dir "src/"
+                                    :test-dir "test/")
   (add-to-list 'yas-snippet-dirs
                (concat (file-name-directory (or load-file-name
                                                 buffer-file-name)) "snippets")))
