@@ -144,6 +144,68 @@ This will be used in be used in `pk/dispatch-cut-function'")
     (annotation (format " [%s]" (get-text-property 0 'full-name arg)))))
 
 (add-to-list 'company-backends 'company-assignees)
+
+(defun pk/forge-cleanup-known-repositories ()
+  "Cleanup known repositories, that is repositories that worktree does not exist anymore."
+  (interactive)
+  (let ((to-delete (cl-remove-if
+                    (lambda (repo)
+                      (file-exists-p (nth 3 repo)))
+                    (forge-sql [:select [githost owner name worktree] :from repository
+                                        :order-by [(asc owner) (asc name)]]
+                               [githost owner name worktree]))))
+    (when (and to-delete
+               (yes-or-no-p (format
+                             "Do you really want to remove %s repositories from the db? "
+                             (length to-delete))))
+       (dolist (repo to-delete)
+         (when-let ((host (nth 0 repo))
+                    (owner (nth 1 repo))
+                    (name (nth 2 repo))
+                    (repo (forge-get-repository (list host owner name))))
+           (message "Deleting %s/%s @%s..." owner name host)
+           (let ((t0 (current-time))
+                 (emacsql-global-timeout 120))
+             (closql-delete repo)
+             (message "- deletion of %s/%s @%s took %.06f"
+                      owner name host (float-time (time-since t0))))))
+         (magit-refresh))))
+
+(defun pk/forge-cleanup-known-repositories-async ()
+  "Cleanup known repositories, that is repositories that worktree does not exist anymore."
+  (interactive)
+  (let ((to-delete (cl-remove-if
+                    (lambda (repo)
+                      (file-exists-p (nth 3 repo)))
+                    (forge-sql [:select [githost owner name worktree] :from repository
+                                        :order-by [(asc owner) (asc name)]]
+                               [githost owner name worktree]))))
+    (when (and to-delete
+               (yes-or-no-p (format
+                             "Do you really want to remove %s repositories from the db? "
+                             (length to-delete))))
+      (async-start
+       (lambda ()
+         (package-initialize) ;; TODO: this doesn't seem to work
+         (require 'forge)
+         (let (results)
+           (dolist (repo to-delete)
+             (when-let ((host (nth 0 repo))
+                        (owner (nth 1 repo))
+                        (name (nth 2 repo))
+                        (repo (forge-get-repository (list host owner name))))
+               (let ((t0 (current-time))
+                     (emacsql-global-timeout 120))
+                 (closql-delete repo)
+                 (setq results
+                       (append
+                        results
+                        (list owner name host (float-time (time-since t0))))))))
+           (magit-refresh)
+           results))
+       (lambda (results)
+         ;;TODO: dosomething
+         )))))
 
 
 (use-package jenkinsfile-mode)
