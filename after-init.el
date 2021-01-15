@@ -112,7 +112,40 @@ This will be used in be used in `pk/dispatch-cut-function'")
 (set-time-zone-rule "/usr/share/zoneinfo/Europe/London")
 
 
+(defun company-assignees (command &optional arg &rest ignored)
+  "A `company-mode' backend for `forge-mode' assignees."
+  (interactive (list 'interactive))
+  (cl-case command
+    (interactive (company-begin-backend 'pk/company-forge-assignees-backend))
+    (prefix (when (and (or (and (boundp 'git-commit-mode)
+                                git-commit-mode)
+                           (derived-mode-p 'forge-post-mode))
+                       (forge-get-repository 'full)
+                       (looking-back
+                        "@\\([a-z0-9]\\(?:[a-z0-9]\\|[-/]\\(?:[a-z0-9]\\)\\)\\{0,38\\}\\)?"
+                        (max (- (point) 40)
+                             (point-at-bol))))
+              ;; IDK how to match end of string that is "@" in neither
+              ;; `git-commit-mode' nor `forge-post-mode', hence it's handled manually.
+              ;; But first see if there was some match of a string after the "@"
+              (if-let ((symbol (match-string 1)))
+                  (cons symbol t)
+                (when (or (looking-at "\\W")
+                          (= (point) (point-max)))
+                  (cons "" t)))))
+    (candidates (when-let ((repo (forge-get-repository 'full)))
+                  (cl-remove-if-not
+                   (lambda (assignee)
+                     (string-prefix-p arg assignee))
+                   (mapcar (lambda (assignee)
+                             (propertize (cadr assignee)
+                                         'full-name (caddr assignee)))
+                           (oref repo assignees)))))
+    (annotation (format " [%s]" (get-text-property 0 'full-name arg)))))
 
+(add-to-list 'company-backends 'company-assignees)
+
+
 (use-package jenkinsfile-mode)
 (use-package groovy-mode
   :after (yasnippet projectile)
