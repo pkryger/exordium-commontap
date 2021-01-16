@@ -152,21 +152,61 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 (add-to-list 'company-backends 'company-assignees)
 
-(defun pk/forge-cleanup-known-repositories-async ()
-  "Cleanup known repositories, that is repositories that worktree does not exist anymore."
+(defun pk/forge-cleanup-known-repositories--question (to-delete)
+  "Return a human readable question about deletion of TO-DELETE repositories.
+Only up to 5 first elements from TO-DELETE are included in the
+returned question.  When length of TO-DELETE is greater than 5
+the *Messages* buffer is populated with all elements in TO-DELETE
+list.  Each element of TO-DELETE is in the same format as used in
+`pk/forge-cleanup-known-repositories'."
+  (let* ((length (length to-delete))
+         (reminder (- length 5))
+         (question
+          "Do you really want to remove the following from the db? [%s] "))
+    (if (<= reminder 0)
+        (format question
+                (pk/forge-cleanup-known-repositories--concat to-delete))
+      (message "Repositories to delete from the db: %s"
+                (pk/forge-cleanup-known-repositories--concat to-delete))
+      (format (concat
+               question
+               "and %s other %s (see *Messages* for a full list)? ")
+              (pk/forge-cleanup-known-repositories--concat
+               (cl-subseq to-delete 0 (- reminder)))
+              reminder
+              (if (= 1 reminder) "repository" "repositories")))))
+
+(defun pk/forge-cleanup-known-repositories--concat (to-delete)
+  "Return a concatenation of TO-DELETE repositories.
+Each element of TO-DELETE is in the same format as used in
+`pk/forge-cleanup-known-repositories'."
+  (mapconcat
+   (lambda (repo)
+     (pcase-let ((`(,host ,owner ,name) (cdr repo)))
+       (format "%s/%s @%s" owner name host)))
+   to-delete
+   ", "))
+
+(defun pk/forge-cleanup-known-repositories ()
+  "Cleanup forge repositories whose worktree doesn't exist anymore."
   (interactive)
   (if-let ((to-delete (cl-remove-if
                        (lambda (repo)
                          (if-let ((worktree (car repo)))
                              (file-exists-p worktree)
                            t))
-                       (forge-sql [:select [worktree githost owner name] :from repository
+                       (forge-sql [:select [worktree githost owner name]
+                                           :from repository
                                            :order-by [(asc owner) (asc name)]]
                                   [worktree githost owner name]))))
-      (when (yes-or-no-p (format
-                          "Do you really want to remove %s repositories from the db? "
-                          (length to-delete))) ;; TODO: print first 10
+      (when (yes-or-no-p (pk/forge-cleanup-known-repositories--question
+                          to-delete))
         (async-start
+         ;; To be executed in a child process.  At the time of writing
+         ;; macros did not expand nicely, and there was no^ access to local
+         ;; variables and functions.
+         ;; ^ Could get one, but that would require loading a whole exordium
+         ;;   into a child process, that seemed like an overkill.
          (lambda ()
            (package-initialize)
            (require 'forge)
@@ -177,13 +217,16 @@ This will be used in be used in `pk/dispatch-cut-function'")
                           (if-let ((worktree (car repo)))
                               (file-exists-p worktree)
                             t))
-                        (forge-sql [:select [worktree githost owner name] :from repository
+                        (forge-sql [:select [worktree githost owner name]
+                                            :from repository
                                             :order-by [(asc owner) (asc name)]]
                                    [worktree githost owner name])))
                (when-let ((forge-repo (forge-get-repository (cdr repo))))
                  (let ((t0 (current-time))
-                       (emacsql-global-timeout 120))
-                   (closql-delete forge-repo) ;; TODO: handle error
+                       ;; Timeout is huge as db ops sometimes are long.
+                       ;; And this is happening in a child process anyway.
+                       (emacsql-global-timeout 300))
+                   (closql-delete forge-repo)
                    (setq results
                          (cons (append (cdr repo)
                                        (list (float-time (time-since t0))))
@@ -193,12 +236,12 @@ This will be used in be used in `pk/dispatch-cut-function'")
            (when results (magit-refresh))
            (dolist (repo results)
              (pcase-let ((`(,host ,owner ,name ,time) repo))
-               (message "- Deleted %s/%s @%s - took %.06f"
+               (message "- Deleted %s/%s @%s - took %.06fs"
                         owner name host time)))
-           (message "Cleanup complete. Deleted %s repositories."
-                     (length results)))))
+           (message "Cleanup complete. Deleted %s %s from the db."
+                    (length results)
+                    (if (= 1 (length results)) "repository" "repositories")))))
     (message "Nothing to cleanup")))
-
 
 (use-package jenkinsfile-mode)
 (use-package groovy-mode
