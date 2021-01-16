@@ -152,33 +152,6 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 (add-to-list 'company-backends 'company-assignees)
 
-(defun pk/forge-cleanup-known-repositories ()
-  "Cleanup known repositories, that is repositories that worktree does not exist anymore."
-  (interactive)
-  (let ((to-delete (cl-remove-if
-                    (lambda (repo)
-                      (if-let ((workdir (nth 3 repo)))
-                          (file-exists-p workdir)
-                        t))
-                    (forge-sql [:select [githost owner name worktree] :from repository
-                                        :order-by [(asc owner) (asc name)]]
-                               [githost owner name worktree]))))
-    (when (yes-or-no-p (format
-                        "Do you really want to remove %s repositories from the db? "
-                        (length to-delete)))
-       (dolist (repo to-delete)
-         (when-let ((host (nth 0 repo))
-                    (owner (nth 1 repo))
-                    (name (nth 2 repo))
-                    (repo (forge-get-repository (list host owner name))))
-           (message "Deleting %s/%s @%s..." owner name host)
-           (let ((t0 (current-time))
-                 (emacsql-global-timeout 120))
-             (closql-delete repo)
-             (message "- deletion of %s/%s @%s took %.06f"
-                      owner name host (float-time (time-since t0))))))
-         (magit-refresh))))
-
 (defun pk/forge-cleanup-known-repositories-async ()
   "Cleanup known repositories, that is repositories that worktree does not exist anymore."
   (interactive)
