@@ -113,7 +113,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 
 (defun company-assignees (command &optional arg &rest ignored)
-  "A `company-mode' backend for `forge-mode' assignees."
+  "A `company-mode' backend for assigneees in `forge-mode' repository."
   (interactive (list 'interactive))
   (cl-case command
     (interactive (company-begin-backend 'pk/company-forge-assignees-backend))
@@ -125,14 +125,21 @@ This will be used in be used in `pk/dispatch-cut-function'")
                         "@\\([a-z0-9]\\(?:[a-z0-9]\\|[-/]\\(?:[a-z0-9]\\)\\)\\{0,38\\}\\)?"
                         (max (- (point) 40)
                              (point-at-bol))))
-              ;; IDK how to match end of string that is "@" in neither
-              ;; `git-commit-mode' nor `forge-post-mode', hence it's handled manually.
-              ;; But first see if there was some match of a string after the "@"
-              (if-let ((symbol (match-string 1)))
-                  (cons symbol t)
+              ;; IDK how to match end of a 'symbol' that is equal to an "@" or
+              ;; is equal to an "@foo" in neither `git-commit-mode' nor
+              ;; `forge-post-mode'. Hence it's handled manually.  The
+              ;; `looking-back' above matches an "@" or an "@foo". When it was
+              ;; the latter there was a match of the group 1. Store it before
+              ;; next search.
+              (let ((match (match-string 1)))
+                ;; Check, if this is at the very end of the "@" or "@foo".  The
+                ;; "@<point>@" also matches. Probably a few other characters,
+                ;; substituting the second "@" in latter pattern, would also
+                ;; give a positive result. Yet the `match' is "", so that's all
+                ;; fine - all candidates will be shown.
                 (when (or (looking-at "\\W")
                           (= (point) (point-max)))
-                  (cons "" t)))))
+                  (cons (or match "") t)))))
     (candidates (when-let ((repo (forge-get-repository 'full)))
                   (cl-remove-if-not
                    (lambda (assignee)
