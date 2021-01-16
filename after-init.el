@@ -184,42 +184,46 @@ This will be used in be used in `pk/dispatch-cut-function'")
   (interactive)
   (if-let ((to-delete (cl-remove-if
                        (lambda (repo)
-                         (if-let ((workdir (nth 3 repo)))
-                             (file-exists-p workdir)
+                         (if-let ((worktree (car repo)))
+                             (file-exists-p worktree)
                            t))
-                       (forge-sql [:select [githost owner name worktree] :from repository
+                       (forge-sql [:select [worktree githost owner name] :from repository
                                            :order-by [(asc owner) (asc name)]]
-                                  [githost owner name worktree]))))
+                                  [worktree githost owner name]))))
       (when (yes-or-no-p (format
                           "Do you really want to remove %s repositories from the db? "
-                          (length to-delete)))
-        (async-start ;; TODO: this doesn't seem to work
+                          (length to-delete))) ;; TODO: print first 10
+        (async-start
          (lambda ()
            (package-initialize)
            (require 'forge)
            (let (results)
-             (dolist (repo to-delete)
-               (when-let ((host (nth 0 repo))
-                          (owner (nth 1 repo))
-                          (name (nth 2 repo))
-                          (repo (forge-get-repository (list host owner name))))
+             (dolist
+                 (repo (cl-remove-if
+                        (lambda (repo)
+                          (if-let ((worktree (car repo)))
+                              (file-exists-p worktree)
+                            t))
+                        (forge-sql [:select [worktree githost owner name] :from repository
+                                            :order-by [(asc owner) (asc name)]]
+                                   [worktree githost owner name])))
+               (when-let ((forge-repo (forge-get-repository (cdr repo))))
                  (let ((t0 (current-time))
                        (emacsql-global-timeout 120))
-                   (closql-delete repo) ;; TODO: handle error
-                   (push results
-                         (list owner name host (float-time (time-since t0)))))))
+                   (closql-delete forge-repo) ;; TODO: handle error
+                   (setq results
+                         (cons (append (cdr repo)
+                                       (list (float-time (time-since t0))))
+                               results)))))
              results))
          (lambda (results)
-           (message ("Cleanup complete. Deleted %s repositories."
-                     (length results)))
            (when results (magit-refresh))
            (dolist (repo results)
-             (let ((host (nth 0 repo))
-                   (owner (nth 1 repo))
-                   (name (nth 2 repo))
-                   (time (nth 3 repo)))
+             (pcase-let ((`(,host ,owner ,name ,time) repo))
                (message "- Deleted %s/%s @%s - took %.06f"
-                        owner name host time))))))
+                        owner name host time)))
+           (message "Cleanup complete. Deleted %s repositories."
+                     (length results)))))
     (message "Nothing to cleanup")))
 
 
