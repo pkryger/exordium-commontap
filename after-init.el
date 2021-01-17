@@ -152,15 +152,20 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 (add-to-list 'company-backends 'company-assignees)
 
-(defun pk/forge-cleanup-known-repositories--question (to-delete)
-  "Return a human readable question about deletion of TO-DELETE repositories.
-Only up to 5 first elements from TO-DELETE are included in the
-returned question.  When length of TO-DELETE is greater than 5
-the *Messages* buffer is populated with all elements in TO-DELETE
-list.  Each element of TO-DELETE is in the same format as used in
+(defun pk/forge-cleanup-known-repositories--question (to-delete &optional number)
+  "Return a question about deletion of up to NUMBER of TO-DELETE repositories.
+
+Only up to NUMBER first elements from TO-DELETE are included in
+the returned question.  When length of TO-DELETE is greater than
+NUMBER the *Messages* buffer is populated with all elements in
+TO-DELETE list.
+
+Default value of NUMBER is 5.
+
+Each element of TO-DELETE is in the same format as used in
 `pk/forge-cleanup-known-repositories'."
   (let* ((length (length to-delete))
-         (reminder (- length 5))
+         (reminder (- length (or number 5)))
          (question
           "Do you really want to remove the following from the db? [%s] "))
     (if (<= reminder 0)
@@ -176,6 +181,45 @@ list.  Each element of TO-DELETE is in the same format as used in
               reminder
               (if (= 1 reminder) "repository" "repositories")))))
 
+(ert-deftest test-pk/forge-cleanup-known-repositories--question-messages-for-all ()
+  (let* ((to-delete '((1 1 1 1) (2 2 2 2) (3 3 3 3)))
+         (message-call-args ""))
+    (cl-letf (((symbol-function 'message)
+               (lambda (&rest args)
+                 (setq message-call-args
+                       (s-append (cadr args) message-call-args)))))
+      (pk/forge-cleanup-known-repositories--question to-delete 1))
+    (should (s-contains-p "1/1 @1" message-call-args))
+    (should (s-contains-p "2/2 @2" message-call-args))
+    (should (s-contains-p "3/3 @3" message-call-args))))
+
+(ert-deftest test-pk/forge-cleanup-known-repositories--question-plural-for-two-more ()
+  (let* ((to-delete '((1 1 1 1) (2 2 2 2) (3 3 3 3)))
+         (question (pk/forge-cleanup-known-repositories--question to-delete 1)))
+    (should (s-contains-p "1/1 @1" question))
+    (should (s-contains-p "and 2 other repositories" question))
+    (should-not (s-contains-p "2/2 @2" question))
+    (should-not (s-contains-p "3/3 @3" question))))
+
+(ert-deftest test-pk/forge-cleanup-known-repositories--question-singular-for-one-more ()
+  (let* ((to-delete '((1 1 1 1) (2 2 2 2)))
+         (question (pk/forge-cleanup-known-repositories--question to-delete 1)))
+    (should (s-contains-p "1/1 @1" question))
+    (should (s-contains-p "and 1 other repository" question))
+    (should-not (s-contains-p "2/2 @2" question))))
+
+(ert-deftest test-pk/forge-cleanup-known-repositories--question-default-number-is-5 ()
+  (let* ((to-delete '((1 1 1 1) (2 2 2 2) (3 3 3 3)
+                      (4 4 4 4) (5 5 5 5) (6 6 6 6)))
+         (question (pk/forge-cleanup-known-repositories--question to-delete)))
+    (should (s-contains-p "1/1 @1" question))
+    (should (s-contains-p "2/2 @2" question))
+    (should (s-contains-p "3/3 @3" question))
+    (should (s-contains-p "4/4 @4" question))
+    (should (s-contains-p "5/5 @5" question))
+    (should (s-contains-p "and 1 other repository" question))
+    (should-not (s-contains-p "6/6 @6" question))))
+
 (defun pk/forge-cleanup-known-repositories--concat (to-delete)
   "Return a concatenation of TO-DELETE repositories.
 Each element of TO-DELETE is in the same format as used in
@@ -186,6 +230,18 @@ Each element of TO-DELETE is in the same format as used in
        (format "%s/%s @%s" owner name host)))
    to-delete
    ", "))
+
+(ert-deftest test-pk/forge-cleanup-known-repositories--concat-1 ()
+  (let ((to-delete '(("worktree-1" "host-1" "owner-1" "name-1"))))
+    (should (string= "owner-1/name-1 @host-1"
+                     (pk/forge-cleanup-known-repositories--concat to-delete)))))
+
+(ert-deftest test-pk/forge-cleanup-known-repositories--concat-2 ()
+  (let ((to-delete '(("worktree-1" "host-1" "owner-1" "name-1")
+                     ("worktree-2" "host-2" "owner-2" "name-2"))))
+    (should (string= (concat "owner-1/name-1 @host-1, "
+                             "owner-2/name-2 @host-2")
+                     (pk/forge-cleanup-known-repositories--concat to-delete)))))
 
 (defun pk/forge-cleanup-known-repositories ()
   "Cleanup forge repositories whose worktree doesn't exist anymore."
@@ -202,9 +258,10 @@ Each element of TO-DELETE is in the same format as used in
       (when (yes-or-no-p (pk/forge-cleanup-known-repositories--question
                           to-delete))
         (async-start
-         ;; To be executed in a child process.  At the time of writing
-         ;; macros did not expand nicely, and there was no^ access to local
-         ;; variables and functions.
+         ;; Deletion can be very slow and could block UI. To be executed in a
+         ;; child process.  At the time of writing macros did not expand
+         ;; nicely, and there was no^ access to local variables and functions.
+         ;;
          ;; ^ Could get one, but that would require loading a whole exordium
          ;;   into a child process, that seemed like an overkill.
          (lambda ()
