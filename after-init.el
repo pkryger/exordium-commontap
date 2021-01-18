@@ -300,7 +300,11 @@ Each element of TO-DELETE is in the same format as used in
                     (if (= 1 (length results)) "repository" "repositories")))))
     (message "Nothing to cleanup")))
 
-(use-package jenkinsfile-mode)
+(use-package jenkinsfile-mode
+  :after flycheck
+  :config
+  (flycheck-add-mode 'groovy 'jenkinsfile-mode))
+
 (use-package groovy-mode
   :after (yasnippet projectile)
   :init
@@ -322,11 +326,11 @@ Each element of TO-DELETE is in the same format as used in
                                                 buffer-file-name)) "snippets")))
 
 (use-package yaml-mode)
+
+
 (use-package flycheck
   :custom
   (flycheck-global-modes '(not c++-mode c-mode org-mode))
-  :config
-  (flycheck-add-mode 'groovy 'jenkinsfile-mode)
   :hook
   (after-init . global-flycheck-mode))
 
