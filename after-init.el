@@ -170,7 +170,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
   (projectile-register-project-type 'pbnj '("pom.xml" "pbnj_lib_config.yaml")
                                     :project-file "pom.xml"
                                     :compile "mvn clean install"
-                                    :test "mvn verify"
+                                    :test "mvn --batch-mode verify"
                                     :test-suffix "Test"
                                     :src-dir "src/"
                                     :test-dir "test/")

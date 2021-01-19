@@ -1,6 +1,6 @@
 # -*- mode: snippet; require-final-newline: t -*-
-# name: groovy-test-file
-# key: .groovy-test
+# name: pbnj-test
+# key: pbnj-test
 # condition: (string-suffix-p "Test.groovy" (buffer-file-name))
 # type: command
 # --
@@ -20,7 +20,6 @@
   ;; Top line
   (insert (format "package %s\n" (s-replace-all '(("/" . ".")) package)))
   (newline)
-  (insert (format "import %s.%s\n" package class-under-test))
   (insert "import spock.lang.Specification\n")
   (newline)
   (insert (format "class %s extends Specification {
@@ -31,8 +30,10 @@
     {
         given:
         def underTest = new %s(pipeline)
+
         when:
         underTest()
+
         then: \"Always fail\"
         false
     }
@@ -41,5 +42,5 @@
 
 ;; Cursor position
 (beginning-of-buffer)
-(forward-line 9)
+(forward-line 8)
 (forward-char 8)

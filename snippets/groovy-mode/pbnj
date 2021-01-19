@@ -1,6 +1,6 @@
 # -*- mode: snippet; require-final-newline: t -*-
-# name: groovy-file
-# key: .groovy
+# name: pbnj
+# key: pbnj
 # condition: (string-suffix-p ".groovy" (buffer-file-name))
 # type: command
 # --
