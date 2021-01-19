@@ -193,6 +193,9 @@ This will be used in be used in `pk/dispatch-cut-function'")
 ;; Alias for C-c r [
 (define-key c-mode-base-map [(control >)] (function rtags-location-stack-forward))
 
+(use-package compile
+  :custom
+  (compilation-scroll-output 'first-error))
 ;; update version control status (git) in mode line
 ;;(setq auto-revert-check-vc-info t)
 
