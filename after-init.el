@@ -179,6 +179,303 @@ This will be used in be used in `pk/dispatch-cut-function'")
                                                 buffer-file-name)) "snippets")))
 
 (use-package yaml-mode)
+
+(cl-defstruct pk/flip-string-test-case
+  (input nil :read-only t)           ;; text to be used in a temp buffer
+  (point-or-region nil :read-only t) ;; a point (a number) or a region (a list)
+                                     ;; in a temp buffer
+  output)                            ;; text after the test in a temp buffer
+
+
+(defmacro with-pk/flip-string-test-case (test-case &rest body)
+  "Execute BODY using a temporary buffer created according to TEST-CASE.
+Return the BODY return value"
+  (declare (ident defun))
+  `(let ((input (pk/flip-string-test-case-input ,test-case))
+         (point-or-region (pk/flip-string-test-case-point-or-region ,test-case)))
+     (with-temp-buffer
+       ;; Use `python-mode' for it richness of supported string formats.
+       (when (numberp point-or-region)
+         (let (python-mode-hook)
+           (python-mode)))
+       (insert input)
+       (cond
+        ((numberp point-or-region)
+         (goto-char point-or-region))
+        ((and point-or-region
+              (listp point-or-region))
+         (set-mark (car point-or-region))
+         (goto-char (cadr point-or-region))
+         (activate-mark)))
+       (prog1
+           ,@body
+         (setf (pk/flip-string-test-case-output ,test-case)
+               (substring-no-properties (buffer-string)))))))
+
+(ert-deftest test-pk/flip-string--even-chars-between-one-dash ()
+  (let ((test-case (make-pk/flip-string-test-case
+                    :input "...-.")))
+    (should-not (with-pk/flip-string-test-case test-case
+                 (pk/flip-string--even-chars-between ?- 2 5)))))
+
+(ert-deftest test-pk/flip-string--even-chars-between-two-dashes ()
+  (let ((test-case (make-pk/flip-string-test-case
+                    :input "...--.")))
+    (should (with-pk/flip-string-test-case test-case
+             (pk/flip-string--even-chars-between ?- 2 6)))))
+
+(ert-deftest test-pk/flip-string--even-chars-between-three-dashes ()
+  (let ((test-case (make-pk/flip-string-test-case
+                    :input "...---.")))
+    (should-not (with-pk/flip-string-test-case test-case
+                 (pk/flip-string--even-chars-between ?- 2 7)))))
+
+(ert-deftest test-pk/flip-string--even-chars-between-four-dashes ()
+  (let ((test-case (make-pk/flip-string-test-case
+                    :input "...----.")))
+    (should (with-pk/flip-string-test-case test-case
+             (pk/flip-string--even-chars-between ?- 2 8)))))
+
+(ert-deftest test-pk/flip-string--even-chars-between-one-dash-begin ()
+  (let ((test-case (make-pk/flip-string-test-case
+                    :input "...-.")))
+    (should-not (with-pk/flip-string-test-case test-case
+                 (pk/flip-string--even-chars-between ?- 4 5)))))
+
+(ert-deftest test-pk/flip-string--even-chars-between-two-dashes-begin ()
+  (let ((test-case (make-pk/flip-string-test-case
+                    :input "...--.")))
+    (should (with-pk/flip-string-test-case test-case
+             (pk/flip-string--even-chars-between ?- 4 6)))))
+
+(ert-deftest test-pk/flip-string--even-chars-between-three-dashes-begin ()
+  (let ((test-case (make-pk/flip-string-test-case
+                    :input "...---.")))
+    (should-not (with-pk/flip-string-test-case test-case
+                 (pk/flip-string--even-chars-between ?- 4 7)))))
+
+(ert-deftest test-pk/flip-string--even-chars-between-four-dashes-begin ()
+  (let ((test-case (make-pk/flip-string-test-case
+                    :input "...----.")))
+    (should (with-pk/flip-string-test-case test-case
+             (pk/flip-string--even-chars-between ?- 4 8)))))
+
+(defun pk/flip-string--even-chars-between (char pos-start pos-end)
+  "Return t when there is an even number of CHAR between POS-START and POS-END.
+The check is starting from `char-before' the POS-END and
+continues until at most POS-START."
+  (let ((offset 0)
+        even)
+    (while (and (< pos-start (- pos-end offset 1))
+                (eq (char-before (- pos-end offset)) char)
+                (eq (char-before (- pos-end offset 1)) char))
+      (setq even (if (< pos-start (- pos-end offset 2))
+                     (not (eq (char-before (- pos-end offset 2)) char))
+                   t))
+      (incf offset 2))
+    even))
+
+(defun pk/tmp-yank-quoted-string ()
+  "Yank a sting escaping it for emacs-lisp."
+  (interactive)
+  (insert (cl-prin1-to-string (substring-no-properties (current-kill 0)))))
+
+(defconst pk/flip-string--data
+  '(("foo01 = \"a string\"" . "foo01 = 'a string'")
+    ("foo02 = 'a string'" . "foo02 = \"a string\"")
+    ("foo03 = \"\"\"a string\"\"\"" . "foo03 = '''a string'''")
+    ("foo04 = '''a string'''" . "foo04 = \"\"\"a string\"\"\"")
+    ("foo05 = \"a string 'with quote'\"" . "foo05 = 'a string \\'with quote\\''")
+    ("foo06 = 'a string \"with quote\"'" . "foo06 = \"a string \\\"with quote\\\"\"")
+    ("foo07 = \"a string \\\\'with quote\\\\'\"" . "foo07 = 'a string \\\\\\'with quote\\\\\\''")
+    ("foo08 = \"a string \\'with quote\\'\"" . "foo08 = 'a string \\'with quote\\''")
+    ("foo09 = 'a string \\\\\"with quote\\\\\"'" . "foo09 = \"a string \\\\\\\"with quote\\\\\\\"\"")
+    ("foo10 = 'a string \\\"with quote\\\"'" . "foo10 = \"a string \\\"with quote\\\"\"")
+    ("foo11 = \"\"\"a string 'with quote'\"\"\"" . "foo11 = '''a string 'with quote\\''''")
+    ("foo12 = '''a string \"with quote\"'''" . "foo12 = \"\"\"a string \"with quote\\\"\"\"\"")
+    ("foo13 = \"\"\"a string \"with quote\\\"\"\"\"" . "foo13 = '''a string \"with quote\"'''")
+    ("foo14 = '''a string 'with quote\\''''" . "foo14 = \"\"\"a string 'with quote'\"\"\"")
+    ("foo15 = \"\"\"a string \"\"with quote\"\\\"\"\"\"" . "foo15 = '''a string \"\"with quote\"\"'''")
+    ("foo16 = '''a string ''with quote'\\''''" . "foo16 = \"\"\"a string ''with quote''\"\"\"")
+    ("foo17 = \"\"\"a string 'with quote\\\\'\"\"\"" . "foo17 = '''a string 'with quote\\\\\\''''")
+    ("foo18 = '''a string \"with quote\\\\\"'''" . "foo18 = \"\"\"a string \"with quote\\\\\\\"\"\"\"")
+    ("foo19 = \"\"\"a string \"with quote\\\\\\\"\"\"\"" . "foo19 = '''a string \"with quote\\\\\"'''")
+    ("foo20 = '''a string 'with quote\\\\\\''''" . "foo20 = \"\"\"a string 'with quote\\\\'\"\"\"")
+    ("foo21 = \"\"\"a string '''with quote'''\"\"\"" . "foo21 = '''a string \\'\\'\\'with quote\\'\\'\\''''")
+    ("foo22 = \"\"\"a string ''with quote''\"\"\"" . "foo22 = '''a string ''with quote'\\''''")
+    ("foo23 = '''a string \"\"\"with quote\"\"\"'''" . "foo23 = \"\"\"a string \\\"\\\"\\\"with quote\\\"\\\"\\\"\"\"\"")
+    ("foo24 = '''a string \"\"with quote\"\"'''" . "foo24 = \"\"\"a string \"\"with quote\"\\\"\"\"\"")
+    ("foo25 = \"\"\"a string \\\"\\\"\\\"with quote\\\"\\\"\\\"\"\"\"" . "foo25 = '''a string \"\"\"with quote\"\"\"'''")
+    ("foo26 = '''a string \\'\\'\\'with quote\\'\\'\\''''" . "foo26 = \"\"\"a string '''with quote'''\"\"\"")
+    ("foo27 = \"\"\"a string \"with quote\" and something\"\"\"" . "foo27 = '''a string \"with quote\" and something'''")
+    ("foo28 = \"\"\"a string \"\"with quote\"\" and something\"\"\"" . "foo28 = '''a string \"\"with quote\"\" and something'''")
+    ("foo29 = '''a string 'with quote' and something'''" . "foo29 = \"\"\"a string 'with quote' and something\"\"\"")
+    ("foo30 = '''a string ''with quote'' and something'''" . "foo30 = \"\"\"a string ''with quote'' and something\"\"\"")))
+
+(ert-deftest test-pk/flip-string-quotes-point ()
+  (dolist (datum pk/flip-string--data)
+    (let ((test-case (make-pk/flip-string-test-case
+                      :input (car datum)
+                      :point-or-region 12))
+          (expected (cdr datum)))
+      (with-pk/flip-string-test-case test-case  (pk/flip-string-quotes))
+      (should (string= expected
+                       (pk/flip-string-test-case-output test-case))))))
+
+(ert-deftest test-pk/flip-string-quotes-region ()
+  (dolist (datum pk/flip-string--data)
+    (let ((test-case (make-pk/flip-string-test-case
+                      :input (car datum)
+                      :point-or-region `(9 ,(+ 9 (length (car datum))))))
+          (expected (cdr datum)))
+      (with-pk/flip-string-test-case test-case  (pk/flip-string-quotes))
+      (should (string= expected
+                       (pk/flip-string-test-case-output test-case))))))
+
+(defconst pk/flip-string--flip-inner-data
+  '(("foo01 = \"a string\"" . "foo01 = 'a string'")
+    ("foo02 = 'a string'" . "foo02 = \"a string\"")
+    ("foo03 = \"\"\"a string\"\"\"" . "foo03 = '''a string'''")
+    ("foo04 = '''a string'''" . "foo04 = \"\"\"a string\"\"\"")
+    ("foo05 = \"a string 'with quote'\"" . "foo05 = 'a string \"with quote\"'")
+    ("foo06 = 'a string \"with quote\"'" . "foo06 = \"a string 'with quote'\"")
+    ("foo07 = \"a string \\\\'with quote\\\\'\"" . "foo07 = 'a string \\\\\"with quote\\\\\"'")
+    ("foo08 = \"a string \\'with quote\\'\"" . "foo08 = 'a string \\\"with quote\\\"'")
+    ("foo09 = 'a string \\\\\"with quote\\\\\"'" . "foo09 = \"a string \\\\'with quote\\\\'\"")
+    ("foo10 = 'a string \\\"with quote\\\"'" . "foo10 = \"a string \\'with quote\\'\"")
+    ("foo11 = \"\"\"a string 'with quote'\"\"\"" . "foo11 = '''a string \"with quote\"'''")
+    ("foo12 = '''a string \"with quote\"'''" . "foo12 = \"\"\"a string 'with quote'\"\"\"")
+    ("foo13 = \"\"\"a string \"with quote\\\"\"\"\"" . "foo13 = '''a string 'with quote\\''''")
+    ("foo14 = '''a string 'with quote\\''''" . "foo14 = \"\"\"a string \"with quote\\\"\"\"\"")
+    ("foo15 = \"\"\"a string \"\"with quote\"\\\"\"\"\"" . "foo15 = '''a string ''with quote'\\''''")
+    ("foo16 = '''a string ''with quote'\\''''" . "foo16 = \"\"\"a string \"\"with quote\"\\\"\"\"\"")
+    ("foo17 = \"\"\"a string 'with quote\\\\'\"\"\"" . "foo17 = '''a string \"with quote\\\\\"'''")
+    ("foo18 = '''a string \"with quote\\\\\"'''" . "foo18 = \"\"\"a string 'with quote\\\\'\"\"\"")
+    ("foo19 = \"\"\"a string \"with quote\\\\\\\"\"\"\"" . "foo19 = '''a string 'with quote\\\\\\''''")
+    ("foo20 = '''a string 'with quote\\\\\\''''" . "foo20 = \"\"\"a string \"with quote\\\\\\\"\"\"\"")
+    ("foo21 = \"\"\"a string '''with quote'''\"\"\"" . "foo21 = '''a string \"\"\"with quote\"\"\"'''")
+    ("foo22 = \"\"\"a string ''with quote''\"\"\"" . "foo22 = '''a string \"\"with quote\"\"'''")
+    ("foo23 = '''a string \"\"\"with quote\"\"\"'''" . "foo23 = \"\"\"a string '''with quote'''\"\"\"")
+    ("foo24 = '''a string \"\"with quote\"\"'''" . "foo24 = \"\"\"a string ''with quote''\"\"\"")
+    ("foo25 = \"\"\"a string \\\"\\\"\\\"with quote\\\"\\\"\\\"\"\"\"" . "foo25 = '''a string \\'\\'\\'with quote\\'\\'\\''''")
+    ("foo26 = '''a string \\'\\'\\'with quote\\'\\'\\''''" . "foo26 = \"\"\"a string \\\"\\\"\\\"with quote\\\"\\\"\\\"\"\"\"")
+    ("foo27 = \"\"\"a string \"with quote\" and something\"\"\"" . "foo27 = '''a string 'with quote' and something'''")
+    ("foo28 = \"\"\"a string \"\"with quote\"\" and something\"\"\"" . "foo28 = '''a string ''with quote'' and something'''")
+    ("foo29 = '''a string 'with quote' and something'''" . "foo29 = \"\"\"a string \"with quote\" and something\"\"\"")
+    ("foo30 = '''a string ''with quote'' and something'''" . "foo30 = \"\"\"a string \"\"with quote\"\" and something\"\"\"")))
+
+(ert-deftest test-pk/flip-string-quotes-point-flip-inner ()
+  (dolist (datum pk/flip-string--flip-inner-data)
+    (let ((test-case (make-pk/flip-string-test-case
+                      :input (car datum)
+                      :point-or-region 12))
+          (expected (cdr datum)))
+      (with-pk/flip-string-test-case test-case  (pk/flip-string-quotes t))
+      (should (string= expected
+                       (pk/flip-string-test-case-output test-case))))))
+
+(ert-deftest test-pk/flip-string-quotes-region-flip-inner ()
+  (dolist (datum pk/flip-string--flip-inner-data)
+    (let ((test-case (make-pk/flip-string-test-case
+                      :input (car datum)
+                      :point-or-region `(9 ,(+ 9 (length (car datum))))))
+          (expected (cdr datum)))
+      (with-pk/flip-string-test-case test-case  (pk/flip-string-quotes t))
+      (should (string= expected
+                       (pk/flip-string-test-case-output test-case))))))
+
+(defun pk/flip-string-quotes (&optional flip-inner)
+  "Flip quotes in a string.
+
+Unless a region is active use syntax in the current buffer to
+determine the string at point.  When a region is active ignore syntax
+in current buffer and assume the active region is the string.
+
+With a FLIP-INNER prefix, also flip all quotes in the string.
+Otherwise escape quotes in the inner string (rationalising escaping)."
+  (interactive "P")
+  (save-restriction
+    (widen)
+    (save-excursion
+      (when-let ((ppss (or (region-active-p)
+                           (syntax-ppss)))
+                 (orig-start (if (region-active-p)
+                                 (min (region-beginning) (region-end))
+                               (nth 8 ppss)))
+                 (orig-quote (char-after orig-start))
+                 (new-quote (pcase orig-quote
+                              (?\' ?\")
+                              (?\" ?\')))
+                 (orig-end (if (region-active-p)
+                               (max (region-beginning) (region-end))
+                             (save-excursion
+                               (goto-char orig-start)
+                               (forward-sexp)
+                               (point))))
+                 ;; assume generic string delimiter has a length of 3
+                 (quote-length (if (region-active-p)
+                                   (if (and (< 5 (- orig-end orig-start))
+                                            (eq orig-quote
+                                                (char-after (+ 1 orig-start)))
+                                            (eq orig-quote
+                                                (char-after (+ 2 orig-start))))
+                                       3
+                                     1)
+                                   (pcase (nth 3 ppss)
+                                     ((pred booleanp) 3)
+                                     (_ 1)))))
+        (goto-char orig-start)
+        (delete-char quote-length)
+        (insert-char new-quote quote-length)
+        (while (< (point) (- orig-end quote-length))
+          (if flip-inner
+              (if-let ((a-quote (pcase (char-after)
+                                  (?\' ?\")
+                                  (?\" ?\'))))
+                  (progn
+                    (delete-char 1)
+                    (insert-char a-quote))
+                (forward-char))
+            (cond
+             ((eq (char-after) new-quote)
+              (if (eq quote-length 1)
+                  (when (or (not (eq (char-before) ?\\))
+                            (pk/flip-string--even-chars-between ?\\ orig-start (point)))
+                    (insert-char ?\\)
+                    (incf orig-end))
+                (when (and (< (point) (- orig-end 2))
+                           (eq (char-after (+ 1 (point))) new-quote)
+                           (eq (char-after (+ 2 (point))) new-quote))
+                  ;; assume generic string delimeter has a length of 3
+                  (insert-char ?\\)
+                  (forward-char)
+                  (insert-char ?\\)
+                  (forward-char)
+                  (insert-char ?\\)
+                  (incf orig-end 3))))
+             ((and
+               (eq (char-after) orig-quote)
+               (eq (char-before) ?\\))
+              (backward-char)
+              (delete-char 1)
+              (decf orig-end)))
+            (forward-char)))
+        ;; A special case: the if the last quote in a string with a generic
+        ;; string delimiter `(eq quote-length 3)' is the same as the new-quote
+        ;; it needs to be escaped (or the flipped string will end up
+        ;; prematurely).
+        (when (and (not flip-inner)
+                   (eq (char-before) new-quote)
+                   (eq quote-length 3)
+                   (< 5 (- orig-end orig-start))
+                   (or
+                    (not (eq (char-before (- (point) 1)) ?\\))
+                    (pk/flip-string--even-chars-between ?\\ orig-start (- (point) 1))))
+          (backward-char)
+          (insert-char ?\\)
+          (forward-char))
+        (delete-char quote-length)
+        (insert-char new-quote quote-length)))))
 
 
 (use-package flycheck
