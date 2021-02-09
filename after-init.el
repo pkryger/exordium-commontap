@@ -64,6 +64,10 @@ This will be used in be used in `pk/dispatch-cut-function'")
 (use-package quelpa-use-package)
 
 
+(use-package orderless
+  :custom
+  (completion-styles '(orderless)))
+
 (use-package ispell
   :ensure-system-package aspell
   :custom
