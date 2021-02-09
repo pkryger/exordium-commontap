@@ -183,7 +183,6 @@ This will be used in be used in `pk/dispatch-cut-function'")
                                                 buffer-file-name)) "snippets")))
 
 (use-package yaml-mode)
-
 
 (use-package flycheck
   :custom
