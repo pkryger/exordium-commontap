@@ -64,6 +64,10 @@ This will be used in be used in `pk/dispatch-cut-function'")
 (use-package quelpa-use-package)
 
 
+(use-package orderless
+  :custom
+  (completion-styles '(orderless)))
+
 (use-package ispell
   :ensure-system-package aspell
   :custom
@@ -297,9 +301,16 @@ The first file found in a project will be used."
   :ensure nil
   :custom
   (python-shell-interpreter  "python3")
-  :hook
-  (python-mode . (lambda ()
-                   (setq fill-column 100))))
+  ;; :hook
+  ;; (python-mode . (lambda ()
+  ;;                  (setq fill-column 100)))
+  )
+
+(use-package toml
+  :quelpa ((toml :fetcher git
+                 :url "https://github.com/pkryger/emacs-toml.git"
+                 :branch "fixes")
+           :upgrade t))
 
 (use-package py-autopep8
   ;; TODO: add if requested
@@ -307,7 +318,14 @@ The first file found in a project will be used."
   :ensure t
   :custom
   (py-autopep8-options  '("--max-line-length" "100"))
-  :hook (python-mode . py-autopep8-enable-on-save))
+  ;; :hook (python-mode . py-autopep8-enable-on-save)
+  )
+
+(use-package python-black
+  :ensure-system-package black
+  :ensure t
+  ;; :hook (python-mode . python-black-on-save-mode)
+  )
 
 (use-package python-pytest
   :ensure t
@@ -319,8 +337,9 @@ The first file found in a project will be used."
 
 (use-package company-jedi
   :ensure t
-  :hook
-  (python-mode . jedi-mode) ;; needs `jedi' and `epc' to be available
+  ;; :hook
+  ;; (python-mode . jedi-mode) ;; needs `jedi' and `epc' to be available
+  ;; (python-mode . jedi:setup)
   :config
   (add-to-list 'company-backends 'company-jedi)
   (setq jedi:server-command
@@ -333,6 +352,12 @@ The first file found in a project will be used."
   :ensure t
   :config
   (direnv-mode))
+
+;; TODO: investigate using of `.dir-locals.el', i.e., sth like
+;; ((python-mode . ((eval . (python-black-on-save-mode))
+;;                  (eval . (jedi:setup))
+;;                  (fill-column . 99))))
+
 
 (defun pk/python-bootstrap (dir)
   "In a given `DIR' bootstrap python environment.
@@ -506,9 +531,7 @@ If the input is empty, select the previous history element instead."
                                              :max 1))
                     :secret)))
       (when secret
-        ;; TODO: Update handling of `gitlab': see `ghub--auth'
-        ;; - Private-Token header
-        ;; - no "token" prefix
+        ;; TODO: probably use Basic for everything, like in pk/jaas-auth-header
         (concat "token "
                 (encode-coding-string (if (functionp secret)
                                           (funcall secret)
