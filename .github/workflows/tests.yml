@@ -26,7 +26,7 @@ jobs:
           version: ${{ matrix.emacs_version }}
       - uses: actions/checkout@v2
         with:
-          repository: 'pkryger/exordium'
+          repository: 'emacs-exordium/exordium'
           ref: 'refactor-init-lisp'
           path: '.emacs.d'
       - uses: actions/checkout@v2
