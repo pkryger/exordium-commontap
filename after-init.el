@@ -376,19 +376,19 @@ python layout with:
               (insert (concat "export PYTHONPATH=" srcdir ":${PYTHONPATH}\n")))
             (insert (concat "layout_" python "\n"))))
         (progress-reporter-update
-         reporter (incf progress) "[allowing direnv...]")
+         reporter (cl-incf progress) "[allowing direnv...]")
         (direnv-allow)
         (when-let ((buf (get-buffer "*Shell Command Output*")))
           (with-current-buffer buf
             (erase-buffer)))
         (dolist (package pk/python-bootstrap-packages)
           (progress-reporter-update
-           reporter (incf progress) (format "[installing %s...]" package))
+           reporter (cl-incf progress) (format "[installing %s...]" package))
           (let ((shell-command-dont-erase-buffer 'end-last-out))
             (shell-command (concat (s-join " " pip-command) " " package))))
         (when requirements
           (progress-reporter-update
-           reporter (incf progress) (format "[installing from %s...]"
+           reporter (cl-incf progress) (format "[installing from %s...]"
                                             (file-name-base requirements)))
           (lexical-let ((out-buffer (get-buffer-create
                                      (concat "*python-bootstrapper*<" project ">")))
