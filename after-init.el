@@ -357,7 +357,8 @@ The first file found in a project will be used."
 ;; ((python-mode . ((eval . (python-black-on-save-mode))
 ;;                  (eval . (jedi:setup))
 ;;                  (fill-column . 99))))
-
+;; TODO: investigate installing when only `setup.cfg' is available, with somehting like:
+;; $ pip install -e '.[testing,docs,format]'
 
 (defun pk/python-bootstrap (dir)
   "In a given `DIR' bootstrap python environment.
