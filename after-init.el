@@ -356,8 +356,11 @@ The first file found in a project will be used."
 ;; TODO: investigate using of `.dir-locals.el', i.e., sth like
 ;; ((python-mode . ((eval . (python-black-on-save-mode))
 ;;                  (eval . (jedi:setup))
-;;                  (fill-column . 99))))
-;; TODO: investigate installing when only `setup.cfg' is available, with somehting like:
+;;                  (fill-column . 99)
+;;                  (flycheck-python-flake8-executable . (concat (getenv "VIRTUAL_ENV")"/bin/python")) ??
+;;                  (flycheck-python-pylint-executable . "<VENV-PATH>/bin/python"))))
+;;                  and more flycheck-python stuff (i.e., mypy)
+;; TODO: investigate installing when only `setup.cfg' is available, with something like:
 ;; $ pip install -e '.[testing,docs,format]'
 
 (defun pk/python-bootstrap (dir)
@@ -400,7 +403,7 @@ python layout with:
             (when-let ((srcdir (f-join dir "src"))
                        (_exists (file-directory-p srcdir)))
               (insert (concat "export PYTHONPATH=" srcdir ":${PYTHONPATH}\n")))
-            (insert (concat "layout_" python "\n"))))
+            (insert (concat "layout " python "\n"))))
         (progress-reporter-update
          reporter (cl-incf progress) "[allowing direnv...]")
         (direnv-allow)
@@ -508,6 +511,7 @@ If the input is empty, select the previous history element instead."
 ;; Load R as well
 (use-package ess
   :config
+  (remove-hook 'ess-r-mode-hook 'ess-r-setup-flymake)
   (require 'ess-site)
   (org-babel-do-load-languages
    'org-babel-load-languages
