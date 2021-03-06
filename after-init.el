@@ -62,7 +62,14 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 (use-package use-package-ensure-system-package)
 (use-package quelpa-use-package)
-
+
+(use-package elisp-mode
+  :ensure nil
+  :bind
+  (:map emacs-lisp-mode-map
+        ("C-c ." . #'xref-find-definitions)
+        ("C-c ," . #'xref-pop-marker-stack)
+        ("C-c ?" . #'helpful-at-point)))
 
 (use-package orderless
   :custom
