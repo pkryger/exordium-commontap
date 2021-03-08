@@ -518,6 +518,7 @@ If the input is empty, select the previous history element instead."
 ;; Load R as well
 (use-package ess
   :config
+  (require 'ess-r-mode)
   (remove-hook 'ess-r-mode-hook 'ess-r-setup-flymake)
   (require 'ess-site)
   (org-babel-do-load-languages
