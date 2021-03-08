@@ -291,6 +291,17 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (desktop-restore-eager 8))
 
 
+(defun pk/flycheck-enable-python-mypy ()
+  "Enable `python-mypy' checker in current project."
+  (interactive)
+  (mapc (lambda (buf)
+          (with-current-buffer buf
+            (when (and (eq major-mode 'python-mode)
+                       flycheck-mode)
+              (flycheck--toggle-checker 'python-mypy t)
+              (flycheck-buffer))))
+        (projectile-project-buffers)))
+
 (defcustom pk/python-bootstrap-packages
   '("epc" "jedi" "pytest")
   "List of packages to install as a part of `python-bootstrap'.
