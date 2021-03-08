@@ -291,7 +291,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (desktop-restore-eager 8))
 
 
-(defun pk/flycheck-enable-python-mypy ()
+(defun pk/project-enable-flycheck-python-mypy ()
   "Enable `python-mypy' checker in current project."
   (interactive)
   (mapc (lambda (buf)
@@ -302,10 +302,21 @@ Defer it so that commands launched immediately after will enjoy the benefits."
               (flycheck-buffer))))
         (projectile-project-buffers)))
 
+(defun pk/python-site-packages-wip ()
+  ;; TODO: doesn't work in venv with pythonpath
+  (s-split
+   ", "
+   (s-replace-all
+    '(("'" . ""))
+    (substring
+     (s-trim (shell-command-to-string
+              (concat python-shell-interpreter " -c 'import sys; print(sys.path)'")))
+     1 -1))))
+
 (defcustom pk/python-bootstrap-packages
-  '("epc" "jedi" "pytest")
+  '("pytest" "mypy")
   "List of packages to install as a part of `python-bootstrap'.
-N.B. The `epc' and `jedi' are required for completion support.
+N.B. The `mypy' is optional but necessary for `flycheck'.
      The `pytest' is optional but necessary for `python-pytest'."
   :type 'list)
 
@@ -345,6 +356,7 @@ The first file found in a project will be used."
   ;; :hook (python-mode . python-black-on-save-mode)
   )
 
+;; TODO: use projectile to jump between tests and implementation as well as run tests
 (use-package python-pytest
   :ensure t
   :bind (:map python-mode-map
@@ -353,15 +365,20 @@ The first file found in a project will be used."
   (setq python-pytest-executable
         (concat python-shell-interpreter " -m pytest")))
 
-(use-package company-jedi
+(use-package anaconda-mode
   :ensure t
-  ;; :hook
-  ;; (python-mode . jedi-mode) ;; needs `jedi' and `epc' to be available
-  ;; (python-mode . jedi:setup)
+  :custom
+  (anaconda-mode-use-posframe-show-doc t)
+  :hook
+  (python-mode . anaconda-mode)
+  (python-mode . anaconda-eldoc-mode))
+
+(use-package company-anaconda
+  :ensure t
+  :after company
   :config
-  (add-to-list 'company-backends 'company-jedi)
-  (setq jedi:server-command
-        (list python-shell-interpreter jedi:server-script)))
+  (add-to-list 'company-backends '(company-anaconda :with company-capf)))
+
 
 ;; See https://blog.adam-uhlir.me/python-virtual-environments-made-super-easy-with-direnv-307611c3a49a
 ;; for layout thing
@@ -372,12 +389,19 @@ The first file found in a project will be used."
   (direnv-mode))
 
 ;; TODO: investigate using of `.dir-locals.el', i.e., sth like
-;; ((python-mode . ((eval . (python-black-on-save-mode))
-;;                  (eval . (jedi:setup))
-;;                  (fill-column . 99)
-;;                  (flycheck-python-flake8-executable . (concat (getenv "VIRTUAL_ENV")"/bin/python")) ??
-;;                  (flycheck-python-pylint-executable . "<VENV-PATH>/bin/python"))))
-;;                  and more flycheck-python stuff (i.e., mypy)
+;; ((python-mode . ((fill-column . 100)
+;;                  (eval . (progn
+;;                            (when-let ((venv (getenv "VIRTUAL_ENV")))
+;;                              (setq-local python-shell-virtualenv-root
+;;                                          (pythonic-python-readable-file-name venv))
+;;                              (when (string-prefix-p venv (buffer-file-name))
+;;                                (read-only-mode)
+;;                                (flycheck-mode -1)))
+;;                            (setq-local python-shell-extra-pythonpaths
+;;                                        (list
+;;                                         (concat (projectile-project-root) "src")
+;;                                         (concat (projectile-project-root) "tests")))
+;;                            (python-black-on-save-mode))))))
 ;; TODO: investigate installing when only `setup.cfg' is available, with something like:
 ;; $ pip install -e '.[testing,docs,format]'
 
@@ -385,7 +409,6 @@ The first file found in a project will be used."
   "In a given `DIR' bootstrap python environment.
 Such a bootstrap will provide a dedicated virtual environment via `direnv'
 python layout with:
-- `jedi' completion support,
 - `pytest' for running tests,
 - install packages from `pk/python-bootstrap-packages',
 - install packages from the first requirements file from
