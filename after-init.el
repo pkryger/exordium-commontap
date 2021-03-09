@@ -67,9 +67,11 @@ This will be used in be used in `pk/dispatch-cut-function'")
   :ensure nil
   :bind
   (:map emacs-lisp-mode-map
-        ("C-c ." . #'xref-find-definitions)
-        ("C-c ," . #'xref-pop-marker-stack)
-        ("C-c ?" . #'helpful-at-point)))
+        ;; Follow Anaconda default mapping
+        ("M-." . #'xref-find-definitions)
+        ("M-," . #'xref-pop-marker-stack)
+        ("M-r" . #'xref-find-references)
+        ("M-?" . #'helpful-at-point)))
 
 (use-package orderless
   :custom
