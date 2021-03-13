@@ -24,6 +24,7 @@ jobs:
       - uses: purcell/setup-emacs@master
         with:
           version: ${{ matrix.emacs_version }}
+      - run: 'rm -rf .emacs.d'
       - uses: actions/checkout@v2
         with:
           repository: 'emacs-exordium/exordium'
