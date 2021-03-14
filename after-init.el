@@ -93,9 +93,6 @@ This will be used in be used in `pk/dispatch-cut-function'")
 (use-package flyspell
   :diminish
   :init
-  (use-package flyspell-correct-helm
-    :config
-    (setq flyspell-correct-interface #'flyspell-correct-helm))
 
   (defun pk/flyspell-jump-and-correct-word (event)
     (interactive "e")
@@ -120,6 +117,10 @@ This will be used in be used in `pk/dispatch-cut-function'")
          ([(control ?\,)] . nil)
          ([(control ?\.)] . nil)))
 
+(use-package flyspell-correct-helm
+  :after flyspell
+  :custom
+  (flyspell-correct-interface #'flyspell-correct-helm))
 
 
 (set-time-zone-rule "/usr/share/zoneinfo/Europe/London")
