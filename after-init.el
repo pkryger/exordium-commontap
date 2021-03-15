@@ -73,6 +73,10 @@ This will be used in be used in `pk/dispatch-cut-function'")
         ("M-r" . #'xref-find-references)
         ("M-?" . #'helpful-at-point)))
 
+(use-package dumb-jump
+  :config
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
+
 (use-package orderless
   :custom
   (completion-styles '(orderless)))
