@@ -42,12 +42,6 @@ This will be used in be used in `pk/dispatch-cut-function'")
 (setq disabled-command-function nil)
 (setq confirm-kill-emacs 'y-or-n-p)
 
-;; A shorter list of packages
-(when (string= exordium-melpa-package-repo exordium-pinned-melpa-package-repo)
-  (cl-delete-if (lambda (elt)
-                  (string= "melpa" (car elt)))
-                package-archives))
-
 ;; ITERM2 MOUSE SUPPORT from https://www.emacswiki.org/emacs/iTerm2
 (unless window-system
   (require 'mouse)
