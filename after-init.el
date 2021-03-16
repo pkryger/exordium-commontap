@@ -46,7 +46,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
 (unless window-system
   (require 'mouse)
   (xterm-mouse-mode t)
-  (defun track-mouse (e)))
+  (defun track-mouse (_)))
 
 (use-package helm
   :diminish
