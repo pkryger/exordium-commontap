@@ -69,7 +69,13 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 (use-package dumb-jump
   :config
-  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+  :bind
+  (:map c-mode-base-map
+        ;; Override exordium's greedy rtags
+        ("M-." . #'xref-find-definitions)
+        ("M-," . #'xref-pop-marker-stack)))
+
 
 (use-package orderless
   :custom
