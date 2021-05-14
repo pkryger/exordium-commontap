@@ -838,4 +838,10 @@ face seems to fix the issue.")
 (quelpa '(basic-stats :fetcher github
                       :repo "pkryger/basic-stats"
                       :branch "main"))
+
+
+(use-package git-link
+  :after (magit transient)
+  :config
+  (transient-append-suffix 'magit-file-dispatch "g" '(1 "f" "copy link" git-link)))
 ;;
