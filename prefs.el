@@ -1,6 +1,6 @@
 (setq exordium-desktop t)
 (setq exordium-helm-everywhere t)
-(setq exordium-theme 'solarized-light)
+(setq exordium-theme nil)
 (setq exordium-fci-mode :prog)
 (setq exordium-fci-use-dashes :two)
 (setq exordium-progress-bar t)

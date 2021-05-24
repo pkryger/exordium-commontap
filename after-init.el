@@ -1,4 +1,34 @@
 ;; -*- lexical-binding: t; -*-
+
+
+(use-package modus-themes
+  :init
+  ;; Add all your customizations prior to loading the themes
+  (setq modus-themes-slanted-constructs t
+        modus-themes-region 'bg-only-no-extend
+        modus-themes-mode-line 'borderless-accented
+        modus-themes-subtle-line-numbers t
+        modus-themes-completions 'moderate
+        modus-themes-org-blocks 'gray-background
+        modus-themes-headings '((t . line-no-bold))
+        modus-themes-variable-pitch-ui t
+        modus-themes-variable-pitch-headings t
+        modus-themes-scale-headings t)
+
+  (defun pk/modus-themes--org-faces ()
+    (set-face-attribute 'exordium-org-work nil :inherit 'org-todo :foreground (modus-themes-color 'orange-intense))
+    (set-face-attribute 'exordium-org-wait nil :inherit 'org-todo :foreground (modus-themes-color 'cyan)))
+
+  ;; load the theme files before enabling a theme (else you get an error).
+  (modus-themes-load-themes)
+  :hook
+  (modus-themes-after-load-theme . pk/modus-themes--org-faces)
+  :config
+  ;; Load the theme of your choice:
+  (modus-themes-load-operandi) ;; OR (modus-themes-load-vivendi)
+  :bind ("<f5>" . modus-themes-toggle))
+
+
 ;; emacs mac ports customisations, per
 ;; https://github.com/railwaycat/homebrew-emacsmacport
 ;; Keybonds
@@ -715,73 +745,6 @@ language."
             (setq auto-composition-mode nil)))
 
 
-(use-package mixed-pitch
-  :quelpa ((mixed-pitch :fetcher git
-                        :url "https://gitlab.com/pkryger/mixed-pitch.git"
-                        :branch "different-cursor")
-           :upgrade t)
-  :when exordium-osx
-  :custom
-  (mixed-pitch-fixed-pitch-cursor 'box)
-  :init
-  ;; TODO: move to exordium or to mixed-pitch-mode
-  (defcustom pk/mixed-pitch--inhibit-modes
-    '(yaml-mode
-      nxml-mode)
-    "TODO: List of major modes that the `mixed-pitch-mode' should not be activated.
-This is useful, when certain modes are derived from modes that `mixed-pitch-mode'
-is activated."
-    :type 'list)
-
-  ;; TODO: move this to exordium
-  (defun pk/mixed-pitch--enable-mode-maybe ()
-    (unless (or (and (boundp 'mixed-pitch-mode)
-                     mixed-pitch-mode)
-                (memq major-mode pk/mixed-pitch--inhibit-modes)
-                (seq-intersection minor-mode-list pk/mixed-pitch--inhibit-modes))
-      (mixed-pitch-mode)))
-
-  :config
-  ;; TODO: move to exordium and make configurable
-  (set-face-attribute 'variable-pitch nil
-                      :family (caar exordium-preferred-variable-fonts)
-                      :height (cdar exordium-preferred-variable-fonts)
-                      :weight 'normal)
-  ;; TODO: Using `mixed-pitch-set-height' has issues with zooming text
-  ;; either with `text-scale-mode' nor with `default-text-scale-mode'.
-  ;; (setq mixed-pitch-set-height t)
-
-  ;; TODO: move this to exordium theme
-  (defface exordium-org-strike-through '((t (:strike-through t)))
-    "Face to be used as a strike through in `org-mode'.
-The default definition of a face for `+' is `(:strike-through)'.
-However this makes `org-mode' to pick up some random font,
-and not the one set as a `variable-pitch'. Making this a proper
-face seems to fix the issue.")
-  ;; TODO: move this to exordium theme
-  (custom-set-variables '(org-emphasis-alist
-                          (append
-                           (seq-filter (lambda (elt)
-                                         (not (string= "+" (car elt))))
-                                       org-emphasis-alist)
-                           '(("+" exordium-org-strike-through (:strike-through t)))))
-                        '(org-fontify-whole-heading-line t))
-
-  ;; TODO: move this to exordium
-  (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-date)
-  (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-todo)
-  (add-to-list 'mixed-pitch-fixed-pitch-faces 'org-done)
-  (add-to-list 'mixed-pitch-fixed-pitch-faces 'exordium-org-wait)
-  (add-to-list 'mixed-pitch-fixed-pitch-faces 'exordium-org-work)
-
-  :hook
-  ;;TODO: move to exordium and make a configurable list
-  ((text-mode . pk/mixed-pitch--enable-mode-maybe)
-   ;; markdown-mode and org-mode inherit from text-mode
-   ;; (markdown-mode . pk/mixed-pitch--enable-mode-maybe)
-   ;; (org-mode . pk/mixed-pitch--enable-mode-maybe)
-   (gfm-mode . pk/mixed-pitch--enable-mode-maybe)))
-
 ;; TODO: move to exordium and likely hide behind the
 ;; `exordium-use-variable-pitch' and `exordium-complete-mode' set to `:company'
 (use-package company-posframe
@@ -808,7 +771,7 @@ face seems to fix the issue.")
 (use-package tab-bar
   :ensure nil
   :custom
-  (tab-bar-separator "⎞⎛")
+  (tab-bar-separator "¦")
   (tab-bar-tab-hints t)
   (tab-bar-select-tab-modifiers '(hyper))
   (tab-bar-show t)
@@ -844,4 +807,5 @@ face seems to fix the issue.")
   :after (magit transient)
   :config
   (transient-append-suffix 'magit-file-dispatch "g" '(1 "f" "copy link" git-link)))
+
 ;;
