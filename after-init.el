@@ -381,7 +381,6 @@ The first file found in a project will be used."
 (use-package py-autopep8
   ;; TODO: add if requested
   :ensure-system-package autopep8
-  :ensure t
   :custom
   (py-autopep8-options  '("--max-line-length" "100"))
   ;; :hook (python-mode . py-autopep8-enable-on-save)
@@ -389,13 +388,11 @@ The first file found in a project will be used."
 
 (use-package python-black
   :ensure-system-package black
-  :ensure t
   ;; :hook (python-mode . python-black-on-save-mode)
   )
 
 ;; TODO: use projectile to jump between tests and implementation as well as run tests
 (use-package python-pytest
-  :ensure t
   :bind (:map python-mode-map
               ("C-c t" . python-pytest-dispatch))
   :init
@@ -403,7 +400,6 @@ The first file found in a project will be used."
         (concat python-shell-interpreter " -m pytest")))
 
 (use-package anaconda-mode
-  :ensure t
   :custom
   (anaconda-mode-use-posframe-show-doc t)
   :hook
@@ -411,17 +407,24 @@ The first file found in a project will be used."
   (python-mode . anaconda-eldoc-mode))
 
 (use-package company-anaconda
-  :ensure t
   :after company
   :config
   (add-to-list 'company-backends '(company-anaconda :with company-capf)))
 
+(projectile-register-project-type 'python-nox '("noxfile.py")
+                                  :project-file "noxfile.py"
+                                  :compile "nox"
+                                  :test "python -m pytest -vv"
+                                  :test-prefix "test_"
+                                  :test-suffix"_test")
+
+(projectile-update-project-type 'python-pip
+                                :test "python -m pytest -vv")
 
 ;; See https://blog.adam-uhlir.me/python-virtual-environments-made-super-easy-with-direnv-307611c3a49a
 ;; for layout thing
 (use-package direnv
   :ensure-system-package direnv
-  :ensure t
   :config
   (direnv-mode))
 
