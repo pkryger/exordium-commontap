@@ -10,7 +10,9 @@
         modus-themes-subtle-line-numbers t
         modus-themes-completions 'moderate
         modus-themes-org-blocks 'gray-background
-        modus-themes-headings '((t . line-no-bold))
+        modus-themes-headings '((1 . rainbow-line-no-bold)
+                                (2 . rainbow-line-no-bold)
+                                (t . rainbow-no-bold))
         modus-themes-variable-pitch-ui t
         modus-themes-variable-pitch-headings t
         modus-themes-scale-headings t)
