@@ -772,18 +772,131 @@ language."
    (add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
    (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium"))))
 
+
 ;; Configure tabs
 (use-package tab-bar
   :ensure nil
+  :init
+  (defun pk/tab-bar--separator (first last current-tab previous-current-tab)
+    "Return a `tab-bar' separator in a form of a propertized  \" ¦ \".
+
+When FIRST the leading space will be omitted.  When LAST the
+trailing space will be omitted.  When CURRENT-TAB then trailing
+space and the ?¦ will have 'tab-bar-tab face property.  WHEN
+PREVIOUS-CURRENT-TAB then leading space and the ?¦ will have
+'tab-bar-tab face property.  All the reminder parts of SEPARATOR
+will have 'tab-bar-tab-inactive face property."
+    (concat
+     (unless first
+       (propertize " " 'face (if previous-current-tab
+                                 'tab-bar-tab
+                               'tab-bar-tab-inactive)))
+     (propertize "¦" 'face (if (or current-tab previous-current-tab)
+                               'tab-bar-tab
+                             'tab-bar-tab-inactive))
+     (unless last
+       (propertize " " 'face (if current-tab
+                                 'tab-bar-tab
+                               'tab-bar-tab-inactive)))))
+
   :custom
-  (tab-bar-separator "¦")
+  (tab-bar-separator #'pk/tab-bar--separator)
   (tab-bar-tab-hints t)
   (tab-bar-select-tab-modifiers '(hyper))
   (tab-bar-show t)
+
+  :config
+  (define-advice tab-bar-make-keymap-1 (:override (&rest _args) pk/tab-bar-make-keymap-1)
+    (let* ((separator (or tab-bar-separator (if window-system " " "|")))
+           (i 0)
+           (tabs (funcall tab-bar-tabs-function))
+           previous-current)
+      (append
+       '(keymap (mouse-1 . tab-bar-handle-mouse))
+       (when tab-bar-history-mode
+         `((sep-history-back menu-item ,(if (functionp separator)
+                                            (funcall separator t nil nil nil)
+                                          separator)
+                             ignore)
+           (history-back
+            menu-item ,tab-bar-back-button tab-bar-history-back
+            :help "Click to go back in tab history")
+           (sep-history-forward menu-item ,(if (functionp separator)
+                                               (funcall separator
+                                                        nil (not tabs)
+                                                        nil nil)
+                                             separator)
+                                ignore)
+           (history-forward
+            menu-item ,tab-bar-forward-button tab-bar-history-forward
+            :help "Click to go forward in tab history")))
+       (mapcan
+        (lambda (tab)
+          (setq i (1+ i))
+          (append
+           `((,(intern (format "sep-%i" i)) menu-item
+              ,(if (functionp separator)
+                   (funcall separator
+                            (and (eql i 1) (not tab-bar-history-mode)) nil
+                            (eq (car tab) 'current-tab) previous-current)
+                 separator)
+              ignore))
+           (cond
+            ((eq (car tab) 'current-tab)
+             (setq previous-current t)
+             `((current-tab
+                menu-item
+                ,(propertize (concat (if tab-bar-tab-hints (format "%d " i) "")
+                                     (alist-get 'name tab)
+                                     (or (and tab-bar-close-button-show
+                                              (not (eq tab-bar-close-button-show
+                                                       'non-selected))
+                                              tab-bar-close-button) ""))
+                             'face 'tab-bar-tab)
+                ignore
+                :help "Current tab")))
+            (t
+             (setq previous-current nil)
+             `((,(intern (format "tab-%i" i))
+                menu-item
+                ,(propertize (concat (if tab-bar-tab-hints (format "%d " i) "")
+                                     (alist-get 'name tab)
+                                     (or (and tab-bar-close-button-show
+                                              (not (eq tab-bar-close-button-show
+                                                       'selected))
+                                              tab-bar-close-button) ""))
+                             'face 'tab-bar-tab-inactive)
+                ,(or
+                  (alist-get 'binding tab)
+                  `(lambda ()
+                     (interactive)
+                     (tab-bar-select-tab ,i)))
+                :help "Click to visit tab"))))
+           `((,(if (eq (car tab) 'current-tab) 'C-current-tab (intern (format "C-tab-%i" i)))
+              menu-item ""
+              ,(or
+                (alist-get 'close-binding tab)
+                `(lambda ()
+                   (interactive)
+                   (tab-bar-close-tab ,i)))))))
+        tabs)
+       `((sep-add-tab menu-item
+                      ,(if (functionp separator)
+                           (funcall separator
+                                    nil t
+                                    nil previous-current)
+                         separator)
+                      ignore))
+       (when (and tab-bar-new-button-show tab-bar-new-button)
+         `((add-tab menu-item ,tab-bar-new-button tab-bar-new-tab
+                    :help "New tab"))))))
+
   :bind (:map global-map
               ("M-<tab>" . #'tab-next)
               ("M-S-<tab>" . #'tab-previous)
               ("H-t" . #'tab-new)))
+
+
 
 ;; evil likes to turn itself on, let's disable it so no surprises
 (use-package evil
@@ -806,6 +919,8 @@ language."
 (quelpa '(basic-stats :fetcher github
                       :repo "pkryger/basic-stats"
                       :branch "main"))
+
+
 
 
 (use-package git-link
