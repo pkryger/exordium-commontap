@@ -777,25 +777,30 @@ language."
 (use-package tab-bar
   :ensure nil
   :init
-  (defun pk/tab-bar--separator (first last current-tab previous-current-tab)
+  (defun pk/tab-bar--separator (type current)
     "Return a `tab-bar' separator in a form of a propertized  \" ¦ \".
 
-When FIRST the leading space will be omitted.  When LAST the
-trailing space will be omitted.  When CURRENT-TAB then trailing
-space and the ?¦ will have 'tab-bar-tab face property.  WHEN
-PREVIOUS-CURRENT-TAB then leading space and the ?¦ will have
-'tab-bar-tab face property.  All the reminder parts of SEPARATOR
-will have 'tab-bar-tab-inactive face property."
+When TYPE is 'first and not in `tab-bar-history-mode' or TYPE is
+'first-history the leading space will be omitted.  When type is LAST the
+trailing space will be omitted.
+
+When CURRENT is 'this then trailing space and the ?¦ will have
+'tab-bar-tab face property.  When CURRENT is 'previous then
+leading space and the ?¦ will have 'tab-bar-tab face property.
+All the reminder parts of the separator will have
+'tab-bar-tab-inactive face property."
     (concat
-     (unless first
-       (propertize " " 'face (if previous-current-tab
+     (unless (or (eq type 'first-history)
+                 (and (not tab-bar-history-mode)
+                      (eq type 'first)))
+       (propertize " " 'face (if (eq current 'previous)
                                  'tab-bar-tab
                                'tab-bar-tab-inactive)))
-     (propertize "¦" 'face (if (or current-tab previous-current-tab)
+     (propertize "¦" 'face (if current
                                'tab-bar-tab
                              'tab-bar-tab-inactive))
-     (unless last
-       (propertize " " 'face (if current-tab
+     (unless (eq type 'last)
+       (propertize " " 'face (if (eq current 'this)
                                  'tab-bar-tab
                                'tab-bar-tab-inactive)))))
 
@@ -815,16 +820,14 @@ will have 'tab-bar-tab-inactive face property."
        '(keymap (mouse-1 . tab-bar-handle-mouse))
        (when tab-bar-history-mode
          `((sep-history-back menu-item ,(if (functionp separator)
-                                            (funcall separator t nil nil nil)
+                                            (funcall separator 'first-history nil)
                                           separator)
                              ignore)
            (history-back
             menu-item ,tab-bar-back-button tab-bar-history-back
             :help "Click to go back in tab history")
            (sep-history-forward menu-item ,(if (functionp separator)
-                                               (funcall separator
-                                                        nil (not tabs)
-                                                        nil nil)
+                                               (funcall separator 'mid-history nil)
                                              separator)
                                 ignore)
            (history-forward
@@ -837,8 +840,10 @@ will have 'tab-bar-tab-inactive face property."
            `((,(intern (format "sep-%i" i)) menu-item
               ,(if (functionp separator)
                    (funcall separator
-                            (and (eql i 1) (not tab-bar-history-mode)) nil
-                            (eq (car tab) 'current-tab) previous-current)
+                            (when (eq i 1) 'first)
+                            (cond
+                             ((eq (car tab) 'current-tab) 'this)
+                             (previous-current 'previous)))
                  separator)
               ignore))
            (cond
@@ -882,9 +887,7 @@ will have 'tab-bar-tab-inactive face property."
         tabs)
        `((sep-add-tab menu-item
                       ,(if (functionp separator)
-                           (funcall separator
-                                    nil t
-                                    nil previous-current)
+                           (funcall separator 'last (if previous-current 'previous))
                          separator)
                       ignore))
        (when (and tab-bar-new-button-show tab-bar-new-button)
