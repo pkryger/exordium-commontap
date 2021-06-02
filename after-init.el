@@ -931,4 +931,75 @@ All the reminder parts of the separator will have
   :config
   (transient-append-suffix 'magit-file-dispatch "g" '(1 "f" "copy link" git-link)))
 
+
+(defun pk/insert-link-dwim (make-link-string insert-link &optional arg)
+  "Insert a link with a personal dwim preferences.
+
+Use MAKE-LINK-STRING to create a link string to be inserted.
+Use INSERT-LINK with ARG to prompt user for a link to be inserted.
+
+Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
+  (let* ((point-in-link (org-in-regexp org-link-any-re 1))
+         (clipboard-url (when (string-match-p "^http" (current-kill 0))
+                          (current-kill 0)))
+         (region-content (when (region-active-p)
+                           (buffer-substring-no-properties (region-beginning)
+                                                           (region-end)))))
+    (cond ((and region-content clipboard-url (not point-in-link))
+           (delete-region (region-beginning) (region-end))
+           (insert (funcall make-link-string clipboard-url region-content)))
+          ((and clipboard-url (not point-in-link))
+           (insert (funcall
+                    make-link-string
+                    clipboard-url
+                    (read-string "title: "
+                                 (with-current-buffer (url-retrieve-synchronously clipboard-url)
+                                   (dom-text (car
+                                              (dom-by-tag (libxml-parse-html-region
+                                                           (point-min)
+                                                           (point-max))
+                                                          'title))))))))
+          (t
+           (let ((current-prefix-arg arg))
+             (call-interactively insert-link))))))
+
+(defun pk/markdown--make-link-string (link &optional description)
+  "Make a markdown link consisting of LINK and DESCRIPTION.
+
+When LINK is a [REF] return a reference link in a form [DESCRIPTION][REF].
+When no DESCRIPTION return a link in a form <LINK>.
+Otherwise return a link in a form [DESCRIPTION](LINK)."
+  (if (not description)
+      (concat "<" link ">")
+    (concat "[" description "]"
+            (if (string-match "\\`\\[\\(.*\\)\\]\\'" link)
+                link
+              (concat "(" link ")")))))
+
+(defun pk/org-insert-link-dwim (&optional complete-file)
+  "Like `org-insert-link' but with dwim features.
+
+See `org-insert-link' for COMPLETE-FILE description.
+Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
+  (interactive "P")
+  (pk/insert-link-dwim 'org-link-make-string 'org-insert-link complete-file))
+
+(defun pk/markdown-insert-link-dwim ()
+  "Like `markdown-insert-link' but with dwim features.
+
+Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
+  (interactive)
+  (pk/insert-link-dwim 'pk/markdown--make-link-string 'markdown-insert-link))
+
+(use-package org
+  :bind
+  (:map org-mode-map
+        ([remap org-insert-link] . #'pk/org-insert-link-dwim)))
+
+(use-package markdown-mode
+  :bind
+  (:map markdown-mode-map
+        ([remap markdown-insert-link] . #'pk/markdown-insert-link-dwim)))
+
+
 ;;
