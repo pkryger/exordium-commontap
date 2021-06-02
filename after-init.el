@@ -219,7 +219,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
   :config
   (projectile-register-project-type 'pbnj '("pom.xml" "pbnj_lib_config.yaml")
                                     :project-file "pom.xml"
-                                    :compile "mvn clean install"
+                                    :compile "pbnj_release_brancher --branch=release-dev --remote=pkryger"
                                     :test "mvn --batch-mode verify"
                                     :test-suffix "Test"
                                     :src-dir "src/"
