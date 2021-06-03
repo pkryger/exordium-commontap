@@ -45,6 +45,7 @@
   (global-set-key [(hyper z)] 'undo)
   (global-set-key [(hyper q)] 'save-buffers-kill-emacs)
 
+  (setq mac-emulate-three-button-mouse t)
   (setq mac-option-modifier 'meta)
   (setq mac-right-option-modifier 'meta)
   (setq mac-command-modifier 'hyper)
@@ -130,13 +131,6 @@ This will be used in be used in `pk/dispatch-cut-function'")
   :diminish
   :init
 
-  (defun pk/flyspell-jump-and-correct-word (event)
-    (interactive "e")
-    (deactivate-mark)
-    (mouse-set-point event)
-    (redisplay)
-    (flyspell-correct-word-before-point event (point)))
-
   :config
   (setq flyspell-issue-message-flag nil)
 
@@ -145,10 +139,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
    (org-mode        . flyspell-mode)
    (text-mode       . flyspell-mode))
 
-  :bind (:map flyspell-mouse-map
-         ([mouse-2] . nil)
-         ([H-mouse-1] . pk/flyspell-jump-and-correct-word)
-         :map flyspell-mode-map
+  :bind (:map flyspell-mode-map
          ("C-;" . flyspell-correct-wrapper)
          ([(control ?\,)] . nil)
          ([(control ?\.)] . nil)))
