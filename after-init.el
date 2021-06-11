@@ -425,7 +425,7 @@ The first file found in a project will be used."
                                   :compile "nox"
                                   :test "python -m pytest -vv"
                                   :test-prefix "test_"
-                                  :test-suffix"_test")
+                                  :test-suffix "_test")
 
 (projectile-update-project-type 'python-pip
                                 :test "python -m pytest -vv")
