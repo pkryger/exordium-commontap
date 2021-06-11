@@ -23,19 +23,24 @@
     (set-face-attribute 'exordium-org-wait nil
                         :inherit 'org-todo :foreground (modus-themes-color 'cyan)))
 
-  (defun pk/modus-themes--iedit-faces ()
-    ;; (face-attribute (face-attribute 'iedit-occurrence :inherit) :background)
-    (set-face-attribute 'iedit-occurrence nil
-                        :inherit nil :box (modus-themes-color 'blue-refine-bg))
-    ;; (face-attribute (face-attribute 'iedit-read-only-occurrence :inherit) :background)
-    (set-face-attribute 'iedit-read-only-occurrence nil
-                        :inherit nil :box (modus-themes-color 'yellow-intense-bg)))
+  (defun pk/modus-themes--custom-faces ()
+    (modus-themes-with-colors
+      (custom-set-faces
+       `(exordium-org-work ((,class :inherit org-todo
+                                    :foreground ,orange-intense)))
+       `(exordium-org-wait ((,class :inherit org-todo
+                                    :foreground ,cyan)))
+       `(iedit-occurrence ((,class :inherit nil
+                                   :box (:line-width -1
+                                         :color ,blue-refine-bg))))
+       `(iedit-read-only-occurrence ((,class :inherit nil
+                                             :box (:line-width -1
+                                                   :color ,yellow-intense-bg)))))))
 
   ;; load the theme files before enabling a theme (else you get an error).
   (modus-themes-load-themes)
   :hook
-  (modus-themes-after-load-theme . pk/modus-themes--org-faces)
-  (modus-themes-after-load-theme . pk/modus-themes--iedit-faces)
+  (modus-themes-after-load-theme . pk/modus-themes--custom-faces)
   :config
   ;; Load the theme of your choice:
   (modus-themes-load-operandi) ;; OR (modus-themes-load-vivendi)
