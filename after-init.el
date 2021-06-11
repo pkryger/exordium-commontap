@@ -6,7 +6,7 @@
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-slanted-constructs t
         modus-themes-region 'bg-only-no-extend
-        modus-themes-mode-line 'borderless-accented
+        modus-themes-mode-line '(borderless accented)
         modus-themes-subtle-line-numbers t
         modus-themes-completions 'moderate
         modus-themes-org-blocks 'gray-background
