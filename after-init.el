@@ -31,10 +31,10 @@
        `(exordium-org-wait ((,class :inherit org-todo
                                     :foreground ,cyan)))
        `(iedit-occurrence ((,class :inherit nil
-                                   :box (:line-width -1
+                                   :box (:line-width -3
                                          :color ,blue-refine-bg))))
        `(iedit-read-only-occurrence ((,class :inherit nil
-                                             :box (:line-width -1
+                                             :box (:line-width -3
                                                    :color ,yellow-intense-bg)))))))
 
   ;; load the theme files before enabling a theme (else you get an error).
@@ -231,6 +231,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
                                     :test-suffix "Test"
                                     :src-dir "src/"
                                     :test-dir "test/")
+
   (add-to-list 'yas-snippet-dirs
                (concat (file-name-directory (or load-file-name
                                                 buffer-file-name)) "snippets")))
