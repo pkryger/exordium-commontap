@@ -1010,4 +1010,8 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
         ([remap markdown-insert-link] . #'pk/markdown-insert-link-dwim)))
 
 
+(use-package mode-line-bell
+  :config
+  (mode-line-bell-mode))
+
 ;;
