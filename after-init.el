@@ -920,8 +920,11 @@ All the reminder parts of the separator will have
         (turn-off-evil-mode))))
   :hook
   ((evil-mode . pk/disable-evil-mode)
-   (evil-local-mode . pk/disable-evil-mode)))
+   (evil-local-mode . pk/disable-evil-mode))
+  :config
+  (advice-remove #'select-window #'ad-Advice-select-window))
 
+
 (use-package so-long
   :config
   (setq-default bidi-paragraph-direction 'left-to-right)
