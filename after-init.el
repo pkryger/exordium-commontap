@@ -601,6 +601,8 @@ If the input is empty, select the previous history element instead."
 
 ;; Load R as well
 (use-package ess
+  :custom
+  (ess-ask-for-ess-directory nil) ; workaround for helm not being able to start
   :config
   (require 'ess-r-mode)
   (remove-hook 'ess-r-mode-hook 'ess-r-setup-flymake)
