@@ -932,12 +932,6 @@ All the reminder parts of the separator will have
     (setq bidi-inhibit-bpa t))
   (global-so-long-mode))
 
-(quelpa '(basic-stats :fetcher github
-                      :repo "pkryger/basic-stats"
-                      :branch "main"))
-
-
-
 
 (use-package git-link
   :after (magit transient)
@@ -1018,5 +1012,11 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 (use-package mode-line-bell
   :config
   (mode-line-bell-mode))
+
+(quelpa '(basic-stats :fetcher github
+                      :repo "pkryger/basic-stats"
+                      :branch "main"))
+
+(use-package dired-du)
 
 ;;
