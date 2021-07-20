@@ -333,6 +333,8 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (add-to-list 'desktop-modes-not-to-save 'fundamental-mode)
   (add-to-list 'desktop-modes-not-to-save 'helpful-mode)
   (add-to-list 'desktop-modes-not-to-save 'helm-major-mode)
+  (add-to-list 'desktop-modes-not-to-save 'magit-mode)
+  (add-to-list 'desktop-modes-not-to-save 'magit-log-mode)
   :custom
   (desktop-files-not-to-save pk/desktop-files-not-to-save)
   (desktop-restore-eager 8))
