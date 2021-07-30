@@ -403,6 +403,11 @@ The first file found in a project will be used."
   ;; :hook (python-mode . python-black-on-save-mode)
   )
 
+(use-package python-isort
+  :ensure-system-package isort
+  ;; :hook (python-mode . python-isort-on-save-mode
+  )
+
 ;; TODO: use projectile to jump between tests and implementation as well as run tests
 (use-package python-pytest
   :bind (:map python-mode-map
