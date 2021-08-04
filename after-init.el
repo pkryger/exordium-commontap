@@ -370,7 +370,7 @@ N.B. The `mypy' is optional but necessary for `flycheck'.
   :type 'list)
 
 (defcustom pk/python-bootstrap-requirements
-  '("requirements.txt" "requirements-dev.txt")
+  '("requirements-dev.txt" "requirements.txt")
   "List of requirements files to use as a part of `python-bootstrap'.
 The first file found in a project will be used."
   :type 'list)
@@ -435,6 +435,14 @@ The first file found in a project will be used."
                                   :test-prefix "test_"
                                   :test-suffix "_test")
 
+(projectile-register-project-type 'python-cc '(".cruft.yaml")
+                                  :project-file "Makefile"
+                                  :configure "make use-docker clean-docker create-venv"
+                                  :compile "make all"
+                                  :test "make lint test"
+                                  :test-prefix "test_"
+                                  :test-dir "tests")
+
 (projectile-update-project-type 'python-pip
                                 :test "python -m pytest -vv")
 
@@ -446,7 +454,7 @@ The first file found in a project will be used."
   (direnv-mode))
 
 ;; TODO: investigate using of `.dir-locals.el', i.e., sth like
-;; ((python-mode . ((fill-column . 100)
+;; ((python-mode . ((fill-column . 88)
 ;;                  (eval . (progn
 ;;                            (when-let ((venv (getenv "VIRTUAL_ENV")))
 ;;                              (setq-local python-shell-virtualenv-root
@@ -458,9 +466,68 @@ The first file found in a project will be used."
 ;;                                        (list
 ;;                                         (concat (projectile-project-root) "src")
 ;;                                         (concat (projectile-project-root) "tests")))
-;;                            (python-black-on-save-mode))))))
+;;                            (python-black-on-save-mode)
+;;                            (python-isort-on-save-mode))))))
 ;; TODO: investigate installing when only `setup.cfg' is available, with something like:
 ;; $ pip install -e '.[testing,docs,format]'
+
+(defcustom pk/python-inhibit-install-packages '("libnlp" "scipy" "scikit-learn")
+  "List of packages that should not be installed while bootstrapping.")
+
+(defun pk/python--packages-from-in-files (project-root)
+  "Return list of constrained packages form *.in files in PROJECT-ROOT."
+  (let ((requirements (f-join project-root "requirements.in")))
+    (mapcar
+     (lambda (package-spec)
+       (format "'%s'" (s-replace-regexp "\\W*;.*$" "" package-spec)))
+     (seq-filter
+      (lambda (line)
+        (not
+         (or (s-starts-with-p "#" line)
+             (s-matches-p "^\\W*$" line)
+             (cl-find-if (lambda (package-spec)
+                           (s-matches-p (format
+                                         "^%s\\(?:\\W*[!<>=]=?\\W*[0-9\.]+\\)?\\W*\\(?:;.*\\)?$"
+                                         package-spec)
+                                        line)) ; see if the package is not inhibited
+                         pk/python-inhibit-install-packages))))
+      (cl-mapcan
+       (lambda (path)
+         (s-split "\n" (f-read path)))
+       (nconc (when (f-exists-p requirements)
+                (list requirements))
+              (f-glob "*.in" (f-join project-root "requirements"))))))))
+
+(defun pk/python--packages-from-file (file)
+  "Return list of constrained packages form FILE."
+  ;; TODO: need to cut out not matching python_version
+  (mapcar
+   (lambda (package-spec)
+     (format "'%s'" (s-replace-regexp "\\W*;.*$" "" package-spec)))
+   (seq-filter
+    (lambda (line)
+      (not
+       (or (s-starts-with-p "#" line)
+           (s-matches-p "^\\W*$" line)
+           (cl-find-if (lambda (package-spec)
+                         (s-matches-p (format
+                                       "^%s\\(?:\\W*[!<>=]=?\\W*[0-9\.]+\\)?\\W*\\(?:;.*\\)?$"
+                                       package-spec)
+                                      line))
+                       pk/python-inhibit-install-packages))))
+    (s-split "\n" (f-read file)))))
+
+(let ((project-root "/Users/pkryger/ainews/paws-inference"))
+  (s-join " "
+          (pk/python--packages-from-file (f-join project-root "requirements.in")))
+  (s-join " "
+          (cl-mapcan (lambda (path)
+                       (pk/python--packages-from-file path))
+                     (f-glob "*.in" (f-join project-root "requirements"))))
+  (s-join " "
+          (cl-mapcan (lambda (path)
+                       (pk/python--packages-from-file path))
+                     (f-glob "*.in" (f-join project-root "requirements-dev")))))
 
 (defun pk/python-bootstrap (dir)
   "In a given `DIR' bootstrap python environment.
