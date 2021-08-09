@@ -8,6 +8,7 @@
         modus-themes-region 'bg-only-no-extend
         modus-themes-mode-line '(borderless accented)
         modus-themes-subtle-line-numbers t
+        modus-themes-tabs-accented t
         modus-themes-completions 'moderate
         modus-themes-org-blocks 'gray-background
         modus-themes-headings '((1 . rainbow-line-no-bold)
