@@ -86,8 +86,8 @@ This will be used in be used in `pk/dispatch-cut-function'")
 ;; https://ylluminarious.github.io/2019/05/23/how-to-fix-the-emacs-mac-port-for-multi-tty-access/
 (use-package mac-pseudo-daemon
   :hook
-  (after-init . mac-pseudo-daemon-mode)
-  (after-init . server-start))
+  ((after-init . mac-pseudo-daemon-mode)
+   (after-init . server-start)))
 
 (setq disabled-command-function nil)
 (setq confirm-kill-emacs 'y-or-n-p)
@@ -222,8 +222,8 @@ This will be used in be used in `pk/dispatch-cut-function'")
   (defun pk/groovy-mode--create-test-files ()
     (setq-local projectile-create-missing-test-files t))
   :hook
-  (groovy-mode . yas-minor-mode)
-  (groovy-mode . pk/groovy-mode--create-test-files)
+  ((groovy-mode . yas-minor-mode)
+   (groovy-mode . pk/groovy-mode--create-test-files))
   :config
   (projectile-register-project-type 'pbnj '("pom.xml" "pbnj_lib_config.yaml")
                                     :project-file "pom.xml"
@@ -244,7 +244,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
   (flycheck-global-modes '(not c++-mode c-mode org-mode))
   :hook
   (after-init . global-flycheck-mode))
-
+
 (require 'cc-mode)
 ;; Alias for C-c r [
 (define-key c-mode-base-map [(control <)] (function rtags-location-stack-back))
@@ -633,12 +633,11 @@ If the input is empty, select the previous history element instead."
                     (message "Matches are not the same length.")
                     (iedit-done)))))))))
   :bind
-  (:map global-map
-        ("C-s" . #'swiper-isearch)
-        ("C-r" . #'swiper-isearch-backward)
+  (("C-s" . swiper-isearch)
+   ("C-r" . swiper-isearch-backward)
    :map swiper-map
-        ("C-r" . #'pk/swiper-C-r)
-        ("C-c ;" . #'pk/swiper-iedit)))
+        ("C-r" . pk/swiper-C-r)
+        ("C-c ;" . pk/swiper-iedit)))
 
 
 ;; Disable some ido hooks for helm mode
@@ -961,10 +960,10 @@ All the reminder parts of the separator will have
          `((add-tab menu-item ,tab-bar-new-button tab-bar-new-tab
                     :help "New tab"))))))
 
-  :bind (:map global-map
-              ("M-<tab>" . #'tab-next)
-              ("M-S-<tab>" . #'tab-previous)
-              ("H-t" . #'tab-new)))
+  :bind
+  (("M-<tab>" . tab-next)
+   ("M-S-<tab>" . tab-previous)
+   ("H-t" . tab-new)))
 
 
 
