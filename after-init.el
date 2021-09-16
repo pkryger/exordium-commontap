@@ -22,10 +22,12 @@
         modus-themes-scale-headings t)
 
   (defun pk/modus-themes--custom-faces ()
-    (set-face-attribute 'exordium-org-work nil
-                        :inherit 'org-todo :foreground (modus-themes-color 'orange-intense))
-    (set-face-attribute 'exordium-org-wait nil
-                        :inherit 'org-todo :foreground (modus-themes-color 'cyan))
+    (when (facep 'exordium-org-work) ;; TODO: remove when org merged
+      (set-face-attribute 'exordium-org-work nil
+                          :inherit 'org-todo :foreground (modus-themes-color 'orange-intense)))
+    (when (facep 'exordium-org-wait) ;; TODO: remove when org merged
+      (set-face-attribute 'exordium-org-wait nil
+                          :inherit 'org-todo :foreground (modus-themes-color 'cyan)))
     (set-face-attribute 'iedit-occurrence nil
                         :inherit nil :box `(:line-width -3
                                             :color ,(modus-themes-color 'blue-refine-bg)))
