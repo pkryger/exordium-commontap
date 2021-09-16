@@ -500,17 +500,17 @@ The first file found in a project will be used."
                        pk/python-inhibit-install-packages))))
     (s-split "\n" (f-read file)))))
 
-(let ((project-root "/Users/pkryger/ainews/paws-inference"))
-  (s-join " "
-          (pk/python--packages-from-file (f-join project-root "requirements.in")))
-  (s-join " "
-          (cl-mapcan (lambda (path)
-                       (pk/python--packages-from-file path))
-                     (f-glob "*.in" (f-join project-root "requirements"))))
-  (s-join " "
-          (cl-mapcan (lambda (path)
-                       (pk/python--packages-from-file path))
-                     (f-glob "*.in" (f-join project-root "requirements-dev")))))
+;; (let ((project-root "/Users/pkryger/ainews/paws-inference"))
+;;   (s-join " "
+;;           (pk/python--packages-from-file (f-join project-root "requirements.in")))
+;;   (s-join " "
+;;           (cl-mapcan (lambda (path)
+;;                        (pk/python--packages-from-file path))
+;;                      (f-glob "*.in" (f-join project-root "requirements"))))
+;;   (s-join " "
+;;           (cl-mapcan (lambda (path)
+;;                        (pk/python--packages-from-file path))
+;;                      (f-glob "*.in" (f-join project-root "requirements-dev")))))
 
 (defun pk/python-bootstrap (dir)
   "In a given `DIR' bootstrap python environment.
