@@ -2,6 +2,8 @@
 
 
 (use-package modus-themes
+  :when (version<= "27.1" emacs-version)
+  :after (org iedit)
   :init
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-italic-constructs t
@@ -18,25 +20,17 @@
         modus-themes-variable-pitch-headings t
         modus-themes-scale-headings t)
 
-  (defun pk/modus-themes--org-faces ()
+  (defun pk/modus-themes--custom-faces ()
     (set-face-attribute 'exordium-org-work nil
                         :inherit 'org-todo :foreground (modus-themes-color 'orange-intense))
     (set-face-attribute 'exordium-org-wait nil
-                        :inherit 'org-todo :foreground (modus-themes-color 'cyan)))
-
-  (defun pk/modus-themes--custom-faces ()
-    (modus-themes-with-colors
-      (custom-set-faces
-       `(exordium-org-work ((,class :inherit org-todo
-                                    :foreground ,orange-intense)))
-       `(exordium-org-wait ((,class :inherit org-todo
-                                    :foreground ,cyan)))
-       `(iedit-occurrence ((,class :inherit nil
-                                   :box (:line-width -3
-                                         :color ,blue-refine-bg))))
-       `(iedit-read-only-occurrence ((,class :inherit nil
-                                             :box (:line-width -3
-                                                   :color ,yellow-intense-bg)))))))
+                        :inherit 'org-todo :foreground (modus-themes-color 'cyan))
+    (set-face-attribute 'iedit-occurrence nil
+                        :inherit nil :box `(:line-width -3
+                                            :color ,(modus-themes-color 'blue-refine-bg)))
+    (set-face-attribute 'iedit-read-only-occurrence nil
+                        :inherit nil :box `(:line-width -3
+                                            :color ,(modus-themes-color 'yellow-intense-bg))))
 
   ;; load the theme files before enabling a theme (else you get an error).
   (modus-themes-load-themes)
@@ -45,7 +39,9 @@
   :config
   ;; Load the theme of your choice:
   (modus-themes-load-operandi) ;; OR (modus-themes-load-vivendi)
-  :bind ("<f5>" . modus-themes-toggle))
+  (pk/modus-themes--custom-faces)
+  :bind
+  ("<f5>" . modus-themes-toggle))
 
 
 ;; emacs mac ports customisations, per
