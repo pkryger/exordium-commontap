@@ -429,24 +429,6 @@ The first file found in a project will be used."
   :config
   (add-to-list 'company-backends '(company-anaconda :with company-capf)))
 
-(projectile-register-project-type 'python-nox '("noxfile.py")
-                                  :project-file "noxfile.py"
-                                  :compile "nox"
-                                  :test "python -m pytest -vv"
-                                  :test-prefix "test_"
-                                  :test-suffix "_test")
-
-(projectile-register-project-type 'python-cc '(".cruft.yaml")
-                                  :project-file "Makefile"
-                                  :configure "make use-docker clean-docker create-venv"
-                                  :compile "make all"
-                                  :test "make lint test"
-                                  :test-prefix "test_"
-                                  :test-dir "tests")
-
-(projectile-update-project-type 'python-pip
-                                :test "python -m pytest -vv")
-
 ;; See https://blog.adam-uhlir.me/python-virtual-environments-made-super-easy-with-direnv-307611c3a49a
 ;; for layout thing
 (use-package direnv
