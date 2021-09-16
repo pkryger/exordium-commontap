@@ -1,8 +1,9 @@
 ;; -*- lexical-binding: t; -*-
 
 
+(when (version<= "27.1" emacs-version)
+
 (use-package modus-themes
-  :when (version<= "27.1" emacs-version)
   :after (org iedit)
   :init
   ;; Add all your customizations prior to loading the themes
@@ -42,6 +43,9 @@
   (pk/modus-themes--custom-faces)
   :bind
   ("<f5>" . modus-themes-toggle))
+
+);; when
+
 
 
 ;; emacs mac ports customisations, per
