@@ -22,6 +22,7 @@
         modus-themes-scale-headings t)
 
   (defun pk/modus-themes--custom-faces ()
+    (set-face-attribute 'fixed-pitch nil :family "Fira Code" :height 130) ;; TODO: this should work with exordium
     (when (facep 'exordium-org-work) ;; TODO: remove when org merged
       (set-face-attribute 'exordium-org-work nil
                           :inherit 'org-todo :foreground (modus-themes-color 'orange-intense)))
