@@ -1078,4 +1078,6 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 
 (use-package dired-du)
 
+(use-package ob-async)
+
 ;;
