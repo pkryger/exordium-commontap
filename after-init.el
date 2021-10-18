@@ -1078,6 +1078,10 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
                       :repo "pkryger/basic-stats"
                       :branch "main"))
 
+(use-package dired
+  :ensure nil
+  :custom
+  (dired-dwim-target t))
 (use-package dired-du)
 
 (use-package ob-async)
