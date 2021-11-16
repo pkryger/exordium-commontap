@@ -833,6 +833,8 @@ language."
         ("C-h" . #'company-posframe-quickhelp-toggle)
         ("C-n" . #'company-select-next)
         ("C-p" . #'company-select-previous))
+  :custom
+  (company-posframe-quickhelp-delay 0.2)
   :config
   (company-posframe-mode 1)
   ;; TODO: move this to desktop configuration
