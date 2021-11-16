@@ -1088,4 +1088,6 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 
 (use-package ob-async)
 
+(use-package transpose-frame)
+
 ;;
