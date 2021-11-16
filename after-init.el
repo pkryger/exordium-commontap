@@ -4,7 +4,7 @@
 (when (version<= "27.1" emacs-version)
 
 (use-package modus-themes
-  :after (org iedit)
+  :after (org iedit ace-window)
   :init
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-italic-constructs t
@@ -34,7 +34,9 @@
                                             :color ,(modus-themes-color 'blue-refine-bg)))
     (set-face-attribute 'iedit-read-only-occurrence nil
                         :inherit nil :box `(:line-width -3
-                                            :color ,(modus-themes-color 'yellow-intense-bg))))
+                                                        :color ,(modus-themes-color 'yellow-intense-bg)))
+    (set-face-attribute 'aw-leading-char-face nil
+                        :foreground (modus-themes-color 'red) :bold t :height 1.5))
 
   ;; load the theme files before enabling a theme (else you get an error).
   (modus-themes-load-themes)
@@ -305,17 +307,16 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (setq deft-use-filter-string-for-filename t)
   (setq deft-auto-save-interval 0))
 
-(require 'ace-window)
-;; Use M-o for ace-window
-(global-set-key (kbd "M-o") #'ace-window)
-;; Use bigger font for ace window
-(custom-set-faces
- '(aw-leading-char-face
-   ((t
-     (:foreground "red" :bold t :height 1.5)))))
-(setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
-;; Limit scope to a frame, as the neither global nor visible play nice with tabs
-(setq aw-scope 'frame)
+
+(use-package ace-window
+  :diminish "AW"
+  :custom
+  (aw-scope 'frame)
+  (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+  (aw-translate-char-function #'(lambda (c)
+                                  (if (eq ?\M-o c) ?n c)))
+  :config
+  (global-set-key (kbd "M-o") #'ace-window))
 
 
 (defconst pk/desktop-files-not-to-save
