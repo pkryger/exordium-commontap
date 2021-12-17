@@ -1086,7 +1086,10 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   :ensure nil
   :custom
   (dired-dwim-target t))
-(use-package dired-du)
+
+(use-package dired-du
+  :custom
+  (dired-du-used-space-program `(,(if exordium-osx "gdu" "du") "-sb")))
 
 (use-package ob-async)
 
