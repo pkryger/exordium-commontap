@@ -15,4 +15,4 @@
 (setq exordium-height-plus-4 1.3)
 (setq avy-all-windows 'all-frames)
 (setq exordium-no-org-babel-confirm t)
-(setq exordium-rtags-syntax-checker :flycheck)
+(setq exordium-rtags-syntax-checker nil)
