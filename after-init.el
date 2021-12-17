@@ -8,19 +8,19 @@
   :init
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-italic-constructs t
-        modus-themes-mixed-fonts t
-        modus-themes-region 'bg-only-no-extend
+        modus-themes-region '(bg-only no-extend accented)
         modus-themes-mode-line '(borderless accented)
         modus-themes-subtle-line-numbers t
         modus-themes-tabs-accented t
         modus-themes-completions 'moderate
         modus-themes-org-blocks 'gray-background
-        modus-themes-headings '((1 . rainbow-line-no-bold)
-                                (2 . rainbow-line-no-bold)
-                                (t . rainbow-no-bold))
-        modus-themes-variable-pitch-ui t
-        modus-themes-variable-pitch-headings t
-        modus-themes-scale-headings t)
+        modus-themes-headings '((1 . (variable-pitch rainbow overline regular 1.27))
+                                (2 . (variable-pitch rainbow overline regular 1.21))
+                                (3 . (variable-pitch rainbow overline regular 1.15))
+                                (4 . (variable-pitch rainbow overline regular 1.1))
+                                (t . (variable-pitch rainbow regular)))
+        modus-themes-mixed-fonts t
+        modus-themes-variable-pitch-ui t)
 
   (defun pk/modus-themes--custom-faces ()
     (set-face-attribute 'fixed-pitch nil :family "Fira Code" :height 130) ;; TODO: this should work with exordium
