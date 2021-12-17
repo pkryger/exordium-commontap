@@ -1095,4 +1095,8 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 
 (use-package transpose-frame)
 
+(use-package dockerfile-mode
+  :config
+  (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode)))
+
 ;;
