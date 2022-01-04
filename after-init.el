@@ -121,6 +121,8 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 (use-package helm
   :diminish
+  :custom
+  (helm-split-window-other-side-when-one-window 'right)
   :bind
   (:map helm-command-map
         ("g" . #'helm-google-suggest)))
