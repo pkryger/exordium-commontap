@@ -263,11 +263,6 @@ This will be used in be used in `pk/dispatch-cut-function'")
   :hook
   (after-init . global-flycheck-mode))
 
-(require 'cc-mode)
-;; Alias for C-c r [
-(define-key c-mode-base-map [(control <)] (function rtags-location-stack-back))
-;; Alias for C-c r [
-(define-key c-mode-base-map [(control >)] (function rtags-location-stack-forward))
 
 (use-package compile
   :custom
