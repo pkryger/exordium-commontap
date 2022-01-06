@@ -24,7 +24,7 @@
   (defun pk/modus-themes--custom-faces ()
     (custom-theme-set-faces
      'user
-     `(fixed-pitch ((t (:family ,exordium-font-name :height ,exordium-font-size))) t)
+     `(fixed-pitch ((t (:family ,(face-attribute 'default :family) :height ,(face-attribute 'default :height)))) t)
      `(exordium-org-work ((t (:inherit 'org-todo :foreground ,(modus-themes-color 'orange-intense)))) t)
      `(exordium-org-wait ((t (:inherit 'org-todo :foreground ,(modus-themes-color 'cyan)))) t)
      `(iedit-occurrence ((t (:inherit nil :box (:line-width -3 :color ,(modus-themes-color 'blue-refine-bg))))) t)
