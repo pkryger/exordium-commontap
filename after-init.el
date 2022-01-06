@@ -612,6 +612,8 @@ python layout with:
 (diminish 'eldoc-mode)
 (diminish 'auto-revert-mode)
 (diminish 'undo-tree-mode)
+(diminish 'git-gutter-mode)
+(diminish 'company-mode)
 
 
 (use-package swiper
