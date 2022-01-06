@@ -4,7 +4,6 @@
 (when (version<= "27.1" emacs-version)
 
 (use-package modus-themes
-  :after (org iedit ace-window)
   :init
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-italic-constructs t
@@ -23,21 +22,14 @@
         modus-themes-variable-pitch-ui t)
 
   (defun pk/modus-themes--custom-faces ()
-    (set-face-attribute 'fixed-pitch nil :family "Fira Code" :height 130) ;; TODO: this should work with exordium
-    (when (facep 'exordium-org-work) ;; TODO: remove when org merged
-      (set-face-attribute 'exordium-org-work nil
-                          :inherit 'org-todo :foreground (modus-themes-color 'orange-intense)))
-    (when (facep 'exordium-org-wait) ;; TODO: remove when org merged
-      (set-face-attribute 'exordium-org-wait nil
-                          :inherit 'org-todo :foreground (modus-themes-color 'cyan)))
-    (set-face-attribute 'iedit-occurrence nil
-                        :inherit nil :box `(:line-width -3
-                                            :color ,(modus-themes-color 'blue-refine-bg)))
-    (set-face-attribute 'iedit-read-only-occurrence nil
-                        :inherit nil :box `(:line-width -3
-                                                        :color ,(modus-themes-color 'yellow-intense-bg)))
-    (set-face-attribute 'aw-leading-char-face nil
-                        :foreground (modus-themes-color 'red) :bold t :height 1.5))
+    (custom-theme-set-faces
+     'user
+     `(fixed-pitch ((t (:family ,exordium-font-name :height ,exordium-font-size))) t)
+     `(exordium-org-work ((t (:inherit 'org-todo :foreground ,(modus-themes-color 'orange-intense)))) t)
+     `(exordium-org-wait ((t (:inherit 'org-todo :foreground ,(modus-themes-color 'cyan)))) t)
+     `(iedit-occurrence ((t (:inherit nil :box (:line-width -3 :color ,(modus-themes-color 'blue-refine-bg))))) t)
+     `(iedit-read-only-occurrence ((t (:inherit nil :box (:line-width -3 :color ,(modus-themes-color 'yellow-intense-bg))))) t)
+     `(aw-leading-char-face ((t (:foreground ,(modus-themes-color 'red) :bold t :height 1.5))) t)))
 
   ;; load the theme files before enabling a theme (else you get an error).
   (modus-themes-load-themes)
