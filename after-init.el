@@ -252,7 +252,8 @@ This will be used in be used in `pk/dispatch-cut-function'")
                (concat (file-name-directory (or load-file-name
                                                 buffer-file-name)) "snippets")))
 
-(use-package yaml-mode
+
+(use-package yaml-mode
   :config
   (add-to-list 'auto-mode-alist '("\\.yaml\\.template\\'" . yaml-mode)))
 
