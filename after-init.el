@@ -45,6 +45,8 @@
 );; when
 
 
+(when (version<= "27.1" emacs-version)
+
 (use-package tree-sitter-langs)
 (use-package tree-sitter
   :after (tree-sitter-langs)
@@ -58,7 +60,7 @@
     (add-to-list 'tree-sitter-major-mode-language-alist
                  (cons 'enh-ruby-mode language-name)))
   (global-tree-sitter-mode))
-
+);; when
 
 
 ;; emacs mac ports customisations, per
