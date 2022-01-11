@@ -13,11 +13,13 @@
         modus-themes-tabs-accented t
         modus-themes-completions 'moderate
         modus-themes-org-blocks 'gray-background
-        modus-themes-headings '((1 . (variable-pitch rainbow overline regular 1.27))
-                                (2 . (variable-pitch rainbow overline regular 1.21))
-                                (3 . (variable-pitch rainbow overline regular 1.15))
-                                (4 . (variable-pitch rainbow overline regular 1.1))
-                                (t . (variable-pitch rainbow regular)))
+        modus-themes-headings (let* ((low-level-properties '(variable-pitch rainbow regular))
+                                     (high-level-properties `(,@low-level-properties overline)))
+                                `((1 . (,@high-level-properties 1.27))
+                                  (2 . (,@high-level-properties 1.21))
+                                  (3 . (,@high-level-properties 1.15))
+                                  (4 . (,@high-level-properties 1.1))
+                                  (t . (,@low-level-properties))))
         modus-themes-mixed-fonts t
         modus-themes-variable-pitch-ui t)
 
