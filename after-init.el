@@ -882,7 +882,7 @@ All the reminder parts of the separator will have
        (propertize " " 'face (if (eq current 'previous)
                                  'tab-bar-tab
                                'tab-bar-tab-inactive)))
-     (propertize "¦" 'face (if current
+     (propertize "⦙" 'face (if current ; alternative: "¦"
                                'tab-bar-tab
                              'tab-bar-tab-inactive))
      (unless (eq type 'last)
