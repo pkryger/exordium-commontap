@@ -1,5 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 
+(when (boundp 'native-comp-async-report-warnings-errors)
+  (setq native-comp-async-report-warnings-errors 'silent))
 
 (when (version<= "27.1" emacs-version)
 
