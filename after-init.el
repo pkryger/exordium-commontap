@@ -59,6 +59,8 @@
   ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/blob/master/doc/emacs-tree-sitter.org#theming
   :hook
   (tree-sitter-after-on . tree-sitter-hl-mode)
+  :custom
+  (font-lock-maximum-decoration t)
   :config
   (when-let ((language-name (alist-get 'ruby-mode
                                        tree-sitter-major-mode-language-alist)))
