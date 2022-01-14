@@ -1,4 +1,5 @@
 ;; -*- lexical-binding: t; -*-
+;;; Code:
 
 (when (boundp 'native-comp-async-report-warnings-errors)
   (setq native-comp-async-report-warnings-errors 'silent))
