@@ -156,7 +156,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
   (completion-styles '(orderless)))
 
 (use-package ispell
-  :ensure-system-package aspell
+;;   :ensure-system-package aspell
   :custom
   ;; spell checks as suggested by
   ;; http://blog.binchen.org/posts/effective-spell-check-in-emacs.html
@@ -414,19 +414,19 @@ The first file found in a project will be used."
 
 (use-package py-autopep8
   ;; TODO: add if requested
-  :ensure-system-package autopep8
+;;   :ensure-system-package autopep8
   :custom
   (py-autopep8-options  '("--max-line-length" "100"))
   ;; :hook (python-mode . py-autopep8-enable-on-save)
   )
 
 (use-package python-black
-  :ensure-system-package black
+;;   :ensure-system-package black
   ;; :hook (python-mode . python-black-on-save-mode)
   )
 
 (use-package python-isort
-  :ensure-system-package isort
+;;   :ensure-system-package isort
   ;; :hook (python-mode . python-isort-on-save-mode
   )
 
@@ -453,7 +453,7 @@ The first file found in a project will be used."
 ;; See https://blog.adam-uhlir.me/python-virtual-environments-made-super-easy-with-direnv-307611c3a49a
 ;; for layout thing
 (use-package direnv
-  :ensure-system-package direnv
+;;   :ensure-system-package direnv
   :config
   (direnv-mode))
 
