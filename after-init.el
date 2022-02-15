@@ -48,6 +48,7 @@
 
 (use-package tree-sitter-langs)
 (use-package tree-sitter
+  :diminish
   :after (tree-sitter-langs)
   ;; TODO: check out themes, likely in modus-themes
   ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/blob/master/doc/emacs-tree-sitter.org#theming
