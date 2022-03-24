@@ -12,7 +12,9 @@
         modus-themes-mode-line '(borderless accented)
         modus-themes-subtle-line-numbers t
         modus-themes-tabs-accented t
-        modus-themes-completions 'moderate
+        modus-themes-completions '((matches . (extrabold background intense))
+                                   (selection . (semibold accented intense))
+                                   (popup . (accented)))
         modus-themes-org-blocks 'gray-background
         modus-themes-headings (let* ((low-level-properties '(variable-pitch rainbow regular))
                                      (high-level-properties `(,@low-level-properties overline)))
