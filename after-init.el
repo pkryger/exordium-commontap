@@ -1111,4 +1111,7 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   :config
   (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode)))
 
+(use-package protobuf-mode)
+
+
 ;;
