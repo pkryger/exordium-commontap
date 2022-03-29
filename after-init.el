@@ -109,7 +109,15 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 (setq disabled-command-function nil)
 (setq confirm-kill-emacs 'y-or-n-p)
-
+
+;; See `split-window-sensibly' doc...
+;; this setup basically forces a vertical split, but only up to 2 windows in a frame
+(setq split-height-threshold nil)
+(setq split-width-threshold 160)
+
+(use-package use-package-ensure-system-package)
+(use-package quelpa-use-package)
+
 ;; ITERM2 MOUSE SUPPORT from https://www.emacswiki.org/emacs/iTerm2
 (unless window-system
   (require 'mouse)
@@ -136,8 +144,6 @@ This will be used in be used in `pk/dispatch-cut-function'")
   (:map helm-command-map
         ("g" . #'helm-google-suggest)))
 
-(use-package use-package-ensure-system-package)
-(use-package quelpa-use-package)
 
 (use-package elisp-mode
   :ensure nil
