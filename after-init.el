@@ -910,7 +910,7 @@ All the reminder parts of the separator will have
            (tabs (funcall tab-bar-tabs-function))
            previous-current)
       (append
-       '(keymap (mouse-1 . tab-bar-handle-mouse))
+       '(keymap (mouse-1 . tab-bar-mouse-down-1))
        (when tab-bar-history-mode
          `((sep-history-back menu-item ,(if (functionp separator)
                                             (funcall separator 'first-history nil)
