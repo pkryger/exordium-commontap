@@ -349,15 +349,13 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 
 
 (defconst pk/desktop-files-not-to-save
-  (if (version< "27" emacs-version)
-      (rx-let ((path (+ (or alnum digit "." "/" "-" "_" "~"))))
-        (rx (or (seq string-start "/" (zero-or-more (not (any "/" ":"))) ":")
-                (seq "(ftp)" string-end)
-                (seq string-start path "/emacs/" path "/lisp/" path
-                     ".el.gz" string-end)
-                (seq string-start path "/.emacs.d/elpa/" path
-                     ".el" string-end))))
-    "\\(\\`/[^/:]*:\\|(ftp)\\'\\)"))
+  (rx-let ((path (+ (or alnum digit "." "/" "-" "_" "~"))))
+    (rx (or (seq string-start "/" (zero-or-more (not (any "/" ":"))) ":")
+            (seq "(ftp)" string-end)
+            (seq string-start path "/emacs/" path "/lisp/" path
+                 ".el.gz" string-end)
+            (seq string-start path "/.emacs.d/elpa/" path
+                 ".el" string-end)))))
 
 (use-package desktop
   :ensure nil
