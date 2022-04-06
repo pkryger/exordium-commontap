@@ -48,6 +48,7 @@
   ("<f5>" . modus-themes-toggle))
 
 
+(unless (getenv "ci_tests")
 (use-package tree-sitter-langs)
 (use-package tree-sitter
   :diminish
@@ -64,6 +65,7 @@
     (add-to-list 'tree-sitter-major-mode-language-alist
                  (cons 'enh-ruby-mode language-name)))
   (global-tree-sitter-mode))
+)
 
 
 ;; emacs mac ports customisations, per
