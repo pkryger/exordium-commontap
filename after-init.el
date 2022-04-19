@@ -126,15 +126,15 @@ This will be used in be used in `pk/dispatch-cut-function'")
   (xterm-mouse-mode t)
   (defun track-mouse (_)))
 
-(defconst pk/shrug-string "¯\_(ツ)_/¯")
+(defconst pk/shrug-string "¯\\_(ツ)_/¯")
 
 (defun pk/shrug ()
-  "Insert ¯\_(ツ)_/¯ at point."
+  "Insert ¯\\_(ツ)_/¯ at point."
   (interactive)
   (insert pk/shrug-string))
 
 (defun pk/shrug-as-kill ()
-  "Add ¯\_(ツ)_/¯ to kill buffer."
+  "Add ¯\\_(ツ)_/¯ to kill buffer."
   (interactive)
   (kill-new pk/shrug-string))
 
