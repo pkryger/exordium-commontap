@@ -277,7 +277,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
   (add-to-list 'yas-snippet-dirs
                (concat (file-name-directory (or load-file-name
-                                                buffer-file-name)) "snippets")))
+                                                (buffer-file-name))) "snippets")))
 
 
 (use-package yaml-mode
