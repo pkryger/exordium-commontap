@@ -112,6 +112,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 (setq disabled-command-function nil)
 (setq confirm-kill-emacs 'y-or-n-p)
+(setq-default display-line-numbers-widen t)
 
 ;; See `split-window-sensibly' doc...
 ;; this setup basically forces a vertical split, but only up to 2 windows in a frame
