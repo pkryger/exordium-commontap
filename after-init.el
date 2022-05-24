@@ -1128,4 +1128,87 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   (setf (alist-get 'python-mode apheleia-mode-alist)
         '(isort black)))
 
-;;
+;; Cassandra - CQL support with sql-mode and ob-sql
+(use-package sql
+  :ensure nil
+  :config
+  (sql-add-product 'cql "Cassandra"
+                   '(:free-software t))
+
+  ;; CQL keywords from (without ANSI keywords):
+  ;; https://cassandra.apache.org/doc/latest/cassandra/cql/appendices.html#appendix-A
+  (defvar pk/sql-cql-font-lock-keywords
+    `(,(sql-font-lock-keywords-builder 'font-lock-type-face nil
+"ascii" "bigint" "counter" "inet" "text" "timeuuid" "tinyint" "uuid" "varint"
+"bitstring" "byte" "complex" "enum" "macaddr")
+      ,(sql-font-lock-keywords-builder 'font-lock-keyword-face nil
+"allow" "apply" "authorize" "batch" "clustering" "columnfamily" "compact"
+"counter" "custom" "entries" "filtering" "finalfunc" "frozen" "functions"
+"if" "index" "infinity" "initcond" "json" "keys" "keyspace" "keyspaces" "list"
+"login" "nan" "nologin" "norecursive" "nosuperuser" "password" "permission"
+"permissions" "rename" "replace" "roles" "sfunc" "storage" "stype" "superuser"
+"timeuuid" "token" "truncate" "ttl" "tuple" "unlogged" "use" "users" "writetime"
+"maxwritetime"))
+    "Cassandra CQL keywords used by font-lock.")
+  (sql-set-product-feature 'cql
+                           :font-lock pk/sql-cql-font-lock-keywords)
+
+  ;; C-style comments // and /**/ (the latter is supported by `sql-mode')
+  (sql-set-product-feature 'cql
+                           :syntax-alist
+                           '((?/ . ". 124")))
+
+  (defcustom pk/sql-cql-program "cqlsh"
+    "Command to start cqlsh"
+    :type 'file
+    :group 'SQL)
+  (defcustom pk/sql-cql-login-params '(user password host port)
+    "List of login parameters needed to connect to Cassandra."
+    :type 'sql-login-params
+    :group 'SQL)
+  (defcustom pk/sql-cql-options nil
+    "List of additional options for `pk/sql-cql-program'."
+    :type '(repeat string)
+    :group 'SQL)
+
+  (sql-set-product-feature 'cql
+                           :sqli-program pk/sql-cql-program)
+  (sql-set-product-feature 'cql
+                           :prompt-regexp "^cqlsh\\(?::[a-zA-Z0-9]+\\)?>")
+  (sql-set-product-feature 'cql
+                           :prompt-length 7)
+  (sql-set-product-feature 'cql
+                           :prompt-cont-regexp "^   \\.\\.\\.")
+  (sql-set-product-feature 'cql
+                           :login-params pk/sql-cql-login-params)
+  (sql-set-product-feature 'cql
+                           :sqli-options pk/sql-cql-options)
+  (sql-set-product-feature 'cql
+                           :list-all "describe tables;")
+  (sql-set-product-feature 'cql
+                           :list-table "describe %s;")
+
+  (defun pk/sql-comint-cql (product options &optional buf-name)
+    "Create comint buffer and connect to Cassandra."
+    (let ((params
+           (append
+            (if (not (string= "" sql-user))
+                (list "-u" sql-user))
+            (if (not (string= "" sql-password))
+                (list "-p" sql-password))
+            options
+            (when (not (string= "" sql-server))
+                (list sql-server)
+                (if (not (= 0 sql-port))
+                    (list (number-to-string sql-port)))))))
+      (sql-comint product params buf-name)))
+   (sql-set-product-feature 'cql
+                            :sqli-comint-func 'pk/sql-comint-cql)
+
+   (defun pk/sql-cql (&optional buffer)
+     "Run cqlsh by Cassandra as an inferior process."
+     (interactive "P")
+     (sql-product-interactive 'cql buffer)))
+
+
+;;
