@@ -1131,9 +1131,17 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 ;; Cassandra - CQL support with sql-mode and ob-sql
 (use-package sql
   :ensure nil
+  :init
+  (defun pk/sql--custom-set-product-feature-factory (feature)
+    "Create a custom set function that updates the FEATURE for Cassandra in `sql'."
+    #'(lambda (sym value)
+        (sql-set-product-feature 'cql
+                                 feature value)
+        (set-default sym value)))
   :config
-  (sql-add-product 'cql "Cassandra"
-                   '(:free-software t))
+  (unless (assoc 'cql sql-product-alist)
+    (sql-add-product 'cql "Cassandra"
+                     '(:free-software t)))
 
   ;; CQL keywords from (without ANSI keywords):
   ;; https://cassandra.apache.org/doc/latest/cassandra/cql/appendices.html#appendix-A
@@ -1161,18 +1169,19 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   (defcustom pk/sql-cql-program "cqlsh"
     "Command to start cqlsh"
     :type 'file
-    :group 'SQL)
+    :group 'SQL
+    :set (pk/sql--custom-set-product-feature-factory :sqli-program))
   (defcustom pk/sql-cql-login-params '(user password host port)
     "List of login parameters needed to connect to Cassandra."
     :type 'sql-login-params
-    :group 'SQL)
+    :group 'SQL
+    :set (pk/sql--custom-set-product-feature-factory :login-params))
   (defcustom pk/sql-cql-options nil
     "List of additional options for `pk/sql-cql-program'."
     :type '(repeat string)
-    :group 'SQL)
+    :group 'SQL
+    :set (pk/sql--custom-set-product-feature-factory :sqli-options))
 
-  (sql-set-product-feature 'cql
-                           :sqli-program pk/sql-cql-program)
   (sql-set-product-feature 'cql
                            :prompt-regexp "^cqlsh\\(?::[a-zA-Z0-9]+\\)?>")
   (sql-set-product-feature 'cql
@@ -1180,13 +1189,9 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   (sql-set-product-feature 'cql
                            :prompt-cont-regexp "^   \\.\\.\\.")
   (sql-set-product-feature 'cql
-                           :login-params pk/sql-cql-login-params)
+                           :list-all "DESCRIBE TABLES;")
   (sql-set-product-feature 'cql
-                           :sqli-options pk/sql-cql-options)
-  (sql-set-product-feature 'cql
-                           :list-all "describe tables;")
-  (sql-set-product-feature 'cql
-                           :list-table "describe %s;")
+                           :list-table "DESCRIBE %s;")
 
   (defun pk/sql-comint-cql (product options &optional buf-name)
     "Create comint buffer and connect to Cassandra."
@@ -1208,7 +1213,12 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
    (defun pk/sql-cql (&optional buffer)
      "Run cqlsh by Cassandra as an inferior process."
      (interactive "P")
-     (sql-product-interactive 'cql buffer)))
+     (sql-product-interactive 'cql buffer))
 
+   (defun pk/sql-mode-with-cql-product ()
+     (setq-local sql-product 'cql)
+     (sql-mode))
+
+   (add-to-list 'auto-mode-alist '("\\.cql\\'" . pk/sql-mode-with-cql-product)))
 
 ;;
