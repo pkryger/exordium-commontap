@@ -1219,6 +1219,53 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
      (setq-local sql-product 'cql)
      (sql-mode))
 
-   (add-to-list 'auto-mode-alist '("\\.cql\\'" . pk/sql-mode-with-cql-product)))
+   (add-to-list 'auto-mode-alist '("\\.cql\\'" . pk/sql-mode-with-cql-product))
 
-;;
+
+   ;; BEGIN: a hacky way to get font-lock per engine in org-mode
+   (defvar pk/sql--ob-fontify-engine nil)
+   (defvar pk/sql--ob-fontify-product-orig nil)
+
+   (defun pk/sql--ob-fontify-init-engine (limit)
+     (when org-src-fontify-natively
+       (unless pk/sql--ob-fontify-product-orig
+         (setq pk/sql--ob-fontify-product-orig sql-product))
+       (save-excursion
+         (setq pk/sql--ob-fontify-engine
+               (let ((case-fold-search t))
+                 (when (re-search-forward
+                        (rx bol
+                            (zero-or-more (any " \t")) "#+begin_src"
+                            (one-or-more (any " \t")) "sql"
+                            (zero-or-more (one-or-more (any " \t")) (zero-or-more any))
+                            (one-or-more (any " \t")) ":engine"
+                            (one-or-more (any " \t")) (group (one-or-more (any "a-zA-Z")))
+                            (zero-or-more (one-or-more (any " \t")) (zero-or-more any))
+                            eol)
+                        limit t)
+                   (match-string 1)))))))
+
+   (defun pk/sql--ob-fontify-set-product (&rest _)
+     (when (and org-src-fontify-natively
+                (eq major-mode 'sql-mode))
+       (sql-set-product (if pk/sql--ob-fontify-engine
+                            (if-let ((product (intern pk/sql--ob-fontify-engine))
+                                     (_ (assoc product sql-product-alist)))
+                                product
+                              'ansi)
+                          'ansi)))
+     (setq pk/sql--ob-fontify-engine nil))
+
+   (defun pk/sql--ob-fontify-reset-product (&rest _)
+     (when pk/sql--ob-fontify-product-orig
+       (sql-set-product pk/sql--ob-fontify-product-orig)
+       (setq pk/sql--ob-fontify-product-orig nil)))
+
+   (advice-add 'org-fontify-meta-lines-and-blocks :before #'pk/sql--ob-fontify-init-engine)
+   (advice-add 'org-font-lock-ensure :before #'pk/sql--ob-fontify-set-product)
+   (advice-add 'org-fontify-meta-lines-and-blocks :after #'pk/sql--ob-fontify-reset-product)
+   ;; END: a hacky way to get font-lock per engine in org-mode
+)
+
+
+;;
