@@ -1183,7 +1183,11 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
     :set (pk/sql--custom-set-product-feature-factory :sqli-options))
 
   (sql-set-product-feature 'cql
-                           :prompt-regexp "^cqlsh\\(?::[a-zA-Z0-9]+\\)?>")
+                           :prompt-regexp (rx bol
+                                              (zero-or-one (any "a-z0-9_") "@")
+                                              "cqlsh"
+                                              (zero-or-one ":" (any "a-z") (any "a-z0-9"))
+                                              ">"))
   (sql-set-product-feature 'cql
                            :prompt-length 7)
   (sql-set-product-feature 'cql
