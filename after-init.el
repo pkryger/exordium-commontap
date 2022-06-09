@@ -29,13 +29,13 @@
   (defun pk/modus-themes--custom-faces ()
     (custom-theme-set-faces
      'user
-     `(fixed-pitch ((t (:family ,(face-attribute 'default :family) :height ,(face-attribute 'default :height)))) t)
-     `(fill-column-indicator ((t (:height 1 :background ,(modus-themes-color 'bg-main) :foreground ,(modus-themes-color 'bg-inactive)))) t)
-     `(exordium-org-work ((t (:inherit 'org-todo :foreground ,(modus-themes-color 'orange-intense)))) t)
-     `(exordium-org-wait ((t (:inherit 'org-todo :foreground ,(modus-themes-color 'cyan)))) t)
-     `(iedit-occurrence ((t (:inherit nil :box (:line-width -3 :color ,(modus-themes-color 'blue-refine-bg))))) t)
-     `(iedit-read-only-occurrence ((t (:inherit nil :box (:line-width -3 :color ,(modus-themes-color 'yellow-intense-bg))))) t)
-     `(aw-leading-char-face ((t (:foreground ,(modus-themes-color 'red) :bold t :height 1.5))) t)))
+     `(fixed-pitch ((t (:family ,(face-attribute 'default :family) :height ,(face-attribute 'default :height)))))
+     `(fill-column-indicator ((t (:height 1 :background ,(modus-themes-color 'bg-main) :foreground ,(modus-themes-color 'bg-inactive)))))
+     `(exordium-org-work ((t (:inherit 'org-todo :foreground ,(modus-themes-color 'orange-intense)))))
+     `(exordium-org-wait ((t (:inherit 'org-todo :foreground ,(modus-themes-color 'cyan)))))
+     `(iedit-occurrence ((t (:inherit nil :box (:line-width -3 :color ,(modus-themes-color 'blue-refine-bg))))))
+     `(iedit-read-only-occurrence ((t (:inherit nil :box (:line-width -3 :color ,(modus-themes-color 'yellow-intense-bg))))))
+     `(aw-leading-char-face ((t (:foreground ,(modus-themes-color 'red) :bold t :height 1.5))))))
 
   ;; load the theme files before enabling a theme (else you get an error).
   (modus-themes-load-themes)
