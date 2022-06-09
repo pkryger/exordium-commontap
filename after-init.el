@@ -1136,12 +1136,15 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
     "Create a custom set function that updates the FEATURE for Cassandra in `sql'."
     #'(lambda (sym value)
         (sql-set-product-feature 'cql
-                                 feature value)
+                                 feature
+                                 (if (member feature sql-indirect-features)
+                                     sym
+                                   value))
         (set-default sym value)))
   :config
   (unless (assoc 'cql sql-product-alist)
     (sql-add-product 'cql "Cassandra"
-                     '(:free-software t)))
+                     :free-software t))
 
   ;; CQL keywords from (without ANSI keywords):
   ;; https://cassandra.apache.org/doc/latest/cassandra/cql/appendices.html#appendix-A
@@ -1159,12 +1162,11 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 "maxwritetime"))
     "Cassandra CQL keywords used by font-lock.")
   (sql-set-product-feature 'cql
-                           :font-lock pk/sql-cql-font-lock-keywords)
+                           :font-lock 'pk/sql-cql-font-lock-keywords)
 
   ;; C-style comments // and /**/ (the latter is supported by `sql-mode')
   (sql-set-product-feature 'cql
-                           :syntax-alist
-                           '((?/ . ". 124")))
+                           :syntax-alist '((?/ . ". 124")))
 
   (defcustom pk/sql-cql-program "cqlsh"
     "Command to start cqlsh"
@@ -1183,11 +1185,12 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
     :set (pk/sql--custom-set-product-feature-factory :sqli-options))
 
   (sql-set-product-feature 'cql
-                           :prompt-regexp (rx bol
-                                              (zero-or-one (any "a-z0-9_") "@")
-                                              "cqlsh"
-                                              (zero-or-one ":" (any "a-z") (any "a-z0-9"))
-                                              ">"))
+                           :prompt-regexp
+                           (rx bol
+                               (zero-or-one (any "a-z0-9_") "@")
+                               "cqlsh"
+                               (zero-or-one ":" (any "a-z") (any "a-z0-9"))
+                               ">"))
   (sql-set-product-feature 'cql
                            :prompt-length 7)
   (sql-set-product-feature 'cql
@@ -1266,8 +1269,10 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
        (setq pk/sql--ob-fontify-product-orig nil)))
 
    (advice-add 'org-fontify-meta-lines-and-blocks :before #'pk/sql--ob-fontify-init-engine)
+   ;;(advice-add 'org-html-fontify-code :before #'pk/sql--ob-fontify-init-engine)
    (advice-add 'org-font-lock-ensure :before #'pk/sql--ob-fontify-set-product)
    (advice-add 'org-fontify-meta-lines-and-blocks :after #'pk/sql--ob-fontify-reset-product)
+   ;;(advice-add 'org-html-fontify-code :after #'pk/sql--ob-fontify-reset-product)
    ;; END: a hacky way to get font-lock per engine in org-mode
 )
 
