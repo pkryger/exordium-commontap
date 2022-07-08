@@ -1277,4 +1277,12 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 )
 
 
+(use-package json-mode
+  :config
+  (add-hook 'json-mode-hook
+            #'(lambda ()
+                ;; Disable js2-mode that exordium turns on for `javascrip-mode'
+                ;; to disable js-lint
+                (js2-minor-mode -1))))
+
 ;;
