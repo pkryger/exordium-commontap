@@ -1022,6 +1022,8 @@ All the reminder parts of the separator will have
 
 (use-package git-link
   :after (magit transient)
+  :custom
+  (git-link-use-commit t)
   :config
   (transient-append-suffix 'magit-file-dispatch "g" '(1 "f" "copy link" git-link)))
 
