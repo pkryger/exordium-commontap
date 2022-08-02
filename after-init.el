@@ -1144,9 +1144,9 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
                                    value))
         (set-default sym value)))
   :config
-  (unless (assoc 'cql sql-product-alist)
-    (sql-add-product 'cql "Cassandra"
-                     :free-software t))
+  (setf sql-product-alist (assoc-delete-all 'cql sql-product-alist))
+  (sql-add-product 'cql "Cassandra"
+                     :free-software t)
 
   ;; CQL keywords from (without ANSI keywords):
   ;; https://cassandra.apache.org/doc/latest/cassandra/cql/appendices.html#appendix-A
@@ -1164,7 +1164,7 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 "maxwritetime"))
     "Cassandra CQL keywords used by font-lock.")
   (sql-set-product-feature 'cql
-                           :font-lock 'pk/sql-cql-font-lock-keywords)
+                           :font-lock pk/sql-cql-font-lock-keywords)
 
   ;; C-style comments // and /**/ (the latter is supported by `sql-mode')
   (sql-set-product-feature 'cql
@@ -1252,7 +1252,7 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
                             (zero-or-more (one-or-more (any " \t")) (zero-or-more any))
                             eol)
                         limit t)
-                   (match-string 1)))))))
+                   (match-string-no-properties 1)))))))
 
    (defun pk/sql--ob-fontify-set-product (&rest _)
      (when (and org-src-fontify-natively
