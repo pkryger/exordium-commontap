@@ -1339,4 +1339,6 @@ This is intended to be used as an advise for
      (set-buffer-modified-p nil))))
 
 
+(use-package graphviz-dot-mode)
+
 ;;
