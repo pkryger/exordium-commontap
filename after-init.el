@@ -349,7 +349,8 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (aw-translate-char-function #'(lambda (c)
                                   (if (eq ?\M-o c) ?n c)))
   :config
-  (global-set-key (kbd "M-o") #'ace-window))
+  (global-set-key (kbd "M-o") #'ace-window)
+  (ace-window-posframe-mode))
 
 
 (defconst pk/desktop-files-not-to-save
