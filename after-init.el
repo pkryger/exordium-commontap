@@ -866,9 +866,9 @@ language."
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (use-package forge
-   :config
-   (add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
-   (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium"))))
+  :config
+  (add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
+  (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium"))))
 
 
 ;; Configure tabs
