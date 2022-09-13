@@ -1252,6 +1252,8 @@ as the advised function."
       (setq pk/sql--ob-fontify-product-orig sql-product))
     (save-excursion
       (setq pk/sql--ob-fontify-engine
+            ;; TODO: use (org-babel-get-src-block-info t), see
+            ;; https://stackoverflow.com/a/66911315/519827
             (let ((case-fold-search t))
               (when (re-search-forward
                      (rx bol
