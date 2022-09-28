@@ -1128,6 +1128,8 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 
 (use-package apheleia
   :config
+  (setf (alist-get 'black apheleia-formatters)
+        '("black" "--line-length" (number-to-string fill-column) "-"))
   (setf (alist-get 'python-mode apheleia-mode-alist)
         '(isort black)))
 
