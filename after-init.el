@@ -1343,4 +1343,36 @@ This is intended to be used as an advise for
 
 (use-package graphviz-dot-mode)
 
+;; what variables should be updated has been copied from exec-path-from-shell-setenv
+(defun pk/fixup-path-setenv ()
+  "Fixup PATH variable: my bin, homebrew bin, reminder of the elements."
+  (interactive)
+  (let* ((home (getenv "HOME"))
+         (brew-prefix (when-let ((brew (executable-find "brew")))
+                        (string-trim (shell-command-to-string (concat brew " --prefix")))))
+         (path (mapconcat
+                #'identity
+                (let* ((dirs (split-string (getenv "PATH") path-separator))
+                       (homies (seq-filter (lambda (elt)
+                                             (string-prefix-p home elt))
+                                           dirs))
+                       (brewies (and brew-prefix
+                                     (seq-filter (lambda (elt)
+                                                   (string-prefix-p brew-prefix elt))
+                                                 dirs))))
+                  (seq-uniq
+                   (append homies
+                           brewies
+                           (seq-remove (lambda (elt)
+                                         (or (member elt homies)
+                                             (member elt brewies)))
+                                       dirs))
+                   #'string=))
+                ":")))
+    (setenv "PATH" path)
+    (setq exec-path (append (parse-colon-path path) (list exec-directory)))
+    ;; `eshell-path-env' is a buffer local variable, so change its default
+    ;; value.
+    (setq-default eshell-path-env path)))
+
 ;;
