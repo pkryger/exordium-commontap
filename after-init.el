@@ -429,14 +429,6 @@ The first file found in a project will be used."
                  :branch "fixes")
            :upgrade t))
 
-(use-package py-autopep8
-  ;; TODO: add if requested
-;;   :ensure-system-package autopep8
-  :custom
-  (py-autopep8-options  '("--max-line-length" "100"))
-  ;; :hook (python-mode . py-autopep8-enable-on-save)
-  )
-
 ;; TODO: use projectile to jump between tests and implementation as well as run tests
 (use-package python-pytest
   :bind (:map python-mode-map
