@@ -1368,4 +1368,17 @@ This is intended to be used as an advise for
     ;; value.
     (setq-default eshell-path-env path)))
 
+(use-package persistent-scratch
+  :init
+  (defun pk/persistent-scratch--scratch-buffer-p ()
+    "Return non nil when the buffer is a scratch like buffer.
+I.e., created with `scratch' or named scratch-"
+    (let ((buffer-name (buffer-name)))
+      (or (string= "*scratch*" buffer-name)
+          (string-prefix-p "scratch-" buffer-name))))
+  :custom
+  (persistent-scratch-scratch-buffer-p-function #'pk/persistent-scratch--scratch-buffer-p)
+  :config
+  (persistent-scratch-setup-default))
+
 ;;
