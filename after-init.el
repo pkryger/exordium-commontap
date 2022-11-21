@@ -205,7 +205,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
          ([(control ?\.)] . nil)))
 
 (use-package flyspell-correct-helm
-  :after flyspell
+  :after (flyspell)
   :custom
   (flyspell-correct-interface #'flyspell-correct-helm))
 
@@ -255,7 +255,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 
 (use-package jenkinsfile-mode
-  :after flycheck
+  :after (flycheck)
   :config
   (flycheck-add-mode 'groovy 'jenkinsfile-mode))
 
@@ -343,6 +343,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 
 
 (use-package ace-window
+  :after (posframe)
   :diminish "AW"
   :custom
   (aw-scope 'frame)
@@ -446,7 +447,7 @@ The first file found in a project will be used."
   (python-mode . anaconda-eldoc-mode))
 
 (use-package company-anaconda
-  :after company
+  :after (company)
   :config
   (add-to-list 'company-backends '(company-anaconda :with company-capf)))
 
