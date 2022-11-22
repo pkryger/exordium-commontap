@@ -843,6 +843,7 @@ language."
 ;; TODO: move to exordium and likely hide behind the
 ;; `exordium-use-variable-pitch' and `exordium-complete-mode' set to `:company'
 (use-package company-posframe
+  :after (posframe)
   :when exordium-osx
   :diminish
   :bind
