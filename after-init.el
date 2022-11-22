@@ -352,7 +352,8 @@ Defer it so that commands launched immediately after will enjoy the benefits."
                                   (if (eq ?\M-o c) ?n c)))
   :config
   (global-set-key (kbd "M-o") #'ace-window)
-  (ace-window-posframe-mode))
+  (when (and (require 'posframe nil t) (posframe-workable-p))
+    (ace-window-posframe-mode)))
 
 
 (defconst pk/desktop-files-not-to-save
