@@ -342,6 +342,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (setq deft-auto-save-interval 0))
 
 
+(use-package posframe)
 (use-package ace-window
   :after (posframe)
   :diminish "AW"
