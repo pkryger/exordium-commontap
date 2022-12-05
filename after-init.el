@@ -1099,9 +1099,9 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   :config
   (mode-line-bell-mode))
 
-(quelpa '(basic-stats :fetcher github
-                      :repo "pkryger/basic-stats"
-                      :branch "main"))
+;; (quelpa '(basic-stats :fetcher github
+;;                       :repo "pkryger/basic-stats"
+;;                       :branch "main"))
 
 (use-package dired
   :ensure nil
