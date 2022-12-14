@@ -1100,10 +1100,6 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   :config
   (mode-line-bell-mode))
 
-;; (quelpa '(basic-stats :fetcher github
-;;                       :repo "pkryger/basic-stats"
-;;                       :branch "main"))
-
 (use-package dired
   :ensure nil
   :custom
@@ -1384,5 +1380,9 @@ I.e., created with `scratch' or named scratch-"
   (persistent-scratch-scratch-buffer-p-function #'pk/persistent-scratch--scratch-buffer-p)
   :config
   (persistent-scratch-setup-default))
+
+(quelpa '(basic-stats :fetcher github
+                      :repo "pkryger/basic-stats"
+                      :branch "main"))
 
 ;;
