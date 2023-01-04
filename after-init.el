@@ -6,13 +6,9 @@
 
 (use-package modus-themes
   :init
+  (require 'modus-themes)
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-italic-constructs t
-        modus-themes-region '(bg-only no-extend accented)
-        modus-themes-mode-line '(borderless accented)
-        modus-themes-subtle-line-numbers t
-        modus-themes-tabs-accented t
-        modus-themes-hl-line '(accented)
         modus-themes-completions '((matches . (extrabold background intense))
                                    (selection . (semibold accented intense))
                                    (popup . (semibold accented)))
@@ -25,27 +21,100 @@
                                   (4 . (,@high-level-properties 1.1))
                                   (t . (,@low-level-properties))))
         modus-themes-mixed-fonts t
-        modus-themes-variable-pitch-ui t)
+        modus-themes-variable-pitch-ui t
+        modus-themes-common-palette-overrides
+        `((border-mode-line-active unspecified)
+          (border-mode-line-inactive unspecified)
+          (bg-mode-line-active bg-blue-subtle)
+          (fg-mode-line-active fg-main)
+          ,@modus-themes-preset-overrides-faint
+          (fg-region unspecified)
+          (fg-line-number-inactive "gray50")
+          (fg-line-number-active fg-main)
+          (bg-line-number-inactive unspecified)
+          (bg-line-number-active unspecified)))
 
   (defun pk/modus-themes--custom-faces ()
-    (custom-theme-set-faces
-     'user
-     `(fixed-pitch ((t (:family ,(face-attribute 'default :family) :height ,(face-attribute 'default :height)))))
-     `(fill-column-indicator ((t (:height 1 :background ,(modus-themes-color 'bg-main) :foreground ,(modus-themes-color 'bg-inactive)))))
-     `(exordium-org-work ((t (:inherit 'org-todo :foreground ,(modus-themes-color 'orange-intense)))))
-     `(exordium-org-wait ((t (:inherit 'org-todo :foreground ,(modus-themes-color 'cyan)))))
-     `(iedit-occurrence ((t (:inherit nil :box (:line-width -3 :color ,(modus-themes-color 'blue-refine-bg))))))
-     `(iedit-read-only-occurrence ((t (:inherit nil :box (:line-width -3 :color ,(modus-themes-color 'yellow-intense-bg))))))
-     `(aw-leading-char-face ((t (:foreground ,(modus-themes-color 'red) :bold t :height 1.5))))))
+    ;; The following is an expanded macro `modus-themes-with-colors',
+    ;; but need it so that it will evaluate when function is executed
+    (let* ((sym (gensym))
+           (colors (mapcar #'car (modus-themes--current-theme-palette))))
+      (eval
+       `(let* ((c '((class color) (min-colors 256)))
+               (,sym (modus-themes--current-theme-palette :overrides))
+               ,@(mapcar (lambda (color)
+                           (list color
+                                 `(let* ((value (car (alist-get ',color ,sym))))
+                                    (if (or (stringp value)
+                                            (eq value 'unspecified))
+                                        value
+                                      (car (alist-get value ,sym))))))
+                         colors))
+          (ignore c ,@colors)
+          (custom-theme-set-faces
+           'user
+           `(fixed-pitch ((t (,@c :family ,(face-attribute 'default :family) :height ,(face-attribute 'default :height)))))
+           `(fill-column-indicator ((t (,@c :height 1 :background ,bg-main :foreground ,bg-inactive))))
+           `(exordium-org-work ((t (,@c :inherit 'org-todo :foreground ,rust))))
+           `(exordium-org-wait ((t (,@c :inherit 'org-todo :foreground ,cyan))))
+           `(iedit-occurrence
+             ((t (,@c :inherit nil
+                      :box (:line-width -2 :color ,(face-attribute 'modus-themes-completion-match-0 :foreground))))))
+           `(iedit-read-only-occurrence
+             ((t (,@c :inherit nil
+                      :box (:line-width -2 :color ,(face-attribute 'modus-themes-completion-match-1 :foreground))))))
+           `(aw-leading-char-face ((t (,@c :foreground ,red :bold t :height 1.5))))
+           ;; Redoing helm, inspired by last removed version in:
+           ;; https://gitlab.com/protesilaos/modus-themes/-/commit/1efaa7ef79682ec13493351d52ed1b339fb6ace2
+           `(helm-selection ((t (,@c :inherit modus-themes-completion-selected))))
+           `(helm-match ((t (,@c :inherit modus-themes-completion-match-0))))
+           `(helm-visible-mark ((t (,@c :inherit modus-themes-subtle-cyan))))
+           `(helm-source-header ((t (,@c :inherit bold :foreground ,fg-main :background ,bg-lavender))))
+           `(helm-candidate-number ((t (,@c :foreground ,cyan))))
+           `(helm-swoop-target-word-face ((t (,@c :inherit modus-themes-completion-match-0))))
+           `(helm-swoop-target-line-face ((t (,@c :inherit modus-themes-completion-selected :extend t))))
+           `(helm-swoop-target-line-block-face ((t (,@c :inherit modus-themes-completion-selected :extend t))))
+           `(helm-rg-match-text-face ((t (,@c :inherit modus-themes-completion-match-0))))
+           `(helm-match-item ((t (,@c :inherit modus-themes-completion-match-0))))
+           `(helm-moccur-buffer ((t (,@c :inherit bold :foreground ,name))))
+           `(helm-rg-file-match-face ((t (,@c :inherit bold :foreground ,name))))
+           `(helm-grep-match ((t (,@c :inherit modus-themes-completion-match-0))))
+           `(helm-grep-lineno ((t (,@c :inherit shadow))))
+           `(helm-grep-finish ((t (,@c :inherit bold))))
+           `(helm-rg-line-number-match-face ((t (,@c :inherit shadow))))
+           `(helm-buffer-archive ((t (,@c :inherit bold :foreground ,cyan))))
+           `(helm-buffer-directory ((t (,@c :inherit bold :foreground ,blue))))
+           `(helm-buffer-file ((t (,@c :foreground ,fg-main))))
+           `(helm-buffer-modified ((t (,@c :foreground ,yellow-warmer))))
+           `(helm-buffer-not-saved ((t (,@c :foreground ,red-warmer))))
+           `(helm-buffer-process ((t (,@c :foreground ,magenta))))
+           `(helm-buffer-saved-out ((t (,@c :inherit bold :background ,bg-cyan-nuanced :foreground ,red))))
+           `(helm-buffer-size ((t (,@c :inherit shadow))))
+           `(helm-ff-backup-file ((t (,@c :inherit shadow))))
+           `(helm-ff-denied ((t (,@c :inherit modus-themes-intense-red))))
+           `(helm-ff-directory ((t (,@c :inherit helm-buffer-directory))))
+           `(helm-ff-dirs ((t (,@c :inherit bold :foreground ,blue-cooler))))
+           `(helm-ff-dotted-directory ((t (,@c :inherit bold :background ,bg-cyan-nuanced :foreground ,fg-alt))))
+           `(helm-ff-dotted-symlink-directory ((t (,@c :inherit (button helm-ff-dotted-directory)))))
+           `(helm-ff-executable ((t (,@c :foreground ,magenta-warmer))))
+           `(helm-ff-file ((t (,@c :foreground ,fg-main))))
+           `(helm-ff-file-extension ((t (,@c :foreground ,yellow-warmer))))
+           `(helm-ff-invalid-symlink ((t (,@c :inherit modus-themes-link-broken))))
+           `(helm-ff-pipe ((t (,@c :inherit modus-themes-special-calm))))
+           `(helm-ff-prefix ((t (,@c :inherit modus-themes-special-warm))))
+           `(helm-ff-socket ((t (,@c :foreground ,red-cooler))))
+           `(helm-ff-suid ((t (,@c :inherit modus-themes-special-warm))))
+           `(helm-ff-symlink ((t (,@c :inherit modus-themes-link-symlink))))
+           `(helm-ff-truename ((t (,@c :foreground ,blue-cooler))))
+           `(helm-M-x-key ((t (,@c :inherit modus-themes-key-binding))))
+           `(helm-M-x-short-doc ((t (,@c :inherit completions-annotations)))))))))
 
-  ;; load the theme files before enabling a theme (else you get an error).
-  (modus-themes-load-themes)
   :hook
   (modus-themes-after-load-theme . pk/modus-themes--custom-faces)
+
   :config
-  ;; Load the theme of your choice:
-  (modus-themes-load-operandi) ;; OR (modus-themes-load-vivendi)
-  (pk/modus-themes--custom-faces)
+  (load-theme 'modus-operandi :no-confirm)
+
   :bind
   ("<f5>" . modus-themes-toggle))
 
