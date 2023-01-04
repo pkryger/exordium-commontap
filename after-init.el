@@ -164,6 +164,13 @@ This will be used in be used in `pk/dispatch-cut-function'")
         ("M-r" . #'xref-find-references)
         ("M-?" . #'helpful-at-point)))
 
+(use-package eglot)
+(use-package eldoc
+  :ensure nil
+  :custom
+  (eldoc-idle-delay 0.25)
+  (eldoc-echo-area-prefer-doc-buffer t))
+
 (use-package dumb-jump
   :config
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
@@ -449,8 +456,10 @@ The first file found in a project will be used."
   :custom
   (anaconda-mode-use-posframe-show-doc t)
   :hook
-  (python-mode . anaconda-mode)
-  (python-mode . anaconda-eldoc-mode))
+  ;; to let to choose eglot
+  ;; (python-mode . anaconda-mode)
+  ;; (python-mode . anaconda-eldoc-mode)
+  )
 
 (use-package company-anaconda
   :after (company)
