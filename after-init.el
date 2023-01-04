@@ -145,8 +145,12 @@ This will be used in be used in `pk/dispatch-cut-function'")
   :diminish
   :custom
   (helm-split-window-other-side-when-one-window 'right)
+  (helm-M-x-show-short-doc t)
   :bind
-  (:map helm-command-map
+  (("C-x b" . #'helm-buffers-list)
+   :map ctl-x-map
+        ("b" . #'helm-buffers-list)
+   :map helm-command-map
         ("g" . #'helm-google-suggest)))
 
 
