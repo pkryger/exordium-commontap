@@ -524,7 +524,7 @@ The first file found in a project will be used."
 (use-package anaconda-mode
   :custom
   (anaconda-mode-use-posframe-show-doc t)
-  :hook
+  ;; :hook
   ;; to let to choose eglot
   ;; (python-mode . anaconda-mode)
   ;; (python-mode . anaconda-eldoc-mode)
