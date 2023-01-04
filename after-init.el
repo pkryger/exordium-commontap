@@ -6,7 +6,7 @@
 
 (use-package modus-themes
   :init
-  (require 'modus-themes)
+  (require 'modus-themes nil t)
   ;; Add all your customizations prior to loading the themes
   (setq modus-themes-italic-constructs t
         modus-themes-completions '((matches . (extrabold background intense))
@@ -27,12 +27,8 @@
           (border-mode-line-inactive unspecified)
           (bg-mode-line-active bg-blue-subtle)
           (fg-mode-line-active fg-main)
-          ,@modus-themes-preset-overrides-faint
           (fg-region unspecified)
-          (fg-line-number-inactive "gray50")
-          (fg-line-number-active fg-main)
-          (bg-line-number-inactive unspecified)
-          (bg-line-number-active unspecified)))
+          ,@modus-themes-preset-overrides-faint))
 
   (defun pk/modus-themes--custom-faces ()
     ;; The following is an expanded macro `modus-themes-with-colors',
