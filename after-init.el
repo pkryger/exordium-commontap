@@ -33,6 +33,7 @@
   (defun pk/modus-themes--custom-faces ()
     ;; The following is an expanded macro `modus-themes-with-colors',
     ;; but need it so that it will evaluate when function is executed
+    ;; -- begin of macro preface --
     (let* ((sym (gensym))
            (colors (mapcar #'car (modus-themes--current-theme-palette))))
       (eval
@@ -47,6 +48,15 @@
                                       (car (alist-get value ,sym))))))
                          colors))
           (ignore c ,@colors)
+          ;; -- end of macro preface --
+
+          ;; helm-rg uses ansi colours from rg output to highlight matches,
+          ;; unfortunateally this doesn't allow for custom overrides so
+          ;; use advice to hack around
+          (advice-add 'helm-rg--construct-match-text-properties :filter-return
+                      `(lambda (&rest _)
+                         (list 'ansi-color-bold (list ':foreground ,red))))
+
           (custom-theme-set-faces
            'user
            `(fixed-pitch ((t (,@c :family ,(face-attribute 'default :family) :height ,(face-attribute 'default :height)))))
@@ -61,17 +71,22 @@
                       :box (:line-width -2 :color ,(face-attribute 'modus-themes-completion-match-1 :foreground))))))
            `(aw-leading-char-face ((t (,@c :foreground ,red :bold t :height 1.5))))
            ;; Redoing helm, inspired by last removed version in:
-           ;; https://gitlab.com/protesilaos/modus-themes/-/commit/1efaa7ef79682ec13493351d52ed1b339fb6ace2
+           ;; https://github.com/protesilaos/modus-themes/commit/1efaa7ef79682ec13493351d52ed1b339fb6ace2
            `(helm-selection ((t (,@c :inherit modus-themes-completion-selected))))
            `(helm-match ((t (,@c :inherit modus-themes-completion-match-0))))
-           `(helm-visible-mark ((t (,@c :inherit modus-themes-subtle-cyan))))
-           `(helm-source-header ((t (,@c :inherit bold :foreground ,fg-main :background ,bg-lavender))))
-           `(helm-candidate-number ((t (,@c :foreground ,cyan))))
-           `(helm-swoop-target-word-face ((t (,@c :inherit modus-themes-completion-match-0))))
-           `(helm-swoop-target-line-face ((t (,@c :inherit modus-themes-completion-selected :extend t))))
-           `(helm-swoop-target-line-block-face ((t (,@c :inherit modus-themes-completion-selected :extend t))))
            `(helm-match-item ((t (,@c :inherit modus-themes-completion-match-0))))
+           `(helm-visible-mark ((t (,@c :inherit modus-themes-subtle-cyan))))
+           `(helm-source-header ((t (,@c :inherit bold :foreground ,fg-main :background ,bg-ochre))))
+           `(helm-header-line-left-margin ((t (,@c :inherit bold :foreground ,yellow-intense))))
+           `(helm-candidate-number ((t (,@c :foreground ,cyan))))
+           `(helm-candidate-number-suspended ((t (,@c :foreground ,yellow))))
+           `(helm-delete-async-message ((t (,@c :inherit bold :foreground ,magenta))))
+           `(helm-locate-finish ((t (,@c :inherit success))))
+           `(helm-swoop-target-word-face ((t (,@c :inherit modus-themes-completion-match-0))))
+           `(helm-swoop-target-line-face ((t (,@c :inherit highlight :extend t))))
+           `(helm-swoop-target-line-block-face ((t (,@c :inherit highlight :extend t))))
            `(helm-moccur-buffer ((t (,@c :inherit bold :foreground ,name))))
+           `(helm-grep-command ((t (,@c :inherit helm-source-header))))
            `(helm-grep-match ((t (,@c :inherit modus-themes-completion-match-0))))
            `(helm-grep-lineno ((t (,@c :inherit shadow))))
            `(helm-grep-finish ((t (,@c :inherit bold))))
@@ -102,10 +117,14 @@
            `(helm-rg-match-text-face ((t (,@c :inherit modus-themes-completion-match-0))))
            `(helm-rg-line-number-match-face ((t (,@c :inherit helm-grep-lineno))))
            `(helm-rg-file-match-face ((t (,@c :inherit helm-moccur-buffer))))
-           `(helm-rg-directory-header-face ((t (,@c :inherit helm-ff-directory))))
-           `(helm-rg-directory-cmd-face ((t (,@c :inherit helm-ff-directory))))
+           `(helm-rg-preview-line-highlight ((t (,@c :inherit highlight :extend t))))
+           `(helm-rg-title-face ((t (,@c :inherit helm-source-header))))
+           `(helm-rg-base-rg-cmd-face ((t (,@c :inherit helm-source-header))))
            `(helm-rg-active-arg-face ((t (,@c :foreground ,yellow-warmer))))
-           `(helm-rg-preview-line-highlight ((t (,@c :inherit modus-themes-completion-selected :extend t))))
+           `(helm-rg-inactive-arg-face ((t (,@c :foreground ,fg-dim))))
+           `(helm-rg-extra-arg-face ((t (,@c :foreground ,yellow-cooler))))
+           `(helm-rg-directory-cmd-face ((t (,@c :inherit helm-ff-directory))))
+           `(helm-rg-directory-header-face ((t (,@c :inherit helm-ff-directory))))
            `(helm-M-x-key ((t (,@c :inherit modus-themes-key-binding))))
            `(helm-M-x-short-doc ((t (,@c :inherit completions-annotations)))))))))
 
