@@ -114,6 +114,7 @@
 
   :config
   (load-theme 'modus-operandi :no-confirm)
+  (pk/modus-themes--custom-faces)
 
   :bind
   ("<f5>" . modus-themes-toggle))
