@@ -90,6 +90,7 @@
            `(helm-swoop-target-line-face ((t (,@c :inherit highlight :extend t))))
            `(helm-swoop-target-line-block-face ((t (,@c :inherit highlight :extend t))))
            `(helm-moccur-buffer ((t (,@c :inherit bold :foreground ,name))))
+           `(helm-resume-need-update ((t (,@c :inherit pulse-highlight-start-face))))
            `(helm-grep-command ((t (,@c :inherit helm-source-header))))
            `(helm-grep-match ((t (,@c :inherit modus-themes-completion-match-0))))
            `(helm-grep-lineno ((t (,@c :inherit shadow))))
