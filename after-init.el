@@ -53,7 +53,11 @@
           ;; helm-rg uses ansi colours from rg output to highlight matches,
           ;; unfortunateally this doesn't allow for custom overrides so
           ;; use advice to hack around
-          (advice-add 'helm-rg--construct-match-text-properties :filter-return
+          ;; It seems that support for defcustom has been added in the past:
+          ;; https://github.com/cosmicexplorer/helm-rg/blob/1f01b2f/helm-rg.el#L931-L935
+          ;; but then subsequently deleted in
+          ;; https://github.com/cosmicexplorer/helm-rg/commit/2221701
+          (advice-add 'helm-rg--construct-match-text-properties :override
                       `(lambda (&rest _)
                          (list 'ansi-color-bold (list ':foreground ,red))))
 
