@@ -1215,6 +1215,10 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   :custom
   (dired-dwim-target t))
 
+(use-package diredfl
+  :config
+  (diredfl-global-mode))
+
 (use-package dired-du
   :custom
   (dired-du-used-space-program `(,(if exordium-osx "gdu" "du") "-sb")))
