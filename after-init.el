@@ -129,7 +129,7 @@
            `(helm-rg-title-face ((t (,@c :inherit helm-source-header))))
            `(helm-rg-base-rg-cmd-face ((t (,@c :inherit helm-source-header))))
            `(helm-rg-active-arg-face ((t (,@c :foreground ,yellow-warmer))))
-           `(helm-rg-inactive-arg-face ((t (,@c :foreground ,fg-dim))))
+           `(helm-rg-inactive-arg-face ((t (,@c :foreground ,fg-dim :weight thin))))
            `(helm-rg-extra-arg-face ((t (,@c :foreground ,yellow-cooler))))
            `(helm-rg-directory-cmd-face ((t (,@c :inherit helm-ff-directory))))
            `(helm-rg-directory-header-face ((t (,@c :inherit helm-ff-directory))))
