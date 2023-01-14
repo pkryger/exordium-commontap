@@ -1513,8 +1513,11 @@ I.e., created with `scratch' or named scratch-"
   :config
   (persistent-scratch-setup-default))
 
-(quelpa '(basic-stats :fetcher github
-                      :repo "pkryger/basic-stats"
-                      :branch "main"))
+;; (condition-case-unless-debug err
+;;     (quelpa '(basic-stats :fetcher github
+;;                           :repo "pkryger/basic-stats"
+;;                           :branch "main"))
+;;   ((debug error) (message "Error while loading basic-stats: %s"
+;;                           (error-message-string err))))
 
 ;;
