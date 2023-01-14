@@ -262,27 +262,27 @@ This will be used in be used in `pk/dispatch-cut-function'")
         ("M-?" . #'helpful-at-point)))
 
 (use-package eglot
+  :init
+  (global-unset-key (kbd "C-c e"))
+  (global-unset-key (kbd "C-c E"))
   :custom
   (eglot-extend-to-xref t)
   :bind
-  (("C-c e" . eglot-mode-map)
+  (("C-c e e" . eglot)
    :map eglot-mode-map
-        ("C-c e e" . eglot)
         ("C-c e r" . eglot-rename)
-        ("C-c e f" . eglot-code-action-quickfix)
-        ("C-c e o" . eglot-code-action-organize-imports)
-        ("C-c e i" . eglot-code-action-inline)
-        ("C-c e x" . eglot-code-action-extract)
-        ("C-c e w" . eglot-code-action-rewrite)
+        ("C-c e a" . eglot-code-actions)
         ("C-c e q" . eglot-shutdown)
         ("C-c e ?" . eldoc)
         ("C-c e h" . eldoc)
         ("C-c e d" . flymake-show-buffer-diagnostics)
         ("C-c e D" . flymake-show-project-diagnostics)
-        ("C-c e b E" . eglot-stderr-buffer)
-        ("C-c e b e" . eglot-events-buffer)
-        ("C-c e b c" . eglot-show-workspace-configuration)
-        ("C-c e b s" . eglot-signal-didChangeConfiguration)))
+        ("C-c e C" . eglot-show-workspace-configuration)
+        ("C-c e S" . eglot-signal-didChangeConfiguration)
+        ("C-c e x r" . eglot-reconnect)
+        ("C-c e x l" . eglot-list-connections)
+        ("C-c e x E" . eglot-stderr-buffer)
+        ("C-c e x e" . eglot-events-buffer)))
 
 (use-package eldoc
   :ensure nil
