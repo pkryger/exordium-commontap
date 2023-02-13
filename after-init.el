@@ -263,8 +263,11 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 ;; A little refactoring based on doomemacs as found in:
 ;; https://github.com/doomemacs/doomemacs/blob/e966249/modules/tools/lsp/autoload/flycheck-eglot.el
-;; This is a bit of a shoehorned, since the `flycheck' would
+;; This is a bit of a shoehorned, since the `flycheck' is keen to work in a
+;; pull mode (i.e., it calls a checker that reports diagnostics found), while
+;; `flymake' is push mode (i.e., it reports errors in a callback).
 (defvar-local pk/eglot-flycheck--init-call nil)
+(defvar-local pk/eglot-flycheck--syntax-check nil)
 
 (use-package eglot
   :after (flymake flycheck project)
@@ -274,6 +277,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
   (defun pk/eglot-flycheck--init (_checker callback)
     "CALLBACK is the function that we need to call when we are done."
+    (setq pk/eglot-flycheck--syntax-check (copy-flycheck-syntax-check flycheck-current-syntax-check))
     (let* ((pk/eglot-flycheck--init-call t) ; needs to be set before `eglot-flymake-backend'
            (current-errors (pk/eglot-flycheck--flymake->flycheck
                             (eglot-flymake-backend #'pk/eglot-flycheck--on-diagnostics))))
@@ -302,37 +306,36 @@ This will be used in be used in `pk/dispatch-cut-function'")
     "Report DIAGS to `flycheck' when `pk/eglot-flycheck--init-call' is nil.
 Otherwise, do nothing."
     (unless pk/eglot-flycheck--init-call
+      ;; First need to mark overlays for deletion, so fixed diagnostics annotations
+      ;; will be cleared, just like `flycheck-buffer'
+      (flycheck-mark-all-overlays-for-deletion)
+      ;; Make sure the `eglot' errors are not reported twice
+      (setq flycheck-current-errors
+            (cl-remove-if (lambda (err)
+                            (eq (flycheck-error-checker err) 'eglot))
+                          flycheck-current-errors))
+
+      ;; Call Flycheck to update the diagnostics annotations, similar to
+      ;; `flycheck-finish-current-syntax-check'
       (let ((current-errors (pk/eglot-flycheck--flymake->flycheck diags)))
-        ;; First need to mark overlays for deletion, so fixed diagnostics annotations
-        ;; will be cleared, just like `flycheck-buffer'
-        (flycheck-mark-all-overlays-for-deletion)
-        ;; Make sure the `eglot' errors are not reported twice
-        (setq flycheck-current-errors
-              (cl-remove-if (lambda (err)
-                              (eq (flycheck-error-checker err) 'eglot))
-                            flycheck-current-errors))
+        (setq current-errors
+              (if-let ((syntax-check pk/eglot-flycheck--syntax-check)
+                       (working-dir (flycheck-syntax-check-working-directory syntax-check)))
+                  (flycheck-relevant-errors
+                   (flycheck-fill-and-expand-error-file-names
+                    (flycheck-filter-errors
+                     (flycheck-assert-error-list-p current-errors) 'eglot)
+                    working-dir))
+                current-errors))
 
-        ;; @todo: perhaps the filtering will be needed here, but that would
-        ;; require capturing `working-dir' as well (or perhaps the whole
-        ;; `flycheck-current-syntax-check')
-        ;; (flycheck-relevant-errors
-        ;;  (flycheck-fill-and-expand-error-file-names
-        ;;   (flycheck-filter-errors
-        ;;    (flycheck-assert-error-list-p errors) 'eglot)
-        ;;   working-dir))
-
-        ;; Call Flycheck to update the diagnostics annotations, similar to
-        ;; `flycheck-finish-current-syntax-check'
         (flycheck-report-current-errors current-errors)
         (flycheck-delete-marked-overlays)
-        (flycheck-error-list-refresh))))
+        (flycheck-error-list-refresh)
+        (when (eq (current-buffer) (window-buffer))
+          (flycheck-display-error-at-point)))))
 
   (defun pk/eglot-flycheck--available-p ()
     (bound-and-true-p eglot--managed-mode))
-
-  (defun pk/eglot-flycheck--working-dir (_checker)
-    "Return current working dir."
-    (project-root (project-current)))
 
   (defun pk/eglot-flycheck--prefer-flycheck ()
     "Turn on `eglot', as a first checker for `flycheck'. Also disable
@@ -388,8 +391,7 @@ a few checkers that may be redundant."
     "Report `eglot' diagnostics using `flycheck'."
     :start #'pk/eglot-flycheck--init
     :predicate #'pk/eglot-flycheck--available-p
-    :modes '(prog-mode text-mode)
-    :working-dir #'pk/elgot-flycheck--wroking-dir)
+    :modes '(prog-mode text-mode))
   (add-to-list 'flycheck-checkers 'eglot)
 
   (when (and
