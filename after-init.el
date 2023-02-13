@@ -261,63 +261,105 @@ This will be used in be used in `pk/dispatch-cut-function'")
         ("M-r" . #'xref-find-references)
         ("M-?" . #'helpful-at-point)))
 
-(defvar-local pk/eglot-flycheck--current-errors nil)
+;; A little refactoring based on doomemacs as found in:
+;; https://github.com/doomemacs/doomemacs/blob/e966249/modules/tools/lsp/autoload/flycheck-eglot.el
+;; This is a bit of a shoehorned, since the `flycheck' would
+(defvar-local pk/eglot-flycheck--init-call nil)
 
 (use-package eglot
-  :after (flymake flycheck)
+  :after (flymake flycheck project)
   :init
   (global-unset-key (kbd "C-c e"))
   (global-unset-key (kbd "C-c E"))
 
-  ;; A little refactoring of doomemacs as found in:
-  ;; https://github.com/doomemacs/doomemacs/blob/e966249/modules/tools/lsp/autoload/flycheck-eglot.el
   (defun pk/eglot-flycheck--init (_checker callback)
-    "_CHECKER is the checker (eglot).
-CALLBACK is the function that we need to call when we are done,
-on all the errors."
-    (eglot-flymake-backend #'pk/eglot-flycheck--on-diagnostics)
-    (funcall callback 'finished pk/eglot-flycheck--current-errors))
+    "CALLBACK is the function that we need to call when we are done."
+    (let* ((pk/eglot-flycheck--init-call t) ; needs to be set before `eglot-flymake-backend'
+           (current-errors (pk/eglot-flycheck--flymake->flycheck
+                            (eglot-flymake-backend #'pk/eglot-flycheck--on-diagnostics))))
+      (funcall callback 'finished current-errors))
+    nil)
+
+  (defun pk/eglot-flycheck--flymake->flycheck (diags)
+    "Convert `flymake' DIAGS into `flyckeck' errors."
+    (mapcar #'(lambda (diag)
+                (with-current-buffer (flymake--diag-buffer diag)
+                  (flycheck-error-new-at-pos
+                   (flymake--diag-beg diag)
+                   (pcase (flymake--diag-type diag)
+                     ('eglot-note 'info)
+                     ('eglot-warning 'warning)
+                     ('eglot-error 'error)
+                     (_ (error "Unknown diagnostic type, %S" diag)))
+                   (flymake--diag-text diag)
+                   :end-pos (flymake--diag-end diag)
+                   :checker 'eglot
+                   :buffer (current-buffer)
+                   :filename (buffer-file-name))))
+            diags))
 
   (defun pk/eglot-flycheck--on-diagnostics (diags &rest _)
-    (cl-labels
-        ((flymake-diag->flycheck-err
-          (diag)
-          (with-current-buffer (flymake--diag-buffer diag)
-            (flycheck-error-new-at-pos
-             (flymake--diag-beg diag)
-             (pcase (flymake--diag-type diag)
-               ('eglot-note 'info)
-               ('eglot-warning 'warning)
-               ('eglot-error 'error)
-               (_ (error "Unknown diagnostic type, %S" diag)))
-             (flymake--diag-text diag)
-             :end-pos (flymake--diag-end diag)
-             :checker 'eglot
-             :buffer (current-buffer)
-             :filename (buffer-file-name)))))
-      (setq pk/eglot-flycheck--current-errors
-            (mapcar #'flymake-diag->flycheck-err diags))
-      ;; Call Flycheck to update the diagnostics annotations
-      (flycheck-buffer-deferred)))
+    "Report DIAGS to `flycheck' when `pk/eglot-flycheck--init-call' is nil.
+Otherwise, do nothing."
+    (unless pk/eglot-flycheck--init-call
+      (let ((current-errors (pk/eglot-flycheck--flymake->flycheck diags)))
+        ;; First need to mark overlays for deletion, so fixed diagnostics annotations
+        ;; will be cleared, just like `flycheck-buffer'
+        (flycheck-mark-all-overlays-for-deletion)
+        ;; Make sure the `eglot' errors are not reported twice
+        (setq flycheck-current-errors
+              (cl-remove-if (lambda (err)
+                              (eq (flycheck-error-checker err) 'eglot))
+                            flycheck-current-errors))
+
+        ;; @todo: perhaps the filtering will be needed here, but that would
+        ;; require capturing `working-dir' as well (or perhaps the whole
+        ;; `flycheck-current-syntax-check')
+        ;; (flycheck-relevant-errors
+        ;;  (flycheck-fill-and-expand-error-file-names
+        ;;   (flycheck-filter-errors
+        ;;    (flycheck-assert-error-list-p errors) 'eglot)
+        ;;   working-dir))
+
+        ;; Call Flycheck to update the diagnostics annotations, similar to
+        ;; `flycheck-finish-current-syntax-check'
+        (flycheck-report-current-errors current-errors)
+        (flycheck-delete-marked-overlays)
+        (flycheck-error-list-refresh))))
 
   (defun pk/eglot-flycheck--available-p ()
     (bound-and-true-p eglot--managed-mode))
 
+  (defun pk/eglot-flycheck--working-dir (_checker)
+    "Return current working dir."
+    (project-root (project-current)))
+
   (defun pk/eglot-flycheck--prefer-flycheck ()
-    (when eglot--managed-mode
-      (when-let ((current-checker (flycheck-get-checker-for-buffer)))
-        (unless (equal current-checker 'eglot)
-          (flycheck-add-next-checker 'eglot current-checker)))
-      (when (eq 'c++-mode major-mode)
-        (setq flycheck-disabled-checkers '(c/c++-clang c/c++-gcc)))
-      (flycheck-add-mode 'eglot major-mode)
-      (flycheck-mode 1)
-      ;; Call flycheck on initialisation to make sure to display initial
-      ;; errors
-      (flycheck-buffer-deferred)))
+    "Turn on `eglot', as a first checker for `flycheck'. Also disable
+a few checkers that may be redundant."
+    (if (eglot-managed-p)
+        (progn
+          (when-let ((current-checker (flycheck-get-checker-for-buffer)))
+            (unless (equal current-checker 'eglot)
+              (flycheck-add-next-checker 'eglot current-checker)))
+          ;; Register all modes supported by `eglot' for the current major-mode
+          (let ((modes (car (eglot--lookup-mode major-mode))))
+            (mapc (lambda (mode)
+                    (unless (memq mode (flycheck-checker-get 'eglot 'modes))
+                      (flycheck-add-mode 'eglot mode)))
+                  modes))
+          (when (cl-find-if #'derived-mode-p '(c++-mode c-mode))
+            (setq flycheck-disabled-checkers
+                  (append flycheck-disabled-checkers '(c/c++-clang c/c++-gcc)))))
+      (when (cl-find-if #'derived-mode-p '(c++-mode c-mode))
+        (setq flycheck-disabled-checkers
+              (cl-remove-if (lambda (mode)
+                              (memq mode '(c/c++-clang c/c++-gcc)))
+                            flycheck-disabled-checkers))))
+    (flycheck-mode 1))
 
   :hook
-  (eglot-managed-mode . pk/eglot-flycheck--prefer-flycheck)
+  ((eglot-managed-mode . pk/eglot-flycheck--prefer-flycheck))
 
   :custom
   (eglot-extend-to-xref t)
@@ -341,11 +383,13 @@ on all the errors."
 
   :config
   (setq eglot-stay-out-of '(flymake))
+
   (flycheck-define-generic-checker 'eglot
     "Report `eglot' diagnostics using `flycheck'."
     :start #'pk/eglot-flycheck--init
     :predicate #'pk/eglot-flycheck--available-p
-    :modes '(prog-mode text-mode))
+    :modes '(prog-mode text-mode)
+    :working-dir #'pk/elgot-flycheck--wroking-dir)
   (add-to-list 'flycheck-checkers 'eglot)
 
   (when (and
@@ -353,6 +397,7 @@ on all the errors."
          (fboundp 'flymake--diag-locus))
     (defalias 'flymake--diag-buffer 'flymake--diag-locus)))
 
+
 (use-package eldoc
   :ensure nil
   :custom
