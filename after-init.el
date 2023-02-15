@@ -163,6 +163,8 @@
                                        tree-sitter-major-mode-language-alist)))
     (add-to-list 'tree-sitter-major-mode-language-alist
                  (cons 'enh-ruby-mode language-name)))
+  (add-to-list 'tree-sitter-major-mode-language-alist
+               (cons 'forge-post-mode 'markdown))
   (global-tree-sitter-mode))
 )
 
