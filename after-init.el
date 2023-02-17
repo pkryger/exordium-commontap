@@ -344,6 +344,8 @@ Otherwise, do nothing."
 a few checkers that may be redundant."
     (if (eglot-managed-p)
         (progn
+          (setq flycheck-disabled-checkers
+                (cl-remove 'eglot flycheck-disabled-checkers))
           (when-let ((current-checker (flycheck-get-checker-for-buffer)))
             (unless (equal current-checker 'eglot)
               (flycheck-add-next-checker 'eglot current-checker)))
@@ -360,7 +362,9 @@ a few checkers that may be redundant."
         (setq flycheck-disabled-checkers
               (cl-remove-if (lambda (mode)
                               (memq mode '(c/c++-clang c/c++-gcc)))
-                            flycheck-disabled-checkers))))
+                            flycheck-disabled-checkers)))
+      (add-to-list 'flycheck-disabled-checkers 'eglot)
+      (setq pk/eglot-flycheck--syntax-check nil))
     (flycheck-mode 1))
 
   :hook
