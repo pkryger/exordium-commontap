@@ -67,6 +67,7 @@
            `(fill-column-indicator ((t (,@c :height 1 :background ,bg-main :foreground ,bg-inactive))))
            `(exordium-org-work ((t (,@c :inherit 'org-todo :foreground ,rust))))
            `(exordium-org-wait ((t (,@c :inherit 'org-todo :foreground ,cyan))))
+           `(exordium-org-stop ((t (,@c :inherit 'org-todo :foreground ,fg-dim))))
            `(iedit-occurrence
              ((t (,@c :inherit nil
                       :box (:line-width -2 :color ,(face-attribute 'modus-themes-completion-match-0 :foreground))))))
