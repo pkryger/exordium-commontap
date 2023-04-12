@@ -530,9 +530,10 @@ a few checkers that may be redundant."
                                     :src-dir "src/"
                                     :test-dir "test/")
 
-  (add-to-list 'yas-snippet-dirs
-               (concat (file-name-directory (or load-file-name
-                                                (buffer-file-name))) "snippets")))
+  ;; (add-to-list 'yas-snippet-dirs
+  ;;              (concat (file-name-directory (or load-file-name
+  ;;                                               (buffer-file-name))) "snippets"))
+  )
 
 
 (use-package yaml-mode
