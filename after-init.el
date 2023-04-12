@@ -64,6 +64,7 @@
           (custom-theme-set-faces
            'user
            `(fixed-pitch ((t (,@c :family ,(face-attribute 'default :family) :height ,(face-attribute 'default :height)))))
+           `(scroll-bar ((t (,@c :background ,bg-inactive :foreground ,fg-dim))))
            `(fill-column-indicator ((t (,@c :height 1 :background ,bg-main :foreground ,bg-inactive))))
            `(exordium-org-work ((t (,@c :inherit 'org-todo :foreground ,rust))))
            `(exordium-org-wait ((t (,@c :inherit 'org-todo :foreground ,cyan))))
