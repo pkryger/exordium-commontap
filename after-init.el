@@ -683,10 +683,11 @@ The first file found in a project will be used."
   )
 
 (use-package toml
-  :quelpa ((toml :fetcher git
-                 :url "https://github.com/pkryger/emacs-toml.git"
-                 :branch "fixes")
-           :upgrade t))
+  ;; :quelpa ((toml :fetcher git
+  ;;                :url "https://github.com/pkryger/emacs-toml.git"
+  ;;                :branch "fixes")
+  ;;          :upgrade t)
+  )
 
 ;; TODO: use projectile to jump between tests and implementation as well as run tests
 (use-package python-pytest
