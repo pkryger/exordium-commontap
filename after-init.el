@@ -267,6 +267,46 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 (use-package flycheck
   :config
+  (flycheck-define-checker python-ruff
+    "A Python syntax and style checker using the ruff utility.
+To override the path to the ruff executable, set
+`flycheck-python-ruff-executable'.
+See URL `http://pypi.python.org/pypi/ruff'."
+    :command ("ruff"
+              "--format=text"
+              (eval (when buffer-file-name
+                      (concat "--stdin-filename=" buffer-file-name)))
+              "-")
+    :standard-input t
+    :error-filter
+    (lambda (errors)
+      (let ((errors (flycheck-sanitize-errors errors)))
+        (seq-map #'flycheck-flake8-fix-error-level errors)))
+    :error-patterns
+    ((warning line-start
+              (file-name) ":" line ":" (optional column ":") " "
+              (id (one-or-more (any alpha)) (one-or-more digit)) " "
+              (message (one-or-more not-newline))
+              line-end))
+    :error-explainer
+    (lambda (error)
+      (when-let (error-code (flycheck-error-id error))
+        (lambda ()
+          (flycheck-call-checker-process
+           'python-ruff nil standard-output t "rule" error-code)
+          (with-current-buffer standard-output
+            (let ((markdown-fontify-code-block-default-mode 'python-mode)
+                  (markdown-fontify-code-blocks-natively t)
+                  (markdown-hide-markup t))
+              (markdown-view-mode)
+              (font-lock-flush)
+              (font-lock-ensure))))))
+    :modes python-mode)
+
+  (add-to-list 'flycheck-checkers 'python-ruff))
+
+(use-package flycheck
+  :config
   (add-to-list 'flycheck-shellcheck-supported-shells 'ksh93))
 
 (use-package eglot
