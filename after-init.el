@@ -309,6 +309,7 @@ See URL `http://pypi.python.org/pypi/ruff'."
   :config
   (add-to-list 'flycheck-shellcheck-supported-shells 'ksh93))
 
+(when (version< "28" emacs-version)
 (use-package eglot
   :after flycheck
   :init
@@ -351,6 +352,8 @@ See URL `http://pypi.python.org/pypi/ruff'."
   (flycheck-eglot-exclusive nil)
   :config
   (global-flycheck-eglot-mode 1))
+
+) ;; (when (version< "28" emacs-version)
 
 
 (use-package eldoc
