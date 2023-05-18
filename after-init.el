@@ -265,6 +265,94 @@ This will be used in be used in `pk/dispatch-cut-function'")
         ("M-r" . #'xref-find-references)
         ("M-?" . #'helpful-at-point)))
 
+(use-package poly-rst)
+
+(defvar pk/flycheck--mypy-error-codes-alist nil
+  "Error codes in a form of (CODE . BODY).
+
+The CODE is the symbol made of mypy's error code and BODY is an
+rst body of the code.") ;; @todo: add mypy version
+
+(use-package flycheck
+  :init
+  (defun pk/flycheck--mypy-retrieve-error-codes (mypy-version)
+    (let* (error-codes-alist
+           (error-headline "^[A-Z][a-z' ]+ \\[\\([a-z-]+\\)\\]
+-+"))
+      (mapc
+       (lambda (error-codes-file-name)
+         (with-current-buffer (url-retrieve-synchronously (concat
+                                                           "https://raw.githubusercontent.com/python/mypy/v"
+                                                           mypy-version
+                                                           "/docs/source/"
+                                                           error-codes-file-name))
+           (when (re-search-forward "^\\.\\. _error-code\\(?:s\\)?-.*:" nil t)
+             (while (re-search-forward error-headline nil t)
+               (let* ((error-code (match-string 1))
+                      (error-body-start (match-beginning 0))
+                      (error-body-end (save-match-data
+                                        (if (re-search-forward error-headline nil t)
+                                            (match-beginning 0)
+                                          (point-max))))
+                      (error-body (buffer-substring error-body-start error-body-end)))
+                 (push (cons (intern error-code) error-body) error-codes-alist)
+                 (goto-char error-body-end))))))
+       '("error_code_list.rst" "error_code_list2.rst"))
+      error-codes-alist))
+
+  :config
+  (flycheck-define-checker pk/python-mypy
+  "Mypy syntax and type checker.  Requires mypy>=0.730.
+
+See URL `http://mypy-lang.org/'."
+  :command ("mypy"
+            "--show-column-numbers"
+            "--show-error-codes"
+            "--no-pretty"
+            (config-file "--config-file" flycheck-python-mypy-config)
+            (option "--cache-dir" flycheck-python-mypy-cache-dir)
+            (option "--python-executable" flycheck-python-mypy-python-executable)
+            source-original)
+  :error-patterns
+  ((error line-start (file-name) ":" line (optional ":" column)
+          ": error:" (message)
+          (one-or-more (any space)) "[" (id (one-or-more not-newline)) "]"
+          line-end)
+   (warning line-start (file-name) ":" line (optional ":" column)
+            ": warning:" (message)
+            (one-or-more (any space)) "[" (id (one-or-more not-newline)) "]"
+            line-end)
+   (info line-start (file-name) ":" line (optional ":" column)
+         ": note:" (message)
+         (one-or-more (any space)) "[" (id (one-or-more not-newline)) "]"
+         line-end))
+  :working-directory flycheck-python-find-project-root
+  :modes (python-mode python-ts-mode)
+  ;; Ensure the file is saved, to work around
+  ;; https://github.com/python/mypy/issues/4746.
+  :predicate flycheck-buffer-saved-p
+  :error-explainer
+  (lambda (error)
+    (when-let ((mypy-version (replace-regexp-in-string "mypy \\(\\(?:[0-9]\\.\\)+[0-9]\\).*\n"
+                                                       "\\1"
+                                                       (shell-command-to-string "mypy --version")))
+               (error-codes-alist (or (alist-get (intern mypy-version) pk/flycheck--mypy-error-codes-alist)
+                                      (let ((new-error-codes (pk/flycheck--mypy-retrieve-error-codes mypy-version)))
+                                        (push (cons (intern mypy-version) new-error-codes) pk/flycheck--mypy-error-codes-alist)
+                                        new-error-codes)))
+               (error-code (flycheck-error-id error))
+               (explanation (alist-get (intern error-code) error-codes-alist)))
+      (lambda ()
+        (with-current-buffer standard-output
+          (insert explanation)
+          (poly-rst-mode)
+          (use-local-map (copy-keymap poly-rst-mode-map))
+          (local-set-key "q" #'bury-buffer)
+          (font-lock-flush)
+          (font-lock-ensure))))))
+
+  (add-to-list 'flycheck-checkers 'pk/python-mypy))
+
 (use-package flycheck
   :config
   (flycheck-define-checker python-ruff
@@ -303,7 +391,9 @@ See URL `http://pypi.python.org/pypi/ruff'."
               (font-lock-ensure))))))
     :modes python-mode)
 
-  (add-to-list 'flycheck-checkers 'python-ruff))
+  (add-to-list 'flycheck-checkers 'python-ruff)
+  ;; suppress in favour of one on steroids (flycheck-add-next-checker 'python-ruff '(t . python-mypy))
+  (flycheck-add-next-checker 'python-ruff '(t . pk/python-mypy)))
 
 (use-package flycheck
   :config
