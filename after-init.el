@@ -267,6 +267,22 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 (use-package poly-rst)
 
+(defmacro pk/get-or-set (place val)
+  "When a value stored in PLACE is non nil return it, otherwise return VAL.
+
+The VAL will be evaluated only when it needs to be returned.  In
+such a case the the VAL will be stored in PLACE.  Example use:
+  (let* ((alist \\='((a . 1)))
+         (a (pk/get-or-set (alist-get \\='a alist) 2))
+         (b (pk/get-or-set (alist-get \\='b alist) 2)))
+    (format \"alist=%s, a=%s, b=%s\" alist a b))
+yields:
+  \"alist=((b . 2) (a . 1)), a=1, b=2\""
+  (gv-letplace (getter setter) place
+    `(or ,getter
+         ,(macroexp-let2 nil v val
+           (funcall setter `,v)))))
+
 (defvar pk/flycheck--mypy-error-codes-alist nil
   "Error codes in a form of (CODE . BODY).
 
@@ -336,10 +352,9 @@ See URL `http://mypy-lang.org/'."
     (when-let ((mypy-version (replace-regexp-in-string "mypy \\(\\(?:[0-9]\\.\\)+[0-9]\\).*\n"
                                                        "\\1"
                                                        (shell-command-to-string "mypy --version")))
-               (error-codes-alist (or (alist-get (intern mypy-version) pk/flycheck--mypy-error-codes-alist)
-                                      (let ((new-error-codes (pk/flycheck--mypy-retrieve-error-codes mypy-version)))
-                                        (push (cons (intern mypy-version) new-error-codes) pk/flycheck--mypy-error-codes-alist)
-                                        new-error-codes)))
+               (error-codes-alist (pk/get-or-set (alist-get (intern mypy-version)
+                                                            pk/flycheck--mypy-error-codes-alist)
+                                                 (pk/flycheck--mypy-retrieve-error-codes mypy-version)))
                (error-code (flycheck-error-id error))
                (explanation (alist-get (intern error-code) error-codes-alist)))
       (lambda ()
