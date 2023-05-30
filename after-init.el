@@ -265,154 +265,6 @@ This will be used in be used in `pk/dispatch-cut-function'")
         ("M-r" . #'xref-find-references)
         ("M-?" . #'helpful-at-point)))
 
-(use-package poly-rst)
-
-(defmacro pk/get-or-set (place val)
-  "When a value stored in PLACE is non nil return it, otherwise return VAL.
-
-The VAL will be evaluated only when it needs to be returned.  In
-such a case the the VAL will be stored in PLACE.  Example use:
-  (let* ((alist \\='((a . 1)))
-         (a (pk/get-or-set (alist-get \\='a alist) 2))
-         (b (pk/get-or-set (alist-get \\='b alist) 2)))
-    (format \"alist=%s, a=%s, b=%s\" alist a b))
-yields:
-  \"alist=((b . 2) (a . 1)), a=1, b=2\""
-  (gv-letplace (getter setter) place
-    `(or ,getter
-         ,(macroexp-let2 nil v val
-           (funcall setter `,v)))))
-
-(defvar pk/flycheck--mypy-error-codes-alist nil
-  "Error codes in a form of (CODE . BODY).
-
-The CODE is the symbol made of mypy's error code and BODY is an
-rst body of the code.") ;; @todo: add mypy version
-
-(use-package flycheck
-  :init
-  (defun pk/flycheck--mypy-retrieve-error-codes (mypy-version)
-    (let* (error-codes-alist
-           (error-headline "^[A-Z][a-z' ]+ \\[\\([a-z-]+\\)\\]
--+"))
-      (mapc
-       (lambda (error-codes-file-name)
-         (with-current-buffer (url-retrieve-synchronously (concat
-                                                           "https://raw.githubusercontent.com/python/mypy/v"
-                                                           mypy-version
-                                                           "/docs/source/"
-                                                           error-codes-file-name))
-           (when (re-search-forward "^\\.\\. _error-code\\(?:s\\)?-.*:" nil t)
-             (while (re-search-forward error-headline nil t)
-               (let* ((error-code (match-string 1))
-                      (error-body-start (match-beginning 0))
-                      (error-body-end (save-match-data
-                                        (if (re-search-forward error-headline nil t)
-                                            (match-beginning 0)
-                                          (point-max))))
-                      (error-body (buffer-substring error-body-start error-body-end)))
-                 (push (cons (intern error-code) error-body) error-codes-alist)
-                 (goto-char error-body-end))))))
-       '("error_code_list.rst" "error_code_list2.rst"))
-      error-codes-alist))
-
-  :config
-  (flycheck-define-checker pk/python-mypy
-  "Mypy syntax and type checker.  Requires mypy>=0.730.
-
-See URL `http://mypy-lang.org/'."
-  :command ("mypy"
-            "--show-column-numbers"
-            "--show-error-codes"
-            "--no-pretty"
-            (config-file "--config-file" flycheck-python-mypy-config)
-            (option "--cache-dir" flycheck-python-mypy-cache-dir)
-            (option "--python-executable" flycheck-python-mypy-python-executable)
-            source-original)
-  :error-patterns
-  ((error line-start (file-name) ":" line (optional ":" column)
-          ": error:" (message)
-          (one-or-more (any space)) "[" (id (one-or-more not-newline)) "]"
-          line-end)
-   (warning line-start (file-name) ":" line (optional ":" column)
-            ": warning:" (message)
-            (one-or-more (any space)) "[" (id (one-or-more not-newline)) "]"
-            line-end)
-   (info line-start (file-name) ":" line (optional ":" column)
-         ": note:" (message)
-         (one-or-more (any space)) "[" (id (one-or-more not-newline)) "]"
-         line-end))
-  :working-directory flycheck-python-find-project-root
-  :modes (python-mode python-ts-mode)
-  ;; Ensure the file is saved, to work around
-  ;; https://github.com/python/mypy/issues/4746.
-  :predicate flycheck-buffer-saved-p
-  :error-explainer
-  (lambda (error)
-    (when-let ((mypy-version (replace-regexp-in-string "mypy \\(\\(?:[0-9]\\.\\)+[0-9]\\).*\n"
-                                                       "\\1"
-                                                       (shell-command-to-string "mypy --version")))
-               (error-codes-alist (pk/get-or-set (alist-get (intern mypy-version)
-                                                            pk/flycheck--mypy-error-codes-alist)
-                                                 (pk/flycheck--mypy-retrieve-error-codes mypy-version)))
-               (error-code (flycheck-error-id error))
-               (explanation (alist-get (intern error-code) error-codes-alist)))
-      (lambda ()
-        (with-current-buffer standard-output
-          (insert explanation)
-          (poly-rst-mode)
-          (use-local-map (copy-keymap poly-rst-mode-map))
-          (local-set-key "q" #'bury-buffer)
-          (font-lock-flush)
-          (font-lock-ensure))))))
-
-  (add-to-list 'flycheck-checkers 'pk/python-mypy))
-
-(use-package flycheck
-  :config
-  (flycheck-define-checker python-ruff
-    "A Python syntax and style checker using the ruff utility.
-To override the path to the ruff executable, set
-`flycheck-python-ruff-executable'.
-See URL `http://pypi.python.org/pypi/ruff'."
-    :command ("ruff"
-              "--format=text"
-              (eval (when buffer-file-name
-                      (concat "--stdin-filename=" buffer-file-name)))
-              "-")
-    :standard-input t
-    :error-filter
-    (lambda (errors)
-      (let ((errors (flycheck-sanitize-errors errors)))
-        (seq-map #'flycheck-flake8-fix-error-level errors)))
-    :error-patterns
-    ((warning line-start
-              (file-name) ":" line ":" (optional column ":") " "
-              (id (one-or-more (any alpha)) (one-or-more digit)) " "
-              (message (one-or-more not-newline))
-              line-end))
-    :error-explainer
-    (lambda (error)
-      (when-let (error-code (flycheck-error-id error))
-        (lambda ()
-          (flycheck-call-checker-process
-           'python-ruff nil standard-output t "rule" error-code)
-          (with-current-buffer standard-output
-            (let ((markdown-fontify-code-block-default-mode 'python-mode)
-                  (markdown-fontify-code-blocks-natively t)
-                  (markdown-hide-markup t))
-              (markdown-view-mode)
-              (font-lock-flush)
-              (font-lock-ensure))))))
-    :modes python-mode)
-
-  (add-to-list 'flycheck-checkers 'python-ruff)
-  ;; suppress in favour of one on steroids (flycheck-add-next-checker 'python-ruff '(t . python-mypy))
-  (flycheck-add-next-checker 'python-ruff '(t . pk/python-mypy)))
-
-(use-package flycheck
-  :config
-  (add-to-list 'flycheck-shellcheck-supported-shells 'ksh93))
 
 (when (version< "28" emacs-version)
 (use-package eglot
@@ -593,13 +445,6 @@ See URL `http://pypi.python.org/pypi/ruff'."
   :config
   (add-to-list 'auto-mode-alist '("\\.yaml\\.template\\'" . yaml-mode)))
 
-(use-package flycheck
-  :custom
-  (flycheck-global-modes '(not c++-mode c-mode org-mode))
-  :hook
-  (after-init . global-flycheck-mode))
-
-
 (use-package compile
   :custom
   (compilation-scroll-output 'first-error))
@@ -691,17 +536,6 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (desktop-restore-eager 8))
 
 
-(defun pk/project-enable-flycheck-python-mypy ()
-  "Enable `python-mypy' checker in current project."
-  (interactive)
-  (mapc (lambda (buf)
-          (with-current-buffer buf
-            (when (and (eq major-mode 'python-mode)
-                       flycheck-mode)
-              (flycheck--toggle-checker 'python-mypy t)
-              (flycheck-buffer))))
-        (projectile-project-buffers)))
-
 (defun pk/python-site-packages-wip ()
   ;; TODO: doesn't work in venv with pythonpath
   (s-split
