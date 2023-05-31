@@ -495,47 +495,13 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (desktop-restore-eager 8))
 
 
-(defun pk/python-site-packages-wip ()
-  ;; TODO: doesn't work in venv with pythonpath
-  (s-split
-   ", "
-   (s-replace-all
-    '(("'" . ""))
-    (substring
-     (s-trim (shell-command-to-string
-              (concat python-shell-interpreter " -c 'import sys; print(sys.path)'")))
-     1 -1))))
-
-(defcustom pk/python-bootstrap-packages
-  '("pytest" "mypy")
-  "List of packages to install as a part of `python-bootstrap'.
-N.B. The `mypy' is optional but necessary for `flycheck'.
-     The `pytest' is optional but necessary for `python-pytest'."
-  :type 'list)
-
-(defcustom pk/python-bootstrap-requirements
-  '("requirements-dev.txt" "requirements.txt")
-  "List of requirements files to use as a part of `python-bootstrap'.
-The first file found in a project will be used."
-  :type 'list)
-
 (use-package python
   :ensure nil
   :custom
-  (python-shell-interpreter  "python3")
-  ;; :hook
-  ;; (python-mode . (lambda ()
-  ;;                  (setq fill-column 100)))
-  )
+  (python-shell-interpreter  "python3"))
 
-(use-package toml
-  ;; :quelpa ((toml :fetcher git
-  ;;                :url "https://github.com/pkryger/emacs-toml.git"
-  ;;                :branch "fixes")
-  ;;          :upgrade t)
-  )
+(use-package toml)
 
-;; TODO: use projectile to jump between tests and implementation as well as run tests
 (use-package python-pytest
   :bind (:map python-mode-map
               ("C-c t" . python-pytest-dispatch))
@@ -564,164 +530,6 @@ The first file found in a project will be used."
   :config
   (direnv-mode))
 
-;; TODO: investigate using of `.dir-locals.el', i.e., sth like
-;; ((python-mode . ((fill-column . 88)
-;;                  (eval . (progn
-;;                            (when-let ((venv (getenv "VIRTUAL_ENV")))
-;;                              (setq-local python-shell-virtualenv-root
-;;                                          (pythonic-python-readable-file-name venv))
-;;                              (when (string-prefix-p venv (buffer-file-name))
-;;                                (read-only-mode)
-;;                                (flycheck-mode -1)))
-;;                            (setq-local python-shell-extra-pythonpaths
-;;                                        (list
-;;                                         (concat (projectile-project-root) "src")
-;;                                         (concat (projectile-project-root) "tests")))
-;;                            (python-black-on-save-mode)
-;;                            (python-isort-on-save-mode))))))
-;; TODO: investigate installing when only `setup.cfg' is available, with something like:
-;; $ pip install -e '.[testing,docs,format]'
-
-(defcustom pk/python-inhibit-install-packages '("libnlp" "scipy" "scikit-learn")
-  "List of packages that should not be installed while bootstrapping.")
-
-(defun pk/python--packages-from-in-files (project-root)
-  "Return list of constrained packages form *.in files in PROJECT-ROOT."
-  (let ((requirements (f-join project-root "requirements.in")))
-    (mapcar
-     (lambda (package-spec)
-       (format "'%s'" (s-replace-regexp "\\W*;.*$" "" package-spec)))
-     (seq-filter
-      (lambda (line)
-        (not
-         (or (s-starts-with-p "#" line)
-             (s-matches-p "^\\W*$" line)
-             (cl-find-if (lambda (package-spec)
-                           (s-matches-p (format
-                                         "^%s\\(?:\\W*[!<>=]=?\\W*[0-9\.]+\\)?\\W*\\(?:;.*\\)?$"
-                                         package-spec)
-                                        line)) ; see if the package is not inhibited
-                         pk/python-inhibit-install-packages))))
-      (cl-mapcan
-       (lambda (path)
-         (s-split "\n" (f-read path)))
-       (nconc (when (f-exists-p requirements)
-                (list requirements))
-              (f-glob "*.in" (f-join project-root "requirements"))))))))
-
-(defun pk/python--packages-from-file (file)
-  "Return list of constrained packages form FILE."
-  ;; TODO: need to cut out not matching python_version
-  (mapcar
-   (lambda (package-spec)
-     (format "'%s'" (s-replace-regexp "\\W*;.*$" "" package-spec)))
-   (seq-filter
-    (lambda (line)
-      (not
-       (or (s-starts-with-p "#" line)
-           (s-matches-p "^\\W*$" line)
-           (cl-find-if (lambda (package-spec)
-                         (s-matches-p (format
-                                       "^%s\\(?:\\W*[!<>=]=?\\W*[0-9\.]+\\)?\\W*\\(?:;.*\\)?$"
-                                       package-spec)
-                                      line))
-                       pk/python-inhibit-install-packages))))
-    (s-split "\n" (f-read file)))))
-
-;; (let ((project-root "/Users/pkryger/ainews/paws-inference"))
-;;   (s-join " "
-;;           (pk/python--packages-from-file (f-join project-root "requirements.in")))
-;;   (s-join " "
-;;           (cl-mapcan (lambda (path)
-;;                        (pk/python--packages-from-file path))
-;;                      (f-glob "*.in" (f-join project-root "requirements"))))
-;;   (s-join " "
-;;           (cl-mapcan (lambda (path)
-;;                        (pk/python--packages-from-file path))
-;;                      (f-glob "*.in" (f-join project-root "requirements-dev")))))
-
-(defun pk/python-bootstrap (dir)
-  "In a given `DIR' bootstrap python environment.
-Such a bootstrap will provide a dedicated virtual environment via `direnv'
-python layout with:
-- `pytest' for running tests,
-- install packages from `pk/python-bootstrap-packages',
-- install packages from the first requirements file from
-  `pk/python-bootstrap-requirements'."
-  (interactive (list (read-directory-name
-                      (concat "Boostrap python in directory: ")
-                      (projectile-project-root))))
-  (if-let ((python (when (string-match "python\[23\]" python-shell-interpreter)
-                     (match-string 0 python-shell-interpreter))))
-      (let* ((pip-command `(,python-shell-interpreter "-m" "pip" "install"))
-             (requirements
-              (when-let ((root (projectile-project-root))
-                         (match
-                          (seq-find
-                           (lambda (elt)
-                             (file-exists-p (f-join root elt)))
-                           pk/python-bootstrap-requirements)))
-                (f-join root match)))
-             (project (or (projectile-project-name) (f-filename dir)))
-             (progress 0)
-             (reporter (make-progress-reporter
-                        (format "Bootstrapping python direnv in %s " project)
-                        progress (+ 2 ;; 1 for `.envrc' file, 2 for `direnv-allow'
-                                    (length pk/python-bootstrap-packages)
-                                    (if requirements 1 0)))))
-        (when-let ((envrc-file (f-join dir ".envrc"))
-                   (_continue
-                    (or (not (file-exists-p envrc-file))
-                        (y-or-n-p
-                         (format "%s already exists.  Overwrite it before continuing? "
-                                 envrc-file)))))
-          (with-temp-file envrc-file
-            (when-let ((srcdir (f-join dir "src"))
-                       (_exists (file-directory-p srcdir)))
-              (insert (concat "export PYTHONPATH=" srcdir ":${PYTHONPATH}\n")))
-            (insert (concat "layout " python "\n"))))
-        (progress-reporter-update
-         reporter (cl-incf progress) "[allowing direnv...]")
-        (direnv-allow)
-        (when-let ((buf (get-buffer "*Shell Command Output*")))
-          (with-current-buffer buf
-            (erase-buffer)))
-        (dolist (package pk/python-bootstrap-packages)
-          (progress-reporter-update
-           reporter (cl-incf progress) (format "[installing %s...]" package))
-          (let ((shell-command-dont-erase-buffer 'end-last-out))
-            (shell-command (concat (s-join " " pip-command) " " package))))
-        (when requirements
-          (progress-reporter-update
-           reporter (cl-incf progress) (format "[installing from %s...]"
-                                            (file-name-base requirements)))
-          (lexical-let ((out-buffer (get-buffer-create
-                                     (concat "*python-bootstrapper*<" project ">")))
-                        (buffers (projectile-project-buffers)))
-            (dolist (buf buffers)
-              (with-current-buffer buf
-                (setq mode-line-process
-                      (propertize " [bootstrapping]"
-                                  'help-echo (format "See progress in %s"
-                                                     (buffer-name out-buffer))
-                                  'font-lock-face 'magit-mode-line-process))))
-            (with-current-buffer out-buffer
-              (read-only-mode 0)
-              (erase-buffer)
-              (read-only-mode)
-              (comint-mode))
-            (make-process :name "pk/python-bootstrapper"
-                          :buffer out-buffer
-                          :command `(,@pip-command "-r" ,requirements)
-                          :noquery t
-                          :filter #'comint-output-filter
-                          :sentinel #'(lambda (_process _event)
-                                        (dolist (buf buffers)
-                                          (when (buffer-live-p buf)
-                                            (with-current-buffer buf
-                                              (setq mode-line-process nil))))))))
-        (progress-reporter-done reporter))
-    (message "Cannot create .envrc for %s" python-shell-interpreter)))
 
 
 ;; Diminish some modes
