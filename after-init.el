@@ -376,7 +376,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
   "A `company-mode' backend for assigneees in `forge-mode' repository."
   (interactive (list 'interactive))
   (cl-case command
-    (interactive (company-begin-backend 'pk/company-forge-assignees-backend))
+    (interactive (company-begin-backend 'company-assignees))
     (prefix (when (and (or (and (boundp 'git-commit-mode)
                                 git-commit-mode)
                            (derived-mode-p 'forge-post-mode))
