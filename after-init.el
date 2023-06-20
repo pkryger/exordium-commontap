@@ -769,6 +769,135 @@ language."
 (add-hook 'ediff-mode-hook
           (lambda ()
             (setq auto-composition-mode nil)))
+
+;;difftastic: https://github.com/Wilfred/difftastic
+
+;; from https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
+(defun pk/difft--magit-with-difftastic (buffer command)
+  "Run COMMAND with GIT_EXTERNAL_DIFF=difft then show result in BUFFER."
+  (let* ((destination-window-width (max 80
+                                        (if (< 1 (length (window-list)))
+                                            (prog2
+                                                (other-window 1)
+                                                (window-width)
+                                              (other-window -1))
+                                          (/ (frame-width) 2))))
+         (process-environment
+          (cons (concat "GIT_EXTERNAL_DIFF=difft --width="
+                        (number-to-string destination-window-width))
+                process-environment)))
+    ;; Clear the result buffer (we might regenerate a diff, e.g., for
+    ;; the current changes in our working directory).
+    (with-current-buffer buffer
+      (setq buffer-read-only nil)
+      (erase-buffer))
+    ;; Now spawn a process calling the git COMMAND.
+    (make-process
+     :name (buffer-name buffer)
+     :buffer buffer
+     :command command
+     ;; Don't query for running processes when emacs is quit.
+     :noquery t
+     ;; Show the result buffer once the process has finished.
+     :sentinel (lambda (proc event)
+                 (when (eq (process-status proc) 'exit)
+                   (with-current-buffer (process-buffer proc)
+                     (goto-char (point-min))
+                     (ansi-color-apply-on-region (point-min) (point-max))
+                     (setq buffer-read-only t)
+                     (view-mode)
+                     (goto-char (point-min))
+                     ;; difftastic diffs are usually 2-column side-by-side,
+                     ;; so ensure our window is wide enough.
+                     (let ((actual-width (+ (cadr (buffer-line-statistics))
+                                            (fringe-columns 'left)
+                                            (fringe-columns 'right))))
+                       (pop-to-buffer
+                        (current-buffer)
+                        `(;; If the buffer is that wide that splitting the frame in
+                          ;; two side-by-side windows would result in less than
+                          ;; 80 columns left, ensure it's shown at the bottom.
+                          ,(when (> 80 (- (frame-width) actual-width))
+                             #'display-buffer-at-bottom)
+                          (window-width
+                           . ,(min (frame-width)
+                                   (max actual-width destination-window-width))))))))))))
+
+;; @todo: make two below to work with C-c M-g D D/S when in a file buffer
+;; just like `magit-diff-buffer-file' does.
+(defun pk/magit-difftastic-show (rev)
+  "Show the result of \"git show REV\" with GIT_EXTERNAL_DIFF=difft."
+  (interactive
+   (list (or
+          ;; If REV is given, just use it.
+          (when (boundp 'rev) rev)
+          ;; If not invoked with prefix arg, try to guess the REV from
+          ;; point's position.
+          (and (not current-prefix-arg)
+               (or (magit-thing-at-point 'git-revision t)
+                   (magit-branch-or-commit-at-point)))
+          ;; Otherwise, query the user.
+          (magit-read-branch-or-commit "Revision"))))
+  (if (not rev)
+      (error "No revision specified")
+    (pk/difft--magit-with-difftastic
+     (get-buffer-create (concat "*git show difftastic " rev "*"))
+     (list "git" "--no-pager" "show" "--ext-diff" rev))))
+
+(defun pk/magit-difftastic (arg)
+  "Show the result of \"git diff ARG\" with GIT_EXTERNAL_DIFF=difft."
+  (interactive
+   (list (or
+          ;; If RANGE is given, just use it.
+          (when (boundp 'range) range)
+          ;; If prefix arg is given, query the user.
+          (and current-prefix-arg
+               (magit-diff-read-range-or-commit "Range"))
+          ;; Otherwise, auto-guess based on position of point, e.g., based on
+          ;; if we are in the Staged or Unstaged section.
+          (pcase (magit-diff--dwim)
+            ('unmerged (error "unmerged is not yet implemented"))
+            ('unstaged nil)
+            ('staged "--cached")
+            (`(stash . ,value) (error "stash is not yet implemented"))
+            (`(commit . ,value) (format "%s^..%s" value value))
+            ((and range (pred stringp)) range)
+            (_ (magit-diff-read-range-or-commit "Range/Commit"))))))
+  (let ((name (concat "*git diff difftastic"
+                      (if arg (concat " " arg) "")
+                      "*")))
+    (pk/difft--magit-with-difftastic
+     (get-buffer-create name)
+     `("git" "--no-pager" "diff" "--ext-diff" ,@(when arg (list arg))))))
+
+;; from https://shivjm.blog/better-magit-diffs/
+;; @todo: replacee with modus-themes colours/faces
+(defun pk/difft--recolour ()
+  (let ((ovs (overlays-in (point-min) (point-max))))
+    (dolist (ov ovs)
+      (let ((face (overlay-get ov 'face)))
+        (when (and (not (null face)) (listp face))
+          (when (plist-get face :foreground)
+            (plist-put face :foreground (pk/difft--get-remapped-colour (plist-get face :foreground))))
+          (when-let ((existing (cl-find :foreground face :key (lambda (x) (if (consp x) (car x) nil)))))
+            (setf face
+                  (cl-subst `(:foreground ,(pk/difft--get-remapped-colour (plist-get existing :foreground)))
+                            :foreground
+                            face
+                            :key (lambda (x) (if (consp x) (car x) nil)))))
+          (overlay-put ov 'face face))))))
+
+(defun pk/difft--get-remapped-colour (original)
+  (alist-get original pk/difft--colour-remapping nil nil 'string=))
+
+(defconst pk/difft--colour-remapping
+  `(("red2" . "#a8353e") ;; https://oklch.com/#50,0.15,20,100
+    ("green2" . "#107823")
+    ("yellow2" . "#2f3b97")))
+
+(transient-append-suffix 'magit-diff '(-1 -1)
+  [("D" "Difftastic Diff (dwim)" pk/magit-difftastic)
+   ("S" "Difftastic Show" pk/magit-difftastic-show)])
 
 
 ;; TODO: move to exordium and likely hide behind the
