@@ -404,6 +404,8 @@ This will be used in be used in `pk/dispatch-cut-function'")
   :config
   (add-to-list 'auto-mode-alist '("\\.yaml\\.template\\'" . yaml-mode)))
 
+(use-package rust-mode)
+
 (use-package compile
   :custom
   (compilation-scroll-output 'first-error))
