@@ -333,6 +333,21 @@ This will be used in be used in `pk/dispatch-cut-function'")
   :custom
   (completion-styles '(orderless)))
 
+;; (condition-case nil
+;;     (let ((orig-cc (getenv "CC")))
+;;       (setenv "CC" "clang")
+;;       ;; (use-package jinx
+;;       ;;   :hook (emacs-startup . global-jinx-mode)
+;;       ;;   :custom
+;;       ;;   (jinx-languages . "en_GB pl_PL")
+;;       ;;   :bind (("M-$" . jinx-correct)
+;;       ;;          ("C-M-$" . jinx-languages))
+;;       ;;   :config
+;;       ;;   ;;(remove-hook 'post-command-hook #'flyspell-post-command-hook)
+;;       ;;   ;;(remove-hook 'pre-command-hook #'flyspell-pre-command-hook)
+;;       ;;   (remove-hook 'prog-mode-hook #'flyspell-prog-mode))
+;;       (setenv "CC" orig-cc)))
+
 (use-package ispell
 ;;   :ensure-system-package aspell
   :custom
