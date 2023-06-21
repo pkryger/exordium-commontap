@@ -836,18 +836,18 @@ language."
                                                    'magit-diff-removed
                                                    'magit-diff-added
                                                    'magit-diff-file-heading
-                                                   'font-lock-comment-face
-                                                   'font-lock-string-face
-                                                   (aref ansi-color-normal-colors-vector 6)
+                                                   font-lock-comment-face
+                                                   font-lock-string-face
+                                                   font-lock-warning-face
                                                    (aref ansi-color-normal-colors-vector 7)))
                  (ansi-color-bright-colors-vector (vector
                                                    (aref ansi-color-bright-colors-vector 0)
                                                    'magit-diff-removed
                                                    'magit-diff-added
                                                    'magit-diff-file-heading
-                                                   'font-lock-comment-face
-                                                   'font-lock-string-face
-                                                   (aref ansi-color-bright-colors-vector 6)
+                                                   font-lock-comment-face
+                                                   font-lock-string-face
+                                                   font-lock-warning-face
                                                    (aref ansi-color-bright-colors-vector 7))))
              (pk/with-temp-advice
                  'ansi-color-get-face-1
