@@ -868,7 +868,7 @@ language."
                  . ,(min (frame-width)
                          (max actual-width requested-width))))))))))))
 
-(defun pk/magit-difftastic-show (rev)
+(defun pk/difft-magit-show (rev)
   "Show the result of \"git show REV\" with GIT_EXTERNAL_DIFF=difft."
   (interactive
    (list (or
@@ -887,7 +887,7 @@ language."
      (get-buffer-create (concat "*git show difftastic " rev "*"))
      (list "git" "--no-pager" "show" "--ext-diff" rev))))
 
-(defun pk/magit-difftastic (arg)
+(defun pk/difft-magit-diff (arg)
   "Show the result of \"git diff ARG\" with GIT_EXTERNAL_DIFF=difft."
   (interactive
    (list (or
@@ -920,8 +920,8 @@ language."
 
 ;; adapted from https://shivjm.blog/better-magit-diffs/
 (transient-append-suffix 'magit-diff '(-1 -1)
-  [("D" "Difftastic Diff (dwim)" pk/magit-difftastic)
-   ("S" "Difftastic Show" pk/magit-difftastic-show)])
+  [("D" "Difftastic Diff (dwim)" pk/difft-magit-diff)
+   ("S" "Difftastic Show" pk/difft-magit-show)])
 
 
 ;; TODO: move to exordium and likely hide behind the
