@@ -781,11 +781,10 @@ language."
            (advice-add ,fn-orig ,where fn-advice-var)
            ,@body)
        (advice-remove ,fn-orig fn-advice-var))))
-
 (defun pk/difft--ansi-color-add-background (face)
   "Add :background to FACE if it is for added or removed face."
   (if (listp face)
-      (pcase (cadr (cl-member :foreground face))
+      (pcase (plist-get face :foreground)
         ((pred (lambda (color)
                 (string= color (face-foreground 'magit-diff-removed))))
               (append face (list :background
@@ -888,8 +887,6 @@ language."
      (get-buffer-create (concat "*git show difftastic " rev "*"))
      (list "git" "--no-pager" "show" "--ext-diff" rev))))
 
-;; @todo: make it to work with C-c M-g D D when in a file buffer
-;; just like `magit-diff-buffer-file' does.
 (defun pk/magit-difftastic (arg)
   "Show the result of \"git diff ARG\" with GIT_EXTERNAL_DIFF=difft."
   (interactive
@@ -901,6 +898,9 @@ language."
                (magit-diff-read-range-or-commit "Range"))
           ;; Otherwise, auto-guess based on position of point, e.g., based on
           ;; if we are in the Staged or Unstaged section.
+          (when-let ((file (magit-file-relative-name)))
+            (save-buffer)
+            file)
           (pcase (magit-diff--dwim)
             ('unmerged (error "unmerged is not yet implemented"))
             ('unstaged nil)
@@ -914,7 +914,9 @@ language."
                       "*")))
     (pk/difft--magit-with-difftastic
      (get-buffer-create name)
-     `("git" "--no-pager" "diff" "--ext-diff" ,@(when arg (list arg))))))
+     `("git" "--no-pager" "diff" "--ext-diff"
+       ,@(when (magit-file-relative-name) (list "--"))
+       ,@(when arg (list arg))))))
 
 ;; adapted from https://shivjm.blog/better-magit-diffs/
 (transient-append-suffix 'magit-diff '(-1 -1)
