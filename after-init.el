@@ -818,7 +818,7 @@ language."
       (setq buffer-read-only nil)
       (erase-buffer))
     ;; Now spawn a process calling the git COMMAND.
-    (message "Running: %s" (mapconcat #'identity command " "))
+    (message "Running: %s..." (mapconcat #'identity command " "))
     (make-process
      :name (buffer-name buffer)
      :buffer buffer
@@ -829,6 +829,7 @@ language."
      :sentinel
      (lambda (proc _event)
        (when (eq (process-status proc) 'exit)
+         (message "Processing difft output...")
          (with-current-buffer (process-buffer proc)
            (goto-char (point-min))
            (let ((ansi-color-normal-colors-vector (vector
@@ -866,7 +867,8 @@ language."
                    #'display-buffer-at-bottom)
                 (window-width
                  . ,(min (frame-width)
-                         (max actual-width requested-width))))))))))))
+                         (max actual-width requested-width))))))))
+       (message nil)))))
 
 (defun pk/difft-magit-show (rev)
   "Show the result of \"git show REV\" with GIT_EXTERNAL_DIFF=difft."
@@ -895,21 +897,21 @@ language."
           (when (boundp 'range) range)
           ;; If prefix arg is given, query the user.
           (and current-prefix-arg
-               (magit-diff-read-range-or-commit "Range"))
-          ;; Otherwise, auto-guess based on position of point, e.g., based on
-          ;; if we are in the Staged or Unstaged section.
+               (magit-diff-read-range-or-commit "Range/Commit"))
+          ;; Otherwise, auto-guess based on position of point, e.g., in a file
+          ;; or based on the Staged or Unstaged section.
           (when-let ((file (magit-file-relative-name)))
             (save-buffer)
             file)
           (pcase (magit-diff--dwim)
-            ('unmerged (error "unmerged is not yet implemented"))
+            ('unmerged (error "Unmerged is not yet implemented"))
             ('unstaged nil)
             ('staged "--cached")
-            (`(stash . ,value) (error "stash is not yet implemented"))
+            (`(stash . ,value) (error "Stash is not yet implemented"))
             (`(commit . ,value) (format "%s^..%s" value value))
             ((and range (pred stringp)) range)
             (_ (magit-diff-read-range-or-commit "Range/Commit"))))))
-  (let ((name (concat "*git diff difftastic"
+  (let ((name (concat "*git difftastic"
                       (if arg (concat " " arg) "")
                       "*")))
     (pk/difft--magit-with-difftastic
