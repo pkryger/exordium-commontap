@@ -775,16 +775,18 @@ language."
 ;; from https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 (defun pk/difft--magit-with-difftastic (buffer command)
   "Run COMMAND with GIT_EXTERNAL_DIFF=difft then show result in BUFFER."
-  (let* ((destination-window-width (max 80
-                                        (if (< 1 (length (window-list)))
-                                            (prog2
-                                                (other-window 1)
-                                                (window-width)
-                                              (other-window -1))
-                                          (/ (frame-width) 2))))
+  (let* ((requested-width (max 80
+                               (- (if (< 1 (length (window-list)))
+                                      (prog2
+                                          (other-window 1)
+                                          (window-width)
+                                        (other-window -1))
+                                    (/ (frame-width) 2))
+                                  (fringe-columns 'left)
+                                  (fringe-columns 'rigth))))
          (process-environment
           (cons (concat "GIT_EXTERNAL_DIFF=difft --width="
-                        (number-to-string destination-window-width))
+                        (number-to-string requested-width))
                 process-environment)))
     ;; Clear the result buffer (we might regenerate a diff, e.g., for
     ;; the current changes in our working directory).
@@ -803,25 +805,40 @@ language."
                  (when (eq (process-status proc) 'exit)
                    (with-current-buffer (process-buffer proc)
                      (goto-char (point-min))
-                     (ansi-color-apply-on-region (point-min) (point-max))
+                     (let ((ansi-color-normal-colors-vector
+                            (vector
+                             (aref ansi-color-normal-colors-vector 0)
+                             'magit-diff-removed
+                             'magit-diff-added
+                             'magit-diff-file-heading
+                             'font-lock-comment-face
+                             'font-lock-string-face
+                             (aref ansi-color-normal-colors-vector 6)
+                             (aref ansi-color-normal-colors-vector 7)))
+                           (ansi-color-bright-colors-vector
+                            (vector
+                             (aref ansi-color-bright-colors-vector 0)
+                             'magit-diff-removed
+                             'magit-diff-added
+                             'magit-diff-file-heading
+                             'font-lock-comment-face
+                             'font-lock-string-face
+                             (aref ansi-color-bright-colors-vector 6)
+                             (aref ansi-color-bright-colors-vector 7))))
+                       (ansi-color-apply-on-region (point-min) (point-max)))
                      (setq buffer-read-only t)
                      (view-mode)
                      (goto-char (point-min))
                      ;; difftastic diffs are usually 2-column side-by-side,
                      ;; so ensure our window is wide enough.
-                     (let ((actual-width (+ (cadr (buffer-line-statistics))
-                                            (fringe-columns 'left)
-                                            (fringe-columns 'right))))
+                     (let ((actual-width (cadr (buffer-line-statistics))))
                        (pop-to-buffer
                         (current-buffer)
-                        `(;; If the buffer is that wide that splitting the frame in
-                          ;; two side-by-side windows would result in less than
-                          ;; 80 columns left, ensure it's shown at the bottom.
-                          ,(when (> 80 (- (frame-width) actual-width))
+                        `(,(when (< requested-width actual-width)
                              #'display-buffer-at-bottom)
                           (window-width
                            . ,(min (frame-width)
-                                   (max actual-width destination-window-width))))))))))))
+                                   (max actual-width requested-width))))))))))))
 
 ;; @todo: make two below to work with C-c M-g D D/S when in a file buffer
 ;; just like `magit-diff-buffer-file' does.
@@ -869,31 +886,6 @@ language."
     (pk/difft--magit-with-difftastic
      (get-buffer-create name)
      `("git" "--no-pager" "diff" "--ext-diff" ,@(when arg (list arg))))))
-
-;; from https://shivjm.blog/better-magit-diffs/
-;; @todo: replacee with modus-themes colours/faces
-(defun pk/difft--recolour ()
-  (let ((ovs (overlays-in (point-min) (point-max))))
-    (dolist (ov ovs)
-      (let ((face (overlay-get ov 'face)))
-        (when (and (not (null face)) (listp face))
-          (when (plist-get face :foreground)
-            (plist-put face :foreground (pk/difft--get-remapped-colour (plist-get face :foreground))))
-          (when-let ((existing (cl-find :foreground face :key (lambda (x) (if (consp x) (car x) nil)))))
-            (setf face
-                  (cl-subst `(:foreground ,(pk/difft--get-remapped-colour (plist-get existing :foreground)))
-                            :foreground
-                            face
-                            :key (lambda (x) (if (consp x) (car x) nil)))))
-          (overlay-put ov 'face face))))))
-
-(defun pk/difft--get-remapped-colour (original)
-  (alist-get original pk/difft--colour-remapping nil nil 'string=))
-
-(defconst pk/difft--colour-remapping
-  `(("red2" . "#a8353e") ;; https://oklch.com/#50,0.15,20,100
-    ("green2" . "#107823")
-    ("yellow2" . "#2f3b97")))
 
 (transient-append-suffix 'magit-diff '(-1 -1)
   [("D" "Difftastic Diff (dwim)" pk/magit-difftastic)
