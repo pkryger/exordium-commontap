@@ -801,10 +801,9 @@ language."
   "Run COMMAND with GIT_EXTERNAL_DIFF=difft then show result in BUFFER."
   (let* ((requested-width (max 80
                                (- (if (< 1 (length (window-list)))
-                                      (prog2
-                                          (other-window 1)
-                                          (window-width)
-                                        (other-window -1))
+                                      (save-window-excursion
+                                        (other-window 1)
+                                        (window-width))
                                     (/ (frame-width) 2))
                                   (fringe-columns 'left)
                                   (fringe-columns 'rigth))))
