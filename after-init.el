@@ -924,6 +924,101 @@ language."
   [("D" "Difftastic Diff (dwim)" pk/difft-magit-diff)
    ("S" "Difftastic Show" pk/difft-magit-show)])
 
+(defun pk/difft-buffers--suggestion (languages buffer-A buffer-B)
+  "Guess one of LANGUAGES based on mode of BUFFER-A and BUFFER-B."
+  (when-let ((mode
+              (or (with-current-buffer buffer-A
+                    (when (derived-mode-p 'prog-mode)
+                      major-mode))
+                  (with-current-buffer buffer-B
+                    (when (derived-mode-p 'prog-mode)
+                      major-mode)))))
+    (cl-find-if (lambda (language)
+                  (string= (downcase language)
+                           (downcase (string-replace
+                                      "-" " "
+                                      (replace-regexp-in-string
+                                       "-mode$" ""
+                                       (symbol-name mode))))))
+                languages)))
+
+(defun pk/difft-buffers--make-temp-file (prefix buffer)
+  "Make a temp file for the BUFFER (with its content) that has PREFIX included."
+  ;; from `make-auto-save-file-name'
+  (with-current-buffer buffer
+    (let ((buffer-name (buffer-name))
+          (limit 0))
+      (while (string-match "[^A-Za-z0-9_.~#+-]" buffer-name limit)
+	    (let* ((character (aref buffer-name (match-beginning 0)))
+	           (replacement
+                ;; For multibyte characters, this will produce more than
+                ;; 2 hex digits, so is not true URL encoding.
+                (format "%%%02X" character)))
+	      (setq buffer-name (replace-match replacement t t buffer-name))
+	      (setq limit (1+ (match-end 0)))))
+      (make-temp-file (format "difft-%s-%s" prefix buffer-name)
+                      nil nil (buffer-string)))))
+
+(defun pk/difft-buffers (buffer-A buffer-B &optional lang-override)
+  "Run difftastic on a pair of buffers, BUFFER-A and BUFFER-B.
+
+Optionally, provide a LANG-OVERRIDE to override language
+used.  See 'difft --list-languages' for language list.  When:
+- either LANG-OVERRIDE is nil and neither of BUFFER-A nor
+BUFFER-B is a file buffer,
+- or function is called with a prefix arg
+then ask for language before running difftastic."
+  (interactive
+   (let (bf-A bf-B)
+     (list (setq bf-A (read-buffer "Buffer A to compare: "
+				                   (ediff-other-buffer "") t))
+	       (setq bf-B (read-buffer "Buffer B to compare: "
+			                       (progn
+			                         ;; realign buffers so that two visible bufs will be
+			                         ;; at the top
+			                         (save-window-excursion (other-window 1))
+			                         (ediff-other-buffer bf-A))
+			                       t))
+           (when (or current-prefix-arg
+                     (and (not (buffer-file-name (get-buffer bf-A)))
+                          (not (buffer-file-name (get-buffer bf-B)))))
+             (let* ((languages
+                     (append
+                      '("Text")
+                      (string-split
+                       (shell-command-to-string
+                        "difft --list-languages | grep -e '^[A-Z]'")
+                       "\n" t)))
+                    (suggested (pk/difft-buffers--suggestion languages
+                                                             (get-buffer bf-A)
+                                                             (get-buffer bf-B))))
+               (completing-read "Language: " languages nil t suggested))))))
+
+  (let (del-A del-B file-A file-B)
+    (unwind-protect
+        (let* ((buf-A (get-buffer buffer-A))
+               (buf-B (get-buffer buffer-B)))
+          (setq file-A (if-let ((buffer-file (buffer-file-name buf-A)))
+                           (progn
+                             (save-buffer buf-A)
+                             buffer-file)
+                         (setq del-A
+                               (pk/difft-buffers--make-temp-file "A" buf-A))))
+          (setq file-B (if-let ((buffer-file (buffer-file-name buf-B)))
+                           (progn
+                             (save-buffer buf-B)
+                             buffer-file)
+                         (setq del-B
+                               (pk/difft-buffers--make-temp-file "B" buf-B))))
+          (message "difft%s %s %s"
+                   (if lang-override (format " --override='*:%s'" lang-override) "")
+                   file-A
+                   file-B))
+      (when (and del-A (stringp file-A) (file-exists-p file-A))
+        (delete-file file-A))
+      (when (and del-B (stringp file-B) (file-exists-p file-B))
+        (delete-file file-B)))))
+
 
 ;; TODO: move to exordium and likely hide behind the
 ;; `exordium-use-variable-pitch' and `exordium-complete-mode' set to `:company'
