@@ -777,6 +777,32 @@ language."
   "Location of difftastic executable."
   :type 'file)
 
+(defcustom pk/difft-normal-colors-vector
+  (vector
+   (aref ansi-color-normal-colors-vector 0)
+   'magit-diff-removed
+   'magit-diff-added
+   'magit-diff-file-heading
+   font-lock-comment-face
+   font-lock-string-face
+   font-lock-warning-face
+   (aref ansi-color-normal-colors-vector 7))
+  "Faces to use for colors on difftastic output (normal)."
+  :type '(vector face face face face face face face face))
+
+(defcustom pk/difft-bright-colors-vector
+  (vector
+   (aref ansi-color-bright-colors-vector 0)
+   'magit-diff-removed
+   'magit-diff-added
+   'magit-diff-file-heading
+   font-lock-comment-face
+   font-lock-string-face
+   font-lock-warning-face
+   (aref ansi-color-bright-colors-vector 7))
+  "Faces to use for colors on difftastic output (bright)."
+  :type '(vector face face face face face face face face))
+
 (defmacro pk/with-temp-advice (fn-orig where fn-advice &rest body)
   "Execute BODY with advice temporarily enabled."
   (declare (indent 3))
@@ -788,18 +814,20 @@ language."
        (advice-remove ,fn-orig fn-advice-var))))
 
 (defun pk/difft--ansi-color-add-background (face)
-  "Add :background to FACE if it is for added or removed face."
-  (if (listp face)
-      (pcase (plist-get face :foreground)
-        ((pred (lambda (color)
-                (string= color (face-foreground 'magit-diff-removed))))
-              (append face (list :background
-                                 (face-background 'magit-diff-removed nil 'default))))
-        ((pred (lambda (color)
-                (string= color (face-foreground 'magit-diff-added))))
-              (append face (list :background
-                                 (face-background 'magit-diff-added nil 'default))))
-        (_ face))
+  "Add :background to FACE.
+
+N.B.  This is meant to filter-result of `ansi-color-get-face-1' by
+adding background to faces if they have foreground set."
+  (if-let ((difft-face
+            (and (listp face)
+                 (cl-find-if (lambda (difft-face)
+                               (and (string= (face-foreground difft-face)
+                                             (plist-get face :foreground))
+                                (face-background difft-face)))
+                             (vconcat pk/difft-normal-colors-vector
+                                      pk/difft-bright-colors-vector)))))
+      (append face (list :background
+                         (face-background difft-face nil 'default)))
     face))
 
 ;; adapted from https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
@@ -814,8 +842,10 @@ language."
                                   (fringe-columns 'left)
                                   (fringe-columns 'rigth))))
          (process-environment
-          (cons (format "GIT_EXTERNAL_DIFF=%s --width %s"
-                        pk/difft-executable requested-width)
+          (cons (format "GIT_EXTERNAL_DIFF=%s --width %s --background %s"
+                        pk/difft-executable
+                        requested-width
+                        (frame-parameter nil 'background-mode))
                 process-environment)))
     (pk/difft--run-command
      buffer
@@ -855,26 +885,8 @@ language."
        (message "Processing difftastic output...")
        (with-current-buffer (process-buffer proc)
          (goto-char (point-min))
-         (let ((ansi-color-normal-colors-vector
-                (vector
-                 (aref ansi-color-normal-colors-vector 0)
-                 'magit-diff-removed
-                 'magit-diff-added
-                 'magit-diff-file-heading
-                 font-lock-comment-face
-                 font-lock-string-face
-                 font-lock-warning-face
-                 (aref ansi-color-normal-colors-vector 7)))
-               (ansi-color-bright-colors-vector
-                (vector
-                 (aref ansi-color-bright-colors-vector 0)
-                 'magit-diff-removed
-                 'magit-diff-added
-                 'magit-diff-file-heading
-                 font-lock-comment-face
-                 font-lock-string-face
-                 font-lock-warning-face
-                 (aref ansi-color-bright-colors-vector 7))))
+         (let ((ansi-color-normal-colors-vector pk/difft-normal-colors-vector)
+               (ansi-color-bright-colors-vector pk/difft-bright-colors-vector))
            (pk/with-temp-advice
                'ansi-color-get-face-1
                :filter-return
@@ -1001,6 +1013,7 @@ LANG-OVERRIDE is passed to difftastic."
      buffer
      `(,pk/difft-executable
        "--width" ,(number-to-string requested-width)
+       "--background" ,(frame-parameter nil 'background-mode)
        ,@(when lang-override (list "--override"
                                    (format "*:%s" lang-override)))
        ,file-A
