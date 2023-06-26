@@ -771,6 +771,9 @@ language."
             (setq auto-composition-mode nil)))
 
 ;;difftastic: https://github.com/Wilfred/difftastic
+(require 'ansi-color)
+(require 'font-lock)
+(require 'magit-diff)
 
 (defcustom pk/difft-executable (or (executable-find "difft")
                                    "difft")
@@ -951,9 +954,11 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
        ,@(when arg (list arg))))))
 
 ;; adapted from https://shivjm.blog/better-magit-diffs/
-(transient-append-suffix 'magit-diff '(-1 -1)
+(use-package magit
+  :config
+  (transient-append-suffix 'magit-diff '(-1 -1)
   [("D" "Difftastic Diff (dwim)" pk/difft-magit-diff)
-   ("S" "Difftastic Show" pk/difft-magit-show)])
+   ("S" "Difftastic Show" pk/difft-magit-show)]))
 
 (defun pk/difft-buffers--make-temp-file (prefix buffer)
   "Make a temp file for the BUFFER (with its content) that has PREFIX included."
