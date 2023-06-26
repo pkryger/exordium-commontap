@@ -772,6 +772,10 @@ language."
 
 ;;difftastic: https://github.com/Wilfred/difftastic
 
+(defcustom pk/difft-executable (executable-find "difft")
+  "Location of difftastic executable."
+  :type 'file)
+
 (defmacro pk/with-temp-advice (fn-orig where fn-advice &rest body)
   "Execute BODY with advice temporarily enabled."
   (declare (indent 3))
@@ -781,6 +785,7 @@ language."
            (advice-add ,fn-orig ,where fn-advice-var)
            ,@body)
        (advice-remove ,fn-orig fn-advice-var))))
+
 (defun pk/difft--ansi-color-add-background (face)
   "Add :background to FACE if it is for added or removed face."
   (if (listp face)
@@ -798,7 +803,7 @@ language."
 
 ;; adapted from https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 (defun pk/difft--magit-with-difftastic (buffer command)
-  "Run COMMAND with GIT_EXTERNAL_DIFF=difft then show result in BUFFER."
+  "Run COMMAND with GIT_EXTERNAL_DIFF then show result in BUFFER."
   (let* ((requested-width (max 80
                                (- (if (< 1 (length (window-list)))
                                       (save-window-excursion
@@ -808,69 +813,81 @@ language."
                                   (fringe-columns 'left)
                                   (fringe-columns 'rigth))))
          (process-environment
-          (cons (concat "GIT_EXTERNAL_DIFF=difft --width="
-                        (number-to-string requested-width))
+          (cons (format "GIT_EXTERNAL_DIFF=%s --width %s"
+                        pk/difft-executable requested-width)
                 process-environment)))
-    ;; Clear the result buffer (we might regenerate a diff, e.g., for
-    ;; the current changes in our working directory).
-    (with-current-buffer buffer
-      (setq buffer-read-only nil)
-      (erase-buffer))
-    ;; Now spawn a process calling the git COMMAND.
-    (message "Running: %s..." (mapconcat #'identity command " "))
-    (make-process
-     :name (buffer-name buffer)
-     :buffer buffer
-     :command command
-     ;; Don't query for running processes when emacs is quit.
-     :noquery t
-     ;; Show the result buffer once the process has finished.
-     :sentinel
-     (lambda (proc _event)
-       (when (eq (process-status proc) 'exit)
-         (message "Processing difft output...")
-         (with-current-buffer (process-buffer proc)
-           (goto-char (point-min))
-           (let ((ansi-color-normal-colors-vector (vector
-                                                   (aref ansi-color-normal-colors-vector 0)
-                                                   'magit-diff-removed
-                                                   'magit-diff-added
-                                                   'magit-diff-file-heading
-                                                   font-lock-comment-face
-                                                   font-lock-string-face
-                                                   font-lock-warning-face
-                                                   (aref ansi-color-normal-colors-vector 7)))
-                 (ansi-color-bright-colors-vector (vector
-                                                   (aref ansi-color-bright-colors-vector 0)
-                                                   'magit-diff-removed
-                                                   'magit-diff-added
-                                                   'magit-diff-file-heading
-                                                   font-lock-comment-face
-                                                   font-lock-string-face
-                                                   font-lock-warning-face
-                                                   (aref ansi-color-bright-colors-vector 7))))
-             (pk/with-temp-advice
-                 'ansi-color-get-face-1
-                 :filter-return
-                 #'pk/difft--ansi-color-add-background
-               (ansi-color-apply-on-region (point-min) (point-max))))
-           (setq buffer-read-only t)
-           (view-mode)
-           (goto-char (point-min))
-           ;; difftastic diffs are usually 2-column side-by-side,
-           ;; so ensure our window is wide enough.
-           (let ((actual-width (cadr (buffer-line-statistics))))
-             (pop-to-buffer
-              (current-buffer)
-              `(,(when (< requested-width actual-width)
-                   #'display-buffer-at-bottom)
-                (window-width
-                 . ,(min (frame-width)
-                         (max actual-width requested-width))))))))
-       (message nil)))))
+    (pk/difft--run-command
+     buffer
+     command
+     (lambda ()
+       (with-current-buffer buffer
+         ;; difftastic diffs are usually 2-column side-by-side,
+         ;; so ensure our window is wide enough.
+         (let ((actual-width (cadr (buffer-line-statistics))))
+           (pop-to-buffer
+            (current-buffer)
+            `(,(when (< requested-width actual-width)
+                 #'display-buffer-at-bottom)
+              (window-width
+               . ,(min (frame-width)
+                       (max actual-width requested-width)))))))))))
+
+(defun pk/difft--run-command (buffer command action)
+  "Run COMMAND then show results in BUFFER then execute ACTION."
+  ;; Clear the result buffer (we might regenerate a diff, e.g., for
+  ;; the current changes in our working directory).
+  (with-current-buffer buffer
+    (setq buffer-read-only nil)
+    (erase-buffer))
+  ;; Now spawn a process calling the git COMMAND.
+  (message "Running: %s..." (mapconcat #'identity command " "))
+  (make-process
+   :name (buffer-name buffer)
+   :buffer buffer
+   :command command
+   ;; Don't query for running processes when emacs is quit.
+   :noquery t
+   ;; Show the result buffer once the process has finished.
+   :sentinel
+   (lambda (proc _event)
+     (when (eq (process-status proc) 'exit)
+       (message "Processing difftastic output...")
+       (with-current-buffer (process-buffer proc)
+         (goto-char (point-min))
+         (let ((ansi-color-normal-colors-vector
+                (vector
+                 (aref ansi-color-normal-colors-vector 0)
+                 'magit-diff-removed
+                 'magit-diff-added
+                 'magit-diff-file-heading
+                 font-lock-comment-face
+                 font-lock-string-face
+                 font-lock-warning-face
+                 (aref ansi-color-normal-colors-vector 7)))
+               (ansi-color-bright-colors-vector
+                (vector
+                 (aref ansi-color-bright-colors-vector 0)
+                 'magit-diff-removed
+                 'magit-diff-added
+                 'magit-diff-file-heading
+                 font-lock-comment-face
+                 font-lock-string-face
+                 font-lock-warning-face
+                 (aref ansi-color-bright-colors-vector 7))))
+           (pk/with-temp-advice
+               'ansi-color-get-face-1
+               :filter-return
+               #'pk/difft--ansi-color-add-background
+             (ansi-color-apply-on-region (point-min) (point-max))))
+         (setq buffer-read-only t)
+         (view-mode)
+         (goto-char (point-min)))
+       (funcall action))
+     (message nil))))
 
 (defun pk/difft-magit-show (rev)
-  "Show the result of \"git show REV\" with GIT_EXTERNAL_DIFF=difft."
+  "Show the result of \"git show REV\" with difftastic.
+When REV couldn't be guessed or called with prefix arg ask for REV."
   (interactive
    (list (or
           ;; If REV is given, just use it.
@@ -889,7 +906,8 @@ language."
      (list "git" "--no-pager" "show" "--ext-diff" rev))))
 
 (defun pk/difft-magit-diff (arg)
-  "Show the result of \"git diff ARG\" with GIT_EXTERNAL_DIFF=difft."
+  "Show the result of \"git diff ARG\" with difftastic.
+When ARG couldn't be guessed or called with prefix arg ask for ARG."
   (interactive
    (list (or
           ;; If RANGE is given, just use it.
@@ -1010,10 +1028,25 @@ then ask for language before running difftastic."
                              buffer-file)
                          (setq del-B
                                (pk/difft-buffers--make-temp-file "B" buf-B))))
-          (message "difft%s %s %s"
-                   (if lang-override (format " --override='*:%s'" lang-override) "")
-                   file-A
-                   file-B))
+          (let ((buffer (get-buffer-create (concat "*difftastic "
+                                                   file-A
+                                                   file-B "*")))
+                (requested-width (- (frame-width)
+                                    (fringe-columns 'left)
+                                    (fringe-columns 'right))))
+            (pk/difft--run-command
+             buffer
+             `(,pk/difft-executable
+                   "--width" ,(number-to-string requested-width)
+                   ,@(when lang-override (list "--override"
+                                               (format "*:%s" lang-override)))
+                   ,file-A
+                   ,file-B)
+             (lambda ()
+               (pop-to-buffer
+                buffer
+                `(,#'display-buffer-reuse-window
+                  (window-width . ,requested-width)))))))
       (when (and del-A (stringp file-A) (file-exists-p file-A))
         (delete-file file-A))
       (when (and del-B (stringp file-B) (file-exists-p file-B))
