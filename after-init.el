@@ -780,7 +780,7 @@ language."
   "Location of difftastic executable."
   :type 'file)
 
-(defcustom pk/difft-normal-colors-vector
+(defvar pk/difft-normal-colors-vector
   (vector
    (aref ansi-color-normal-colors-vector 0)
    'magit-diff-removed
@@ -790,10 +790,9 @@ language."
    font-lock-string-face
    font-lock-warning-face
    (aref ansi-color-normal-colors-vector 7))
-  "Faces to use for colors on difftastic output (normal)."
-  :type '(vector face face face face face face face face))
+  "Faces to use for colors on difftastic output (normal).")
 
-(defcustom pk/difft-bright-colors-vector
+(defvar pk/difft-bright-colors-vector
   (vector
    (aref ansi-color-bright-colors-vector 0)
    'magit-diff-removed
@@ -803,8 +802,7 @@ language."
    font-lock-string-face
    font-lock-warning-face
    (aref ansi-color-bright-colors-vector 7))
-  "Faces to use for colors on difftastic output (bright)."
-  :type '(vector face face face face face face face face))
+  "Faces to use for colors on difftastic output (bright).")
 
 (defmacro pk/with-temp-advice (fn-orig where fn-advice &rest body)
   "Execute BODY with advice temporarily enabled."
