@@ -772,7 +772,8 @@ language."
 
 ;;difftastic: https://github.com/Wilfred/difftastic
 
-(defcustom pk/difft-executable (executable-find "difft")
+(defcustom pk/difft-executable (or (executable-find "difft")
+                                   "difft")
   "Location of difftastic executable."
   :type 'file)
 
