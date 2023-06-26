@@ -942,6 +942,32 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
   [("D" "Difftastic Diff (dwim)" pk/difft-magit-diff)
    ("S" "Difftastic Show" pk/difft-magit-show)])
 
+(defun pk/difft-buffers--make-temp-file (prefix buffer)
+  "Make a temp file for the BUFFER (with its content) that has PREFIX included."
+  ;; from `make-auto-save-file-name'
+  (with-current-buffer buffer
+    (let ((buffer-name (buffer-name))
+          (limit 0))
+      (while (string-match "[^A-Za-z0-9_.~#+-]" buffer-name limit)
+	    (let* ((character (aref buffer-name (match-beginning 0)))
+	           (replacement
+                ;; For multibyte characters, this will produce more than
+                ;; 2 hex digits, so is not true URL encoding.
+                (format "%%%02X" character)))
+	      (setq buffer-name (replace-match replacement t t buffer-name))
+	      (setq limit (1+ (match-end 0)))))
+      (make-temp-file (format "difft-%s-%s" prefix buffer-name)
+                      nil nil (buffer-string)))))
+
+(defun pk/difft--languages ()
+  "Return list of language overrides supported by difftastic."
+  (append
+   '("Text")
+   (string-split
+    (shell-command-to-string
+     (concat pk/difft-executable " --list-languages | grep -e '^[A-Z]'"))
+    "\n" t)))
+
 (defun pk/difft-buffers--suggestion (languages buffer-A buffer-B)
   "Guess one of LANGUAGES based on mode of BUFFER-A and BUFFER-B."
   (when-let ((mode
@@ -959,23 +985,30 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
                                        "-mode$" ""
                                        (symbol-name mode))))))
                 languages)))
+(defun pk/difft--files-internal (file-A file-B &optional lang-override)
+  "Create a buffer and run difftastic on a pair of files FILE-A and FILE-B.
 
-(defun pk/difft-buffers--make-temp-file (prefix buffer)
-  "Make a temp file for the BUFFER (with its content) that has PREFIX included."
-  ;; from `make-auto-save-file-name'
-  (with-current-buffer buffer
-    (let ((buffer-name (buffer-name))
-          (limit 0))
-      (while (string-match "[^A-Za-z0-9_.~#+-]" buffer-name limit)
-	    (let* ((character (aref buffer-name (match-beginning 0)))
-	           (replacement
-                ;; For multibyte characters, this will produce more than
-                ;; 2 hex digits, so is not true URL encoding.
-                (format "%%%02X" character)))
-	      (setq buffer-name (replace-match replacement t t buffer-name))
-	      (setq limit (1+ (match-end 0)))))
-      (make-temp-file (format "difft-%s-%s" prefix buffer-name)
-                      nil nil (buffer-string)))))
+LANG-OVERRIDE is passed to difftastic."
+  (let ((buffer (get-buffer-create (concat "*difftastic "
+                                           (file-name-nondirectory file-A)
+                                           (file-name-nondirectory file-B)
+                                           "*")))
+        (requested-width (- (frame-width)
+                            (fringe-columns 'left)
+                            (fringe-columns 'right))))
+    (pk/difft--run-command
+     buffer
+     `(,pk/difft-executable
+       "--width" ,(number-to-string requested-width)
+       ,@(when lang-override (list "--override"
+                                   (format "*:%s" lang-override)))
+       ,file-A
+       ,file-B)
+     (lambda ()
+       (pop-to-buffer
+        buffer
+        `(,nil
+          (window-width . ,requested-width)))))))
 
 (defun pk/difft-buffers (buffer-A buffer-B &optional lang-override)
   "Run difftastic on a pair of buffers, BUFFER-A and BUFFER-B.
@@ -1000,13 +1033,7 @@ then ask for language before running difftastic."
            (when (or current-prefix-arg
                      (and (not (buffer-file-name (get-buffer bf-A)))
                           (not (buffer-file-name (get-buffer bf-B)))))
-             (let* ((languages
-                     (append
-                      '("Text")
-                      (string-split
-                       (shell-command-to-string
-                        "difft --list-languages | grep -e '^[A-Z]'")
-                       "\n" t)))
+             (let* ((languages (pk/difft--languages))
                     (suggested (pk/difft-buffers--suggestion languages
                                                              (get-buffer bf-A)
                                                              (get-buffer bf-B))))
@@ -1028,29 +1055,46 @@ then ask for language before running difftastic."
                              buffer-file)
                          (setq del-B
                                (pk/difft-buffers--make-temp-file "B" buf-B))))
-          (let ((buffer (get-buffer-create (concat "*difftastic "
-                                                   file-A
-                                                   file-B "*")))
-                (requested-width (- (frame-width)
-                                    (fringe-columns 'left)
-                                    (fringe-columns 'right))))
-            (pk/difft--run-command
-             buffer
-             `(,pk/difft-executable
-                   "--width" ,(number-to-string requested-width)
-                   ,@(when lang-override (list "--override"
-                                               (format "*:%s" lang-override)))
-                   ,file-A
-                   ,file-B)
-             (lambda ()
-               (pop-to-buffer
-                buffer
-                `(,#'display-buffer-reuse-window
-                  (window-width . ,requested-width)))))))
+          (pk/difft--files-internal file-A file-B lang-override))
       (when (and del-A (stringp file-A) (file-exists-p file-A))
         (delete-file file-A))
       (when (and del-B (stringp file-B) (file-exists-p file-B))
         (delete-file file-B)))))
+
+(defun pk/difft-files (file-A file-B &optional lang-override)
+  "Run difftastic on a pair of files, FILE-A and FILE-B.
+
+Optionally, provide a LANG-OVERRIDE to override language used.
+See 'difft --list-languages' for language list.  When function is
+called with a prefix arg then ask for language before running
+difftastic."
+  (interactive
+   (let ((dir-A (if ediff-use-last-dir
+		            ediff-last-dir-A
+		          default-directory))
+	     dir-B f)
+     (list (setq f (ediff-read-file-name
+		            "File A to compare"
+		            dir-A
+		            (ediff-get-default-file-name)
+		            'no-dirs))
+	       (ediff-read-file-name "File B to compare"
+				                 (setq dir-B
+				                       (if ediff-use-last-dir
+					                       ediff-last-dir-B
+					                     (file-name-directory f)))
+				                 (progn
+				                   (add-to-history
+				                    'file-name-history
+				                    (ediff-abbreviate-file-name
+				                     (expand-file-name
+				                      (file-name-nondirectory f)
+				                      dir-B)))
+				                   (ediff-get-default-file-name f 1)))
+           (when current-prefix-arg
+             (completing-read "Language: " (pk/difft--languages) nil t)))))
+  (pk/difft--files-internal file-A file-B lang-override))
+
 
 
 ;; TODO: move to exordium and likely hide behind the
