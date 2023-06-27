@@ -978,7 +978,7 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
   [("D" "Difftastic Diff (dwim)" pk/difft-magit-diff)
    ("S" "Difftastic Show" pk/difft-magit-show)]))
 
-(defun pk/difft-buffers--make-temp-file (prefix buffer)
+(defun pk/difft---make-temp-file (prefix buffer)
   "Make a temp file for the BUFFER (with its content) that has PREFIX included."
   ;; from `make-auto-save-file-name'
   (with-current-buffer buffer
@@ -1004,7 +1004,7 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
      (concat pk/difft-executable " --list-languages | grep -e '^[A-Z]'"))
     "\n" t)))
 
-(defun pk/difft-buffers--suggestion (languages buffer-A buffer-B)
+(defun pk/difft--make-suggestion (languages buffer-A buffer-B)
   "Guess one of LANGUAGES based on mode of BUFFER-A and BUFFER-B."
   (when-let ((mode
               (or (with-current-buffer buffer-A
@@ -1021,6 +1021,7 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
                                        "-mode$" ""
                                        (symbol-name mode))))))
                 languages)))
+
 (defun pk/difft--files-internal (file-A file-B &optional lang-override)
   "Create a buffer and run difftastic on a pair of files FILE-A and FILE-B.
 
@@ -1071,9 +1072,9 @@ then ask for language before running difftastic."
                      (and (not (buffer-file-name (get-buffer bf-A)))
                           (not (buffer-file-name (get-buffer bf-B)))))
              (let* ((languages (pk/difft--languages))
-                    (suggested (pk/difft-buffers--suggestion languages
-                                                             (get-buffer bf-A)
-                                                             (get-buffer bf-B))))
+                    (suggested (pk/difft--make-suggestion languages
+                                                          (get-buffer bf-A)
+                                                          (get-buffer bf-B))))
                (completing-read "Language: " languages nil t suggested))))))
 
   (let (del-A del-B file-A file-B)
@@ -1085,13 +1086,13 @@ then ask for language before running difftastic."
                              (save-buffer buf-A)
                              buffer-file)
                          (setq del-A
-                               (pk/difft-buffers--make-temp-file "A" buf-A))))
+                               (pk/difft---make-temp-file "A" buf-A))))
           (setq file-B (if-let ((buffer-file (buffer-file-name buf-B)))
                            (progn
                              (save-buffer buf-B)
                              buffer-file)
                          (setq del-B
-                               (pk/difft-buffers--make-temp-file "B" buf-B))))
+                               (pk/difft---make-temp-file "B" buf-B))))
           (pk/difft--files-internal file-A file-B lang-override))
       (when (and del-A (stringp file-A) (file-exists-p file-A))
         (delete-file file-A))
