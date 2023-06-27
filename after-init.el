@@ -779,7 +779,7 @@ language."
   "Get face from VECTOR with OFFSET or make a new one with NAME.
 
 New face is made when VECTOR is not bound."
-;;This is for backward compatibility with Emacs-27.  Calls can be removed with
+;;This is for backward compatibility with Emacs-27.  Calls can be replaced with
 ;; `(aref vector offset)'.
   (if (version< emacs-version "28")
       (defface pk/difft--ansi-color-black
