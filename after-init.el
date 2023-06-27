@@ -775,34 +775,48 @@ language."
 (require 'font-lock)
 (require 'magit-diff)
 
+(defun pk/difft--ansi-color-face (vector offset name)
+  "Get face from VECTOR with OFFSET or make a new one with NAME.
+
+New face is made when VECTOR is not bound."
+;;This is for backward compatibility with Emacs-27.  Calls can be removed with
+;; `(aref vector offset)'.
+  (if (version< emacs-version "28")
+      (defface pk/difft--ansi-color-black
+        `((t :foreground ,(cdr (aref (ansi-color-make-color-map)
+                                     (+ 30 offset)))))
+        (concat "Face used to render " name " color code."))
+    (aref (eval vector) offset)))
+
 (defcustom pk/difft-executable (or (executable-find "difft")
                                    "difft")
   "Location of difftastic executable."
   :type 'file)
 
+
 (defcustom pk/difft-normal-colors-vector
   (vector
-   (aref ansi-color-normal-colors-vector 0)
+   (pk/difft--ansi-color-face 'ansi-color-normal-colors-vector 0 "black")
    'magit-diff-removed
    'magit-diff-added
    'magit-diff-file-heading
    font-lock-comment-face
    font-lock-string-face
    font-lock-warning-face
-   (aref ansi-color-normal-colors-vector 7))
+   (pk/difft--ansi-color-face 'ansi-color-normal-colors-vector 7 "white"))
   "Faces to use for colors on difftastic output (normal)."
   :type '(vector face face face face face face face face))
 
 (defcustom pk/difft-bright-colors-vector
   (vector
-   (aref ansi-color-bright-colors-vector 0)
+   (pk/difft--ansi-color-face 'ansi-color-bright-colors-vector 0 "black")
    'magit-diff-removed
    'magit-diff-added
    'magit-diff-file-heading
    font-lock-comment-face
    font-lock-string-face
    font-lock-warning-face
-   (aref ansi-color-bright-colors-vector 7))
+   (pk/difft--ansi-color-face 'ansi-color-bright-colors-vector 7 "white"))
   "Faces to use for colors on difftastic output (bright)."
   :type '(vector face face face face face face face face))
 
