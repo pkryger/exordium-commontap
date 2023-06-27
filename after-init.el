@@ -875,7 +875,9 @@ adding background to faces if they have foreground set."
        (with-current-buffer buffer
          ;; difftastic diffs are usually 2-column side-by-side,
          ;; so ensure our window is wide enough.
-         (let ((actual-width (cadr (buffer-line-statistics))))
+         (let ((actual-width (if (version< "28" emacs-version)
+                                 (bde-max-column-in-region (point-min) (point-max))
+                               (cadr (buffer-line-statistics)))))
            (pop-to-buffer
             (current-buffer)
             `(,(when (< requested-width actual-width)
