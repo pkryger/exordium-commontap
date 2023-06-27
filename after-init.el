@@ -838,13 +838,13 @@ adding background to faces if they have foreground set."
   (if-let ((difft-face
             (and (listp face)
                  (cl-find-if (lambda (difft-face)
-                               (when-let ((foreground (face-foreground difft-face))
-                                          (background (face-background difft-face)))
-                                 (and (string= foreground
-                                               (plist-get face :foreground))
-                                      ;; anis-color faces have the same foreground
-                                      ;; and background
-                                      (not (string= foreground background)))))
+                               (and (string= (face-foreground difft-face)
+                                             (plist-get face :foreground))
+                                    ;; anis-color faces have the same foreground
+                                    ;; and background
+                                    (not (string= (face-foreground difft-face)
+                                                  (face-background difft-face)))
+                                    (face-background difft-face)))
                              (vconcat pk/difft-normal-colors-vector
                                       pk/difft-bright-colors-vector)))))
       (append face (list :background
