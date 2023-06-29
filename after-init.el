@@ -510,7 +510,14 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   :custom
   (desktop-files-not-to-save pk/desktop-files-not-to-save)
   (desktop-restore-eager 8))
-
+
+(use-package savehist
+  :ensure nil
+  :config
+  (add-to-list 'savehist-additional-variables 'kill-ring)
+  (add-to-list 'savehist-additional-variables 'register-alist)
+  (add-to-list 'savehist-additional-variables 'compile-command)
+  (savehist-mode))
 
 (use-package python
   :ensure nil
