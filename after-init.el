@@ -837,6 +837,8 @@ New face is made when VECTOR is not bound."
            ,@body)
        (advice-remove ,fn-orig fn-advice-var))))
 
+(define-derived-mode pk/difft-mode fundamental-mode "difft")
+
 (defun pk/difft--ansi-color-add-background (face)
   "Add :background to FACE.
 
@@ -927,10 +929,13 @@ adding background to faces if they have foreground set."
    (lambda (proc _event)
      (when (eq (process-status proc) 'exit)
        (with-current-buffer (process-buffer proc)
-         (read-only-mode)
+         (pk/difft-mode)
+         (flycheck-mode -1)
          (view-mode)
-         (goto-char (point-min)))
-       (funcall action))
+         (read-only-mode))
+       (funcall action)
+       (with-current-buffer (process-buffer proc)
+         (goto-char (point-min))))
      (message nil))))
 
 (defun pk/difft-magit-show (rev)
