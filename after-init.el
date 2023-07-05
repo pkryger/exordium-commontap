@@ -898,8 +898,8 @@ adding background to faces if they have foreground set."
   ;; Clear the result buffer (we might regenerate a diff, e.g., for
   ;; the current changes in our working directory).
   (with-current-buffer buffer
-    (setq buffer-read-only nil)
-    (erase-buffer))
+    (let ((inhibit-read-only t))
+      (erase-buffer)))
   ;; Now spawn a process calling the git COMMAND.
   (message "Running: %s..." (mapconcat #'identity command " "))
   (make-process
@@ -908,21 +908,26 @@ adding background to faces if they have foreground set."
    :command command
    ;; Don't query for running processes when emacs is quit.
    :noquery t
-   ;; Show the result buffer once the process has finished.
+   :filter
+   ;; Apply ANSI color sequences as they come
+   (lambda (process string)
+     (let ((buffer (process-buffer process))
+           (ansi-color-normal-colors-vector pk/difft-normal-colors-vector)
+           (ansi-color-bright-colors-vector pk/difft-bright-colors-vector))
+       (when (and string buffer (process-buffer process))
+         (pk/with-temp-advice
+             'ansi-color-get-face-1
+             :filter-return
+             #'pk/difft--ansi-color-add-background
+           (with-current-buffer buffer
+             (let ((inhibit-read-only t))
+               (insert (ansi-color-apply string))))))))
+   ;; Disable write access and call `action' when process is finished.
    :sentinel
    (lambda (proc _event)
      (when (eq (process-status proc) 'exit)
-       (message "Processing difftastic output...")
        (with-current-buffer (process-buffer proc)
-         (goto-char (point-min))
-         (let ((ansi-color-normal-colors-vector pk/difft-normal-colors-vector)
-               (ansi-color-bright-colors-vector pk/difft-bright-colors-vector))
-           (pk/with-temp-advice
-               'ansi-color-get-face-1
-               :filter-return
-               #'pk/difft--ansi-color-add-background
-             (ansi-color-apply-on-region (point-min) (point-max))))
-         (setq buffer-read-only t)
+         (read-only-mode)
          (view-mode)
          (goto-char (point-min)))
        (funcall action))
