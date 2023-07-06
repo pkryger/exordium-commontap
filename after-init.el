@@ -837,7 +837,13 @@ New face is made when VECTOR is not bound."
            ,@body)
        (advice-remove ,fn-orig fn-advice-var))))
 
-(define-derived-mode pk/difft-mode fundamental-mode "difft")
+(define-derived-mode pk/difft-mode fundamental-mode "difft"
+  (view-mode)
+  (setq buffer-read-only t))
+
+;;@todo: move this to init-flycheck.el
+(add-to-list 'flycheck-global-modes 'pk/difft-mode t)
+
 
 (defun pk/difft--ansi-color-add-background (face)
   "Add :background to FACE.
@@ -884,8 +890,10 @@ adding background to faces if they have foreground set."
        (with-current-buffer buffer
          ;; difftastic diffs are usually 2-column side-by-side,
          ;; so ensure our window is wide enough.
-         (let ((actual-width (if (version< "28" emacs-version)
-                                 (bde-max-column-in-region (point-min) (point-max))
+         (let ((actual-width (if (version< emacs-version "28")
+                                 ;;@todo: move this to init-lib ,add alias, and add couple tests
+                                 (save-excursion
+                                   (bde-max-column-in-region (point-min) (point-max)))
                                (cadr (buffer-line-statistics)))))
            (pop-to-buffer
             (current-buffer)
@@ -896,7 +904,9 @@ adding background to faces if they have foreground set."
                        (max actual-width requested-width)))))))))))
 
 (defun pk/difft--run-command (buffer command action)
-  "Run COMMAND then show results in BUFFER then execute ACTION."
+  "Run COMMAND then show results in BUFFER then execute ACTION.
+
+The ACTION is designed to display the BUFFER in some window."
   ;; Clear the result buffer (we might regenerate a diff, e.g., for
   ;; the current changes in our working directory).
   (with-current-buffer buffer
@@ -930,12 +940,8 @@ adding background to faces if they have foreground set."
      (when (eq (process-status proc) 'exit)
        (with-current-buffer (process-buffer proc)
          (pk/difft-mode)
-         (flycheck-mode -1)
-         (view-mode)
-         (read-only-mode))
-       (funcall action)
-       (with-current-buffer (process-buffer proc)
-         (goto-char (point-min))))
+         (goto-char (point-min)))
+       (funcall action))
      (message nil))))
 
 (defun pk/difft-magit-show (rev)
