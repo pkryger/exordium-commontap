@@ -841,10 +841,8 @@ New face is made when VECTOR is not bound."
   (view-mode)
   (setq buffer-read-only t))
 
-;;@todo: move this to init-flycheck.el
-(use-package flycheck
-  :config
-  (add-to-list 'flycheck-global-modes 'pk/difft-mode t))
+;;@todo: add equivalent of this to init-flycheck.el
+;; (add-to-list 'flycheck-global-modes 'pk/difft-mode t)
 
 (defun pk/difft--ansi-color-add-background (face)
   "Add :background to FACE.
