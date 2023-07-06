@@ -781,6 +781,7 @@ language."
 (require 'ansi-color)
 (require 'font-lock)
 (require 'magit-diff)
+(require 'compat)
 
 (defun pk/difft--ansi-color-face (vector offset name)
   "Get face from VECTOR with OFFSET or make a new one with NAME.
@@ -899,8 +900,9 @@ adding background to faces if they have foreground set."
             `(,(when (< requested-width actual-width)
                  #'display-buffer-at-bottom)
               (window-width
-               . ,(min (frame-width)
-                       (max actual-width requested-width)))))))))))
+               . ,(+ (max actual-width requested-width)
+                     (fringe-columns 'left)
+                     (fringe-columns 'rigth)))))))))))
 
 (defun pk/difft--run-command (buffer command action)
   "Run COMMAND then show results in BUFFER then execute ACTION.
@@ -936,12 +938,18 @@ The ACTION is designed to display the BUFFER in some window."
    ;; Disable write access and call `action' when process is finished.
    :sentinel
    (lambda (proc _event)
-     (when (eq (process-status proc) 'exit)
-       (with-current-buffer (process-buffer proc)
-         (pk/difft-mode)
-         (goto-char (point-min)))
-       (funcall action))
-     (message nil))))
+     (let (output)
+       (when (eq (process-status proc) 'exit)
+         (with-current-buffer (process-buffer proc)
+           (pk/difft-mode)
+           (goto-char (point-min))
+           (setq output (not (eq (point-min) (point-max)))))
+         (when output
+           (funcall action)))
+     (if output
+         (message nil)
+       (message "Process %s returned no output"
+                (mapconcat #'identity command " ")))))))
 
 (defun pk/difft-magit-show (rev)
   "Show the result of \"git show REV\" with difftastic.
@@ -1018,7 +1026,6 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
 	      (setq limit (1+ (match-end 0)))))
       (make-temp-file (format "difft-%s-%s" prefix buffer-name)
                       nil nil (buffer-string)))))
-
 (defun pk/difft--languages ()
   "Return list of language overrides supported by difftastic."
   (append
@@ -1070,7 +1077,9 @@ LANG-OVERRIDE is passed to difftastic."
        (pop-to-buffer
         buffer
         `(,nil
-          (window-width . ,requested-width)))))))
+          (window-width . ,(+ requested-width
+                              (fringe-columns 'left)
+                              (fringe-columns 'right)))))))))
 
 (defun pk/difft-buffers (buffer-A buffer-B &optional lang-override)
   "Run difftastic on a pair of buffers, BUFFER-A and BUFFER-B.
