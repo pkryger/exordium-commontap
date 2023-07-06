@@ -869,14 +869,17 @@ adding background to faces if they have foreground set."
 ;; adapted from https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 (defun pk/difft--magit-with-difftastic (buffer command)
   "Run COMMAND with GIT_EXTERNAL_DIFF then show result in BUFFER."
-  (let* ((requested-width (max 80
-                               (- (if (< 1 (length (window-list)))
-                                      (save-window-excursion
-                                        (other-window 1)
-                                        (window-width))
-                                    (/ (frame-width) 2))
+  (let* ((windows-count (length (window-list)))
+         (requested-width (- (max (if split-width-threshold
+                                      (/ split-width-threshold 2)
+                                    80)
+                                  (if (eq 1 windows-count)
+                                      (/ (window-width) 2)
+                                    (save-window-excursion
+                                      (other-window 1)
+                                      (window-width))))
                                   (fringe-columns 'left)
-                                  (fringe-columns 'rigth))))
+                                  (fringe-columns 'rigth)))
          (process-environment
           (cons (format "GIT_EXTERNAL_DIFF=%s --width %s --background %s"
                         pk/difft-executable
@@ -893,16 +896,23 @@ adding background to faces if they have foreground set."
          (let ((actual-width (if (version< emacs-version "28")
                                  ;;@todo: move this to init-lib ,add alias, and add couple tests
                                  (save-excursion
-                                   (bde-max-column-in-region (point-min) (point-max)))
+                                   (bde-max-column-in-region
+                                    (point-min) (point-max)))
                                (cadr (buffer-line-statistics)))))
            (pop-to-buffer
             (current-buffer)
             `(,(when (< requested-width actual-width)
                  #'display-buffer-at-bottom)
               (window-width
-               . ,(+ (max actual-width requested-width)
-                     (fringe-columns 'left)
-                     (fringe-columns 'rigth)))))))))))
+               . ,(max
+                   (if (and (eq 1 windows-count)
+                            split-width-threshold
+                            (<= split-width-threshold (window-width)))
+                       (/ (window-width) 2)
+                     0)
+                   (+ (max actual-width requested-width)
+                      (fringe-columns 'left)
+                      (fringe-columns 'rigth))))))))))))
 
 (defun pk/difft--run-command (buffer command action)
   "Run COMMAND then show results in BUFFER then execute ACTION.
