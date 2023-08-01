@@ -509,7 +509,9 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (add-to-list 'desktop-modes-not-to-save 'magit-log-mode)
   :custom
   (desktop-files-not-to-save pk/desktop-files-not-to-save)
-  (desktop-restore-eager 8))
+  (desktop-restore-eager 8)
+  (desktop-load-locked-desktop (if (version< "29" emacs-version) 'check-pid 'ask)))
+
 
 (use-package savehist
   :ensure nil
