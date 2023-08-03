@@ -857,8 +857,8 @@ adding background to faces if they have foreground set."
                  (cl-find-if (lambda (difft-face)
                                (and (string= (face-foreground difft-face)
                                              (plist-get face :foreground))
-                                    ;; anis-color faces have the same foreground
-                                    ;; and background
+                                    ;; ansi-color-* faces have the same
+                                    ;; foreground and background
                                     (not (string= (face-foreground difft-face)
                                                   (face-background difft-face)))
                                     (face-background difft-face)))
@@ -929,7 +929,7 @@ The ACTION is designed to display the BUFFER in some window."
      (let ((buffer (process-buffer process))
            (ansi-color-normal-colors-vector pk/difft-normal-colors-vector)
            (ansi-color-bright-colors-vector pk/difft-bright-colors-vector))
-       (when (and string buffer (process-buffer process))
+       (when (and string buffer)
          (pk/with-temp-advice
              'ansi-color-get-face-1
              :filter-return
@@ -996,13 +996,17 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
             (`(commit . ,value) (format "%s^..%s" value value))
             ((and range (pred stringp)) range)
             (_ (magit-diff-read-range-or-commit "Range/Commit"))))))
-  (let ((name (concat "*git difftastic"
-                      (if arg (concat " " arg) "")
-                      "*")))
+  (let* ((name (concat "*git difftastic"
+                       (if arg (concat " " arg) "")
+                       "*"))
+         (file (magit-file-relative-name))
+         (default-directory (if file
+                                (magit-toplevel)
+                              default-directory)))
     (pk/difft--magit-with-difftastic
      (get-buffer-create name)
      `("git" "--no-pager" "diff" "--ext-diff"
-       ,@(when (magit-file-relative-name) (list "--"))
+       ,@(when file (list "--"))
        ,@(when arg (list arg))))))
 
 ;; adapted from https://shivjm.blog/better-magit-diffs/
