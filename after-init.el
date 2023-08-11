@@ -149,27 +149,6 @@
   ("<f5>" . modus-themes-toggle))
 
 
-(unless (getenv "ci_tests")
-(use-package tree-sitter-langs)
-(use-package tree-sitter
-  :diminish
-  :after (tree-sitter-langs)
-  ;; TODO: check out themes, likely in modus-themes
-  ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/blob/master/doc/emacs-tree-sitter.org#theming
-  :hook
-  (tree-sitter-after-on . tree-sitter-hl-mode)
-  :custom
-  (font-lock-maximum-decoration t)
-  :config
-  (when-let ((language-name (alist-get 'ruby-mode
-                                       tree-sitter-major-mode-language-alist)))
-    (add-to-list 'tree-sitter-major-mode-language-alist
-                 (cons 'enh-ruby-mode language-name)))
-  (add-to-list 'tree-sitter-major-mode-language-alist
-               (cons 'forge-post-mode 'markdown))
-  (global-tree-sitter-mode))
-)
-
 
 ;; emacs mac ports customisations, per
 ;; https://github.com/railwaycat/homebrew-emacsmacport

@@ -17,3 +17,4 @@
 (setq exordium-no-org-babel-confirm t)
 (setq exordium-rtags-syntax-checker nil)
 (setq exordium-lsp-mode-enable nil)
+(setq exordium-treesit-modes-enable t)
