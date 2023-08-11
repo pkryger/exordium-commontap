@@ -809,6 +809,14 @@ New face is made when VECTOR is not bound."
   "Faces to use for colors on difftastic output (bright)."
   :type '(vector face face face face face face face face))
 
+(defcustom pk/difft-highlight-alist
+  '((magit-diff-added . magit-diff-added-highlight)
+    (magit-diff-removed . magit-diff-removed-highlight))
+  "Faces to replace underlined highlight in difftastic output.
+
+Set to nil if you prefer unaltered difftastic output."
+  :type '(alist :key-type face :value-type face))
+
 (defmacro pk/with-temp-advice (fn-orig where fn-advice &rest body)
   "Execute BODY with advice temporarily enabled."
   (declare (indent 3))
@@ -853,8 +861,21 @@ adding background to faces if they have a foreground set."
                          (face-background difft-face)))
                   (vconcat pk/difft-normal-colors-vector
                            pk/difft-bright-colors-vector)))))
-      (append face (list :background
-                         (face-background difft-face nil 'default)))
+      (if-let ((highlight-face (and (cl-member 'ansi-color-underline face)
+                                    (alist-get difft-face
+                                               pk/difft-highlight-alist))))
+          (append (cl-remove-if (lambda (elt)
+                                  (and (listp elt)
+                                       (plist-get elt :foreground)))
+                                (cl-remove 'ansi-color-underline
+                                           (cl-remove 'ansi-color-bold face)))
+                  (list :background
+                        (face-background highlight-face nil 'default))
+                  (list :foreground
+                        (face-foreground highlight-face nil 'default)))
+        (append face
+                (list :background
+                      (face-background difft-face nil 'default))))
     face))
 
 ;; adapted from https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
