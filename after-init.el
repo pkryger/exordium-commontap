@@ -829,8 +829,9 @@ New face is made when VECTOR is not bound."
 (defun pk/difft--ansi-color-add-background (face)
   "Add :background to FACE.
 
-N.B.  This is meant to filter-result of `ansi-color-get-face-1' by
-adding background to faces if they have foreground set."
+N.B.  This is meant to filter-result of either
+`ansi-color--face-vec-face' or `ansi-color-get-face-1' by
+adding background to faces if they have a foreground set."
   (if-let ((difft-face
             (and (listp face)
                  (cl-find-if
@@ -846,7 +847,7 @@ adding background to faces if they have foreground set."
                                         face)
                             :foreground)))
                          ;; ansi-color-* faces have the same
-                         ;; foreground and background
+                         ;; foreground and background - don't use them
                          (not (string= (face-foreground difft-face)
                                        (face-background difft-face)))
                          (face-background difft-face)))
