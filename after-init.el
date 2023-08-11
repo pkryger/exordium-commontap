@@ -833,16 +833,25 @@ N.B.  This is meant to filter-result of `ansi-color-get-face-1' by
 adding background to faces if they have foreground set."
   (if-let ((difft-face
             (and (listp face)
-                 (cl-find-if (lambda (difft-face)
-                               (and (string= (face-foreground difft-face)
-                                             (plist-get face :foreground))
-                                    ;; ansi-color-* faces have the same
-                                    ;; foreground and background
-                                    (not (string= (face-foreground difft-face)
-                                                  (face-background difft-face)))
-                                    (face-background difft-face)))
-                             (vconcat pk/difft-normal-colors-vector
-                                      pk/difft-bright-colors-vector)))))
+                 (cl-find-if
+                  (lambda (difft-face)
+                    (and (string=
+                          (face-foreground difft-face)
+                          (or
+                           (plist-get face :foreground)
+                           (plist-get
+                            (cl-find-if (lambda (elt)
+                                          (and (listp elt)
+                                               (plist-get elt :foreground)))
+                                        face)
+                            :foreground)))
+                         ;; ansi-color-* faces have the same
+                         ;; foreground and background
+                         (not (string= (face-foreground difft-face)
+                                       (face-background difft-face)))
+                         (face-background difft-face)))
+                  (vconcat pk/difft-normal-colors-vector
+                           pk/difft-bright-colors-vector)))))
       (append face (list :background
                          (face-background difft-face nil 'default)))
     face))
@@ -909,7 +918,9 @@ The ACTION is designed to display the BUFFER in some window."
            (ansi-color-bright-colors-vector pk/difft-bright-colors-vector))
        (when (and string buffer)
          (pk/with-temp-advice
-             'ansi-color-get-face-1
+             (if (fboundp 'ansi-color--face-vec-face)
+                 'ansi-color--face-vec-face
+               'ansi-color-get-face-1)
              :filter-return
              #'pk/difft--ansi-color-add-background
            (with-current-buffer buffer
