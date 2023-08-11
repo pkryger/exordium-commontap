@@ -850,8 +850,7 @@ adding background to faces if they have foreground set."
 ;; adapted from https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 (defun pk/difft--magit-with-difftastic (buffer command)
   "Run COMMAND with GIT_EXTERNAL_DIFF then show result in BUFFER."
-  (let* ((windows-count (length (window-list)))
-         (requested-width (- (if (< 1 (count-windows))
+  (let* ((requested-width (- (if (< 1 (count-windows))
                                  (save-window-excursion
                                    (other-window 1)
                                    (window-width))
