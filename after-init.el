@@ -834,6 +834,44 @@ Set to nil if you prefer unaltered difftastic output."
 ;;@todo: add equivalent of this to init-flycheck.el
 ;; (add-to-list 'flycheck-global-modes 'pk/difft-mode t)
 
+(defun pk/copy-tree (tree &optional vecp)
+  "Make a copy of TREE.
+
+If TREE is a cons cell, this recursively copies both its car and its cdr.
+Contrast to `copy-sequence', which copies only along the cdrs.  With second
+argument VECP, this copies vectors and bool vectors as well as conses."
+  (if (consp tree)
+      (let (result)
+	    (while (consp tree)
+	      (let ((newcar (car tree)))
+	        (when (or (consp (car tree))
+                      (and vecp (or (vectorp (car tree))
+                                    (bool-vector-p (car tree)))))
+		      (setq newcar (pk/copy-tree (car tree) vecp)))
+	        (push newcar result))
+	      (setq tree (cdr tree)))
+	    (nconc (nreverse result)
+               (when (and vecp (or (vectorp tree)
+                                   (bool-vector-p tree)))
+                 (pk/copy-tree tree vecp) tree)))
+    (if (and vecp (or (vectorp tree)
+                      (bool-vector-p tree)))
+        (if (vectorp tree)
+            (let ((i (length (setq tree (copy-sequence tree)))))
+	          (while (>= (setq i (1- i)) 0)
+	            (aset tree i (pk/copy-tree (aref tree i) vecp)))
+	          tree)
+          ;; Optimisation: bool vector doesn't need a deep copy
+          (copy-sequence tree))
+      tree)))
+
+;; @todo: small test case:
+;; (let* ((x #&8" ")
+;;        (y (pk/copy-tree `(,x 3 nil) t)))
+;;   (aset x 0 t)
+;;   (equal x (car y)))
+;; should be nil
+
 (defun pk/difft--ansi-color-add-background (face)
   "Add :background to FACE.
 
@@ -887,18 +925,14 @@ adding background to faces if they have a foreground set."
 
 Utilise `pk/difft--ansi-color-add-background-cache' to cache
 `ansi-color--face-vec-face' calls."
-  ;; A strawman way of making `face-vec' a key element for a cache. Note that
-  ;; it's being updated while calling `ansi-color-apply' family of functions
-  ;; and `copy-tree' doesn't seem to work ¯\_(ツ)_/¯.
-  (let ((key (format "%s" face-vec)))
-    (if-let ((cached (assoc key
+    (if-let ((cached (assoc face-vec
                             pk/difft--ansi-color-add-background-cache)))
         (cdr cached)
       (let ((face (pk/difft--ansi-color-add-background
                    (funcall orig-fun face-vec))))
-        (push (cons key face)
+        (push (cons (pk/copy-tree face-vec t) face)
               pk/difft--ansi-color-add-background-cache)
-        face))))
+        face)))
 
 ;; adapted from https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 (defun pk/difft--magit-with-difftastic (buffer command)
