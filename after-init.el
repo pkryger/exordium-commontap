@@ -878,18 +878,23 @@ adding background to faces if they have a foreground set."
                       (face-background difft-face nil 'default))))
     face))
 
-(defvar pk/difft--ansi-color-add-background-cache nil)
+(defvar-local pk/difft--ansi-color-add-background-cache nil)
 
-(defun pk/difft--ansi-color-add-background-cached (face)
-  "Add background to FACE.
+(defun pk/difft--ansi-color-add-background-cached (orig-fun &rest args)
+  "Memoise ORIG-FUN based on ARGS.
 
 Utilise `pk/difft--ansi-color-add-background-cache' to cache
+`ansi-color--face-vec-face' and
 `pk/difft--ansi-color-add-background' calls."
-  (if-let ((cached (assoc face pk/difft--ansi-color-add-background-cache)))
-      (cdr cached)
-    (let ((filtered (pk/difft--ansi-color-add-background face)))
-      (push (cons face filtered) pk/difft--ansi-color-add-background-cache)
-      filtered)))
+  (let ((key (format "%s" args))) ;; @todo - but why can't use just args?!?!?!
+    (if-let ((cached (assoc key
+                            pk/difft--ansi-color-add-background-cache)))
+        (cdr cached)
+      (let ((face (pk/difft--ansi-color-add-background
+                   (apply orig-fun args))))
+        (push (cons key face)
+              pk/difft--ansi-color-add-background-cache)
+        face)))))
 
 ;; adapted from https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 (defun pk/difft--magit-with-difftastic (buffer command)
@@ -941,44 +946,47 @@ The ACTION is designed to display the BUFFER in some window."
   (message "Running: %s..." (mapconcat #'identity command " "))
   ;; In practice there are only dozens or so different faces used,
   ;; so we can cache them each time anew.
-  (let (pk/difft--ansi-color-add-background-cache)
-    (make-process
-     :name (buffer-name buffer)
-     :buffer buffer
-     :command command
-     ;; Don't query for running processes when emacs is quit.
-     :noquery t
-     :filter
-     ;; Apply ANSI color sequences as they come
-     (lambda (process string)
-       (let ((buffer (process-buffer process))
-             (ansi-color-normal-colors-vector pk/difft-normal-colors-vector)
-             (ansi-color-bright-colors-vector pk/difft-bright-colors-vector))
-         (when (and string buffer)
-           (pk/with-temp-advice
-               (if (fboundp 'ansi-color--face-vec-face)
+  (make-process
+   :name (buffer-name buffer)
+   :buffer buffer
+   :command command
+   ;; Don't query for running processes when emacs is quit.
+   :noquery t
+   :filter
+   ;; Apply ANSI color sequences as they come
+   (lambda (process string)
+     (when-let ((buffer (and string
+                             (process-buffer process))))
+       (with-current-buffer buffer
+         (let ((inhibit-read-only t)
+               (ansi-color-normal-colors-vector pk/difft-normal-colors-vector)
+               (ansi-color-bright-colors-vector pk/difft-bright-colors-vector))
+           (if (fboundp 'ansi-color--face-vec-face) ;; since Emacs-29
+               (pk/with-temp-advice
                    'ansi-color--face-vec-face
-                 'ansi-color-get-face-1)
-               :filter-return
-               #'pk/difft--ansi-color-add-background-cached
-             (with-current-buffer buffer
-               (let ((inhibit-read-only t))
-                 (insert (ansi-color-apply string))))))))
-     ;; Disable write access and call `action' when process is finished.
-     :sentinel
-     (lambda (proc _event)
-       (let (output)
-         (when (eq (process-status proc) 'exit)
-           (with-current-buffer (process-buffer proc)
-             (pk/difft-mode)
-             (goto-char (point-min))
-             (setq output (not (eq (point-min) (point-max)))))
-           (when output
-             (funcall action)))
-         (if output
-             (message nil)
-           (message "Process %s returned no output"
-                    (mapconcat #'identity command " "))))))))
+                   :around
+                   #'pk/difft--ansi-color-add-background-cached
+                 (insert (ansi-color-apply string)))
+             (pk/with-temp-advice
+                 'ansi-color-get-face-1
+                 :filter-return
+                 #'pk/difft--ansi-color-add-background
+               (insert (ansi-color-apply string))))))))
+   ;; Disable write access and call `action' when process is finished.
+   :sentinel
+   (lambda (proc _event)
+     (let (output)
+       (when (eq (process-status proc) 'exit)
+         (with-current-buffer (process-buffer proc)
+           (pk/difft-mode)
+           (goto-char (point-min))
+           (setq output (not (eq (point-min) (point-max)))))
+         (when output
+           (funcall action)))
+       (if output
+           (message nil)
+         (message "Process %s returned no output"
+                  (mapconcat #'identity command " ")))))))
 
 (defun pk/difft-magit-show (rev)
   "Show the result of \"git show REV\" with difftastic.
