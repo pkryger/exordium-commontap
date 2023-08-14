@@ -861,6 +861,8 @@ adding background to faces if they have a foreground set."
                          (face-background difft-face)))
                   (vconcat pk/difft-normal-colors-vector
                            pk/difft-bright-colors-vector)))))
+      ;; difftastic uses underline to highlight some changes;
+      ;; it uses bold as well, but it's not as unambiguaus as underline
       (if-let ((highlight-face (and (cl-member 'ansi-color-underline face)
                                     (alist-get difft-face
                                                pk/difft-highlight-alist))))
@@ -880,21 +882,23 @@ adding background to faces if they have a foreground set."
 
 (defvar-local pk/difft--ansi-color-add-background-cache nil)
 
-(defun pk/difft--ansi-color-add-background-cached (orig-fun &rest args)
+(defun pk/difft--ansi-color-add-background-cached (orig-fun face-vec)
   "Memoise ORIG-FUN based on ARGS.
 
 Utilise `pk/difft--ansi-color-add-background-cache' to cache
-`ansi-color--face-vec-face' and
-`pk/difft--ansi-color-add-background' calls."
-  (let ((key (format "%s" args))) ;; @todo - but why can't use just args?!?!?!
+`ansi-color--face-vec-face' calls."
+  ;; A strawman way of making `face-vec' a key element for a cache. Note that
+  ;; it's being updated while calling `ansi-color-apply' family of functions
+  ;; and `copy-tree' doesn't seem to work ¯\_(ツ)_/¯.
+  (let ((key (format "%s" face-vec)))
     (if-let ((cached (assoc key
                             pk/difft--ansi-color-add-background-cache)))
         (cdr cached)
       (let ((face (pk/difft--ansi-color-add-background
-                   (apply orig-fun args))))
+                   (funcall orig-fun face-vec))))
         (push (cons key face)
               pk/difft--ansi-color-add-background-cache)
-        face)))))
+        face))))
 
 ;; adapted from https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 (defun pk/difft--magit-with-difftastic (buffer command)
