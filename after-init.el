@@ -854,16 +854,16 @@ argument VECP, this copies vectors and bool vectors as well as conses."
                (when (and vecp (or (vectorp tree)
                                    (bool-vector-p tree)))
                  (pk/copy-tree tree vecp) tree)))
-    (if (and vecp (or (vectorp tree)
-                      (bool-vector-p tree)))
-        (if (vectorp tree)
-            (let ((i (length (setq tree (copy-sequence tree)))))
-	          (while (>= (setq i (1- i)) 0)
-	            (aset tree i (pk/copy-tree (aref tree i) vecp)))
-	          tree)
-          ;; Optimisation: bool vector doesn't need a deep copy
-          (copy-sequence tree))
-      tree)))
+    (cond
+     ((and vecp (vectorp tree))
+      (let ((i (length (setq tree (copy-sequence tree)))))
+	    (while (>= (setq i (1- i)) 0)
+	      (aset tree i (pk/copy-tree (aref tree i) vecp)))
+	    tree))
+     ;; Optimisation: bool vector doesn't need a deep copy
+      ((and vecp (bool-vector-p tree)
+            (copy-sequence tree)))
+      (t tree))))
 
 ;; @todo: small test case:
 ;; (let* ((x (make-bool-vector 8 nil))
