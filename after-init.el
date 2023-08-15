@@ -866,11 +866,11 @@ argument VECP, this copies vectors and bool vectors as well as conses."
       tree)))
 
 ;; @todo: small test case:
-;; (let* ((x #&8" ")
+;; (let* ((x (make-bool-vector 8 nil))
 ;;        (y (pk/copy-tree `(,x 3 nil) t)))
 ;;   (aset x 0 t)
-;;   (equal x (car y)))
-;; should be nil
+;;   (cl-assert (not (equal x (car y)))))
+
 
 (defun pk/difft--ansi-color-add-background (face)
   "Add :background to FACE.
@@ -900,7 +900,7 @@ adding background to faces if they have a foreground set."
                   (vconcat pk/difft-normal-colors-vector
                            pk/difft-bright-colors-vector)))))
       ;; difftastic uses underline to highlight some changes;
-      ;; it uses bold as well, but it's not as unambiguaus as underline
+      ;; it uses bold as well, but it's not as unambiguous as underline
       (if-let ((highlight-face (and (cl-member 'ansi-color-underline face)
                                     (alist-get difft-face
                                                pk/difft-highlight-alist))))
