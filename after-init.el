@@ -834,7 +834,7 @@ Set to nil if you prefer unaltered difftastic output."
 ;;@todo: add equivalent of this to init-flycheck.el
 ;; (add-to-list 'flycheck-global-modes 'pk/difft-mode t)
 
-(defun pk/copy-tree (tree &optional vecp)
+(defun pk/copy-tree (tree)
   "Make a copy of TREE.
 
 If TREE is a cons cell, this recursively copies both its car and its cdr.
@@ -844,30 +844,31 @@ argument VECP, this copies vectors and bool vectors as well as conses."
       (let (result)
 	    (while (consp tree)
 	      (let ((newcar (car tree)))
-	        (when (or (consp (car tree))
-                      (and vecp (or (vectorp (car tree))
-                                    (bool-vector-p (car tree)))))
-		      (setq newcar (pk/copy-tree (car tree) vecp)))
+	        (when (or (consp newcar)
+                      (or (vectorp newcar)
+                          (bool-vector-p newcar)))
+		      (setq newcar (pk/copy-tree newcar)))
 	        (push newcar result))
 	      (setq tree (cdr tree)))
 	    (nconc (nreverse result)
-               (when (and vecp (or (vectorp tree)
-                                   (bool-vector-p tree)))
-                 (pk/copy-tree tree vecp) tree)))
+               (if (or (vectorp tree)
+                       (bool-vector-p tree))
+                   (pk/copy-tree tree)
+                 tree)))
     (cond
-     ((and vecp (vectorp tree))
+     ((vectorp tree)
       (let ((i (length (setq tree (copy-sequence tree)))))
 	    (while (>= (setq i (1- i)) 0)
 	      (aset tree i (pk/copy-tree (aref tree i) vecp)))
 	    tree))
      ;; Optimisation: bool vector doesn't need a deep copy
-      ((and vecp (bool-vector-p tree)
-            (copy-sequence tree)))
+      ((bool-vector-p tree)
+       (copy-sequence tree))
       (t tree))))
 
 ;; @todo: small test case:
 ;; (let* ((x (make-bool-vector 8 nil))
-;;        (y (pk/copy-tree `(,x 3 nil) t)))
+;;        (y (pk/copy-tree `(,x 3 nil))))
 ;;   (aset x 0 t)
 ;;   (cl-assert (not (equal x (car y)))))
 
@@ -930,7 +931,7 @@ Utilise `pk/difft--ansi-color-add-background-cache' to cache
         (cdr cached)
       (let ((face (pk/difft--ansi-color-add-background
                    (funcall orig-fun face-vec))))
-        (push (cons (pk/copy-tree face-vec t) face)
+        (push (cons (pk/copy-tree face-vec) face)
               pk/difft--ansi-color-add-background-cache)
         face)))
 
