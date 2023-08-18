@@ -1744,6 +1744,28 @@ This is intended to be used as an advise for
      (set-buffer-modified-p nil))))
 
 
+;; Inspired by Bart and Piotr Kazanowski's:
+;; https://pkaznowski.gitlab.io/blog/post/sort-words-in-region/
+
+(defun pk/sort-words-in-region (beg end &optional reversed)
+  "In active region sort comma separated strings in ascending order.
+
+With prefix arg REVERSED sort in descending order."
+  (interactive  "r\nP")
+  (unless (region-active-p) (user-error "No active region to sort!"))
+  (replace-region-contents
+   beg end
+   (lambda ()
+     (string-join
+      (sort
+       (mapcar #'string-trim
+               (string-split
+                (buffer-substring-no-properties (point-min) (point-max))
+                ","))
+       (if reversed #'string> #'string<))
+      ", "))))
+
+
 (use-package graphviz-dot-mode)
 
 ;; what variables should be updated has been copied from exec-path-from-shell-setenv
