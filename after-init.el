@@ -1791,11 +1791,10 @@ I.e., created with `scratch' or named scratch-"
   :config
   (persistent-scratch-setup-default))
 
-;; (condition-case-unless-debug err
-;;     (quelpa '(basic-stats :fetcher github
-;;                           :repo "pkryger/basic-stats"
-;;                           :branch "main"))
-;;   ((debug error) (message "Error while loading basic-stats: %s"
-;;                           (error-message-string err))))
+(when-let ((path (let ((path "~/gh/pkryger/basic-stats"))
+                   (when (file-directory-p path)
+                     path))))
+  (add-to-list 'load-path path)
+  (require 'basic-stats))
 
 ;;
