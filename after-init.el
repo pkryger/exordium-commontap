@@ -764,6 +764,8 @@ language."
 (require 'magit-diff)
 (require 'compat)
 
+(require 'ediff)
+
 (defun pk/difft--ansi-color-face (vector offset name)
   "Get face from VECTOR with OFFSET or make a new one with NAME.
 
@@ -777,8 +779,7 @@ New face is made when VECTOR is not bound."
         (concat "Face used to render " name " color code."))
     (aref (eval vector) offset)))
 
-(defcustom pk/difft-executable (or (executable-find "difft")
-                                   "difft")
+(defcustom pk/difft-executable "difft"
   "Location of difftastic executable."
   :type 'file)
 
@@ -923,7 +924,7 @@ adding background to faces if they have a foreground set."
 (defvar-local pk/difft--ansi-color-add-background-cache nil)
 
 (defun pk/difft--ansi-color-add-background-cached (orig-fun face-vec)
-  "Memoise ORIG-FUN based on ARGS.
+  "Memoise ORIG-FUN based on FACE-VEC.
 
 Utilise `pk/difft--ansi-color-add-background-cache' to cache
 `ansi-color--face-vec-face' calls."
@@ -974,9 +975,10 @@ Utilise `pk/difft--ansi-color-add-background-cache' to cache
                  #'display-buffer-at-bottom)))))))))
 
 (defun pk/difft--run-command (buffer command action)
-  "Run COMMAND then show results in BUFFER then execute ACTION.
+  "Run COMMAND, show its results in BUFFER, then execute ACTION.
 
-The ACTION is designed to display the BUFFER in some window."
+The ACTION is meant to display the BUFFER in some window and
+perform cleanup."
   ;; Clear the result buffer (we might regenerate a diff, e.g., for
   ;; the current changes in our working directory).
   (with-current-buffer buffer
@@ -1029,7 +1031,7 @@ The ACTION is designed to display the BUFFER in some window."
                     (mapconcat #'identity command " "))))))))
 
 (defun pk/difft-magit-show (rev)
-  "Show the result of \"git show REV\" with difftastic.
+  "Show the result of \\='git show REV\\=' with difftastic.
 When REV couldn't be guessed or called with prefix arg ask for REV."
   (interactive
    (list (or
@@ -1049,7 +1051,7 @@ When REV couldn't be guessed or called with prefix arg ask for REV."
      (list "git" "--no-pager" "show" "--ext-diff" rev))))
 
 (defun pk/difft-magit-diff (arg)
-  "Show the result of \"git diff ARG\" with difftastic.
+  "Show the result of \\='git diff ARG\\=' with difftastic.
 When ARG couldn't be guessed or called with prefix arg ask for ARG."
   (interactive
    (list (or
@@ -1067,7 +1069,7 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
             ('unmerged (error "Unmerged is not yet implemented"))
             ('unstaged nil)
             ('staged "--cached")
-            (`(stash . ,value) (error "Stash is not yet implemented"))
+            (`(stash . ,_) (error "Stash is not yet implemented"))
             (`(commit . ,value) (format "%s^..%s" value value))
             ((and range (pred stringp)) range)
             (_ (magit-diff-read-range-or-commit "Range/Commit"))))))
@@ -1093,7 +1095,7 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
 
 (defun pk/difft---make-temp-file (prefix buffer)
   "Make a temp file for the BUFFER (with its content) that has PREFIX included."
-  ;; from `make-auto-save-file-name'
+  ;; adapted from `make-auto-save-file-name'
   (with-current-buffer buffer
     (let ((buffer-name (buffer-name))
           (limit 0))
@@ -1171,11 +1173,14 @@ then delete FILE-A and/or FILE-B respectively after difftastic has been run."
 (defun pk/difft-buffers (buffer-A buffer-B &optional lang-override)
   "Run difftastic on a pair of buffers, BUFFER-A and BUFFER-B.
 
-Optionally, provide a LANG-OVERRIDE to override language
-used.  See 'difft --list-languages' for language list.  When:
+Optionally, provide a LANG-OVERRIDE to override language used.
+See \\='difft --list-languages\\=' for language list.
+
+When:
 - either LANG-OVERRIDE is nil and neither of BUFFER-A nor
 BUFFER-B is a file buffer,
-- or function is called with a prefix arg
+- or function is called with a prefix arg,
+
 then ask for language before running difftastic."
   (interactive
    (let (bf-A bf-B)
@@ -1225,9 +1230,9 @@ then ask for language before running difftastic."
   "Run difftastic on a pair of files, FILE-A and FILE-B.
 
 Optionally, provide a LANG-OVERRIDE to override language used.
-See 'difft --list-languages' for language list.  When function is
-called with a prefix arg then ask for language before running
-difftastic."
+See \\='difft --list-languages\\=' for language list.  When
+function is called with a prefix arg then ask for language before
+running difftastic."
   (interactive
    (let ((dir-A (if ediff-use-last-dir
 		            ediff-last-dir-A
