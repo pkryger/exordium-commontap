@@ -1135,10 +1135,11 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
                                        (symbol-name mode))))))
                 languages)))
 
-(defun pk/difft--files-internal (file-A file-B &optional lang-override)
+(defun pk/difft--files-internal (file-A file-B &optional lang-override del-A del-B)
   "Create a buffer and run difftastic on a pair of files FILE-A and FILE-B.
 
-LANG-OVERRIDE is passed to difftastic."
+LANG-OVERRIDE is passed to difftastic.  When DEL-A and/or DEL-B is/are non nil
+then delete FILE-A and/or FILE-B respectively after difftastic has been run."
   (let ((buffer (get-buffer-create (concat "*difftastic "
                                            (file-name-nondirectory file-A)
                                            (file-name-nondirectory file-B)
@@ -1150,7 +1151,7 @@ LANG-OVERRIDE is passed to difftastic."
      buffer
      `(,pk/difft-executable
        "--width" ,(number-to-string requested-width)
-       "--background" ,(frame-parameter nil 'background-mode)
+       "--background" ,(format "%s" (frame-parameter nil 'background-mode))
        ,@(when lang-override (list "--override"
                                    (format "*:%s" lang-override)))
        ,file-A
@@ -1161,7 +1162,11 @@ LANG-OVERRIDE is passed to difftastic."
         `(,nil
           (window-width . ,(+ requested-width
                               (fringe-columns 'left)
-                              (fringe-columns 'right)))))))))
+                              (fringe-columns 'right)))))
+       (when (and del-A (file-exists-p file-A))
+         (delete-file file-A))
+       (when (and del-B (file-exists-p file-B))
+         (delete-file file-B))))))
 
 (defun pk/difft-buffers (buffer-A buffer-B &optional lang-override)
   "Run difftastic on a pair of buffers, BUFFER-A and BUFFER-B.
@@ -1193,7 +1198,7 @@ then ask for language before running difftastic."
                (completing-read "Language: " languages nil t suggested))))))
 
   (let (del-A del-B file-A file-B)
-    (unwind-protect
+    (condition-case err
         (let* ((buf-A (get-buffer buffer-A))
                (buf-B (get-buffer buffer-B)))
           (setq file-A (if-let ((buffer-file (buffer-file-name buf-A)))
@@ -1208,11 +1213,13 @@ then ask for language before running difftastic."
                              buffer-file)
                          (setq del-B
                                (pk/difft---make-temp-file "B" buf-B))))
-          (pk/difft--files-internal file-A file-B lang-override))
-      (when (and del-A (stringp file-A) (file-exists-p file-A))
-        (delete-file file-A))
-      (when (and del-B (stringp file-B) (file-exists-p file-B))
-        (delete-file file-B)))))
+          (pk/difft--files-internal file-A file-B lang-override del-A del-B))
+      ((error debug)
+       (when (and del-A (stringp file-A) (file-exists-p file-A))
+         (delete-file file-A))
+       (when (and del-B (stringp file-B) (file-exists-p file-B))
+         (delete-file file-B))
+       (signal (car err) (cdr err))))))
 
 (defun pk/difft-files (file-A file-B &optional lang-override)
   "Run difftastic on a pair of files, FILE-A and FILE-B.
