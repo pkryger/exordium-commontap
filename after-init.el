@@ -837,9 +837,10 @@ Set to nil if you prefer unaltered difftastic output."
 (defun pk/copy-tree (tree)
   "Make a copy of TREE.
 
-If TREE is a cons cell, this recursively copies both its car and its cdr.
-Contrast to `copy-sequence', which copies only along the cdrs.  With second
-argument VECP, this copies vectors and bool vectors as well as conses."
+If TREE is a cons cell, this recursively copies both its car and
+its cdr.  Contrast to `copy-sequence', which copies only along
+the cdrs.  This copies vectors and bool vectors as well as
+conses."
   (if (consp tree)
       (let (result)
 	    (while (consp tree)
@@ -1020,12 +1021,12 @@ The ACTION is designed to display the BUFFER in some window."
            (pk/difft-mode)
            (goto-char (point-min))
            (setq output (not (eq (point-min) (point-max)))))
-         (when output
-           (funcall action)))
-       (if output
-           (message nil)
-         (message "Process %s returned no output"
-                  (mapconcat #'identity command " ")))))))
+         (if output
+           (progn
+             (funcall action)
+             (message nil))
+           (message "Process %s returned no output"
+                    (mapconcat #'identity command " "))))))))
 
 (defun pk/difft-magit-show (rev)
   "Show the result of \"git show REV\" with difftastic.
@@ -1106,6 +1107,7 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
 	      (setq limit (1+ (match-end 0)))))
       (make-temp-file (format "difft-%s-%s" prefix buffer-name)
                       nil nil (buffer-string)))))
+
 (defun pk/difft--languages ()
   "Return list of language overrides supported by difftastic."
   (append
