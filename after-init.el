@@ -778,6 +778,38 @@ New face is made when VECTOR is not bound."
         (concat "Face used to render " name " color code."))
     (aref (eval vector) offset)))
 
+(defun pk/difft-requested-window-width ()
+  "Get a window width for difftastic call."
+  (- (if (< 1 (count-windows))
+         (save-window-excursion
+           (other-window 1)
+           (window-width))
+       (if (and split-width-threshold
+                (< split-width-threshold (window-width)))
+           (/ (window-width) 2)
+         (window-width)))
+     (fringe-columns 'left)
+     (fringe-columns 'rigth)))
+
+(defun pk/difft-pop-to-buffer (buffer-or-name requested-width)
+  "Display BUFFER-OR-NAME with REQUESTED-WIDTH and select its window.
+
+When actual window width is greater than REQUESTED-WIDTH then
+display buffer at bottom."
+  (with-current-buffer buffer-or-name
+    ;; difftastic diffs are usually 2-column side-by-side,
+    ;; so ensure our window is wide enough.
+    (let ((actual-width (if (version< emacs-version "28")
+                            ;;@todo: move this to init-lib ,add alias, and add couple tests
+                            (save-excursion
+                              (bde-max-column-in-region
+                               (point-min) (point-max)))
+                          (cadr (buffer-line-statistics)))))
+      (pop-to-buffer
+       (current-buffer)
+       `(,(when (< requested-width actual-width)
+            #'display-buffer-at-bottom))))))
+
 (defcustom pk/difft-executable "difft"
   "Location of difftastic executable."
   :type 'file)
@@ -816,6 +848,20 @@ New face is made when VECTOR is not bound."
 
 Set to nil if you prefer unaltered difftastic output."
   :type '(alist :key-type face :value-type face))
+
+(defcustom pk/difft-requested-window-width-function
+  #'pk/difft-requested-window-width
+  "Function used to calculate a requested width for difftastic call."
+  :type 'function)
+
+(defcustom pk/difft-display-buffer-function
+  #'pk/difft-pop-to-buffer
+  "Function used diplay buffer with output of difftastic call.
+
+It will be called with two arguments: BUFFER-OR-NAME: a buffer to
+display and REQUESTED-WIDTH: a with requested for difftastic
+call."
+  :type 'function)
 
 (defmacro pk/with-temp-advice (fn-orig where fn-advice &rest body)
   "Execute BODY with advice temporarily enabled."
@@ -939,16 +985,7 @@ Utilise `pk/difft--ansi-color-add-background-cache' to cache
 ;; adapted from https://tsdh.org/posts/2022-08-01-difftastic-diffing-with-magit.html
 (defun pk/difft--magit-with-difftastic (buffer command)
   "Run COMMAND with GIT_EXTERNAL_DIFF then show result in BUFFER."
-  (let* ((requested-width (- (if (< 1 (count-windows))
-                                 (save-window-excursion
-                                   (other-window 1)
-                                   (window-width))
-                               (if (and split-width-threshold
-                                        (< split-width-threshold (window-width)))
-                                   (/ (window-width) 2)
-                                 (window-width)))
-                             (fringe-columns 'left)
-                             (fringe-columns 'rigth)))
+  (let* ((requested-width (funcall pk/difft-requested-window-width-function))
          (process-environment
           (cons (format "GIT_EXTERNAL_DIFF=%s --width %s --background %s"
                         pk/difft-executable
@@ -959,19 +996,7 @@ Utilise `pk/difft--ansi-color-add-background-cache' to cache
      buffer
      command
      (lambda ()
-       (with-current-buffer buffer
-         ;; difftastic diffs are usually 2-column side-by-side,
-         ;; so ensure our window is wide enough.
-         (let ((actual-width (if (version< emacs-version "28")
-                                 ;;@todo: move this to init-lib ,add alias, and add couple tests
-                                 (save-excursion
-                                   (bde-max-column-in-region
-                                    (point-min) (point-max)))
-                               (cadr (buffer-line-statistics)))))
-           (pop-to-buffer
-            (current-buffer)
-            `(,(when (< requested-width actual-width)
-                 #'display-buffer-at-bottom)))))))))
+       (funcall pk/difft-display-buffer-function buffer requested-width)))))
 
 (defun pk/difft--run-command (buffer command action)
   "Run COMMAND, show its results in BUFFER, then execute ACTION.
@@ -1163,9 +1188,7 @@ when it is a temporary file."
   "Run difftastic on files FILE-TEMP-A and FILE-TEMP-B in BUFFER.
 
 LANG-OVERRIDE is passed to difftastic."
-  (let ((requested-width (- (frame-width)
-                            (fringe-columns 'left)
-                            (fringe-columns 'right))))
+  (let ((requested-width (funcall pk/difft-requested-window-width-function)))
     (pk/difft--run-command
      buffer
      `(,pk/difft-executable
@@ -1176,12 +1199,7 @@ LANG-OVERRIDE is passed to difftastic."
        ,(car file-temp-A)
        ,(car file-temp-B))
      (lambda ()
-       (pop-to-buffer
-        buffer
-        `(,nil
-          (window-width . ,(+ requested-width
-                              (fringe-columns 'left)
-                              (fringe-columns 'right)))))
+       (funcall pk/difft-display-buffer-function buffer requested-width)
        (pk/difft--delete-temp-file file-temp-A)
        (pk/difft--delete-temp-file file-temp-B)))))
 
@@ -1275,7 +1293,6 @@ running difftastic."
    (cons file-A nil)
    (cons file-B nil)
    lang-override))
-
 
 
 ;; TODO: move to exordium and likely hide behind the
