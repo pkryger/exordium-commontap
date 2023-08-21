@@ -760,11 +760,10 @@ language."
 
 ;;difftastic: https://github.com/Wilfred/difftastic
 (require 'ansi-color)
+(require 'compat)
+(require 'ediff)
 (require 'font-lock)
 (require 'magit-diff)
-(require 'compat)
-
-(require 'ediff)
 
 (defun pk/difft--ansi-color-face (vector offset name)
   "Get face from VECTOR with OFFSET or make a new one with NAME.
