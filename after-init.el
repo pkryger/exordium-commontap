@@ -1107,8 +1107,31 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
                 (format "%%%02X" character)))
 	      (setq buffer-name (replace-match replacement t t buffer-name))
 	      (setq limit (1+ (match-end 0)))))
-      (make-temp-file (format "difft-%s-%s" prefix buffer-name)
+      (make-temp-file (format "difft-%s-%s-" prefix buffer-name)
                       nil nil (buffer-string)))))
+
+(defun pk/difft--get-file (prefix buffer)
+  "If BUFFER visits a file return it else create a temporary file with PREFIX.
+The return value is a cons where car is the file and cdr is non
+nil if a temporary file has been created."
+  (let* (temp
+         (file
+          (if-let ((buffer-file (buffer-file-name buffer)))
+              (progn
+                (save-buffer buffer)
+                buffer-file)
+            (setq temp
+                  (pk/difft---make-temp-file prefix buffer)))))
+    (cons file temp)))
+
+(defun pk/difft--delete-temp-file (file-temp)
+  "Delete FILE-TEMP when it is a temporary file.
+The FILE-TEMP is a cons where car is the file and cdr is non nil
+when it is a temporary file."
+  (let ((file (car file-temp))
+        (temp (cdr file-temp)))
+   (when (and temp (stringp file) (file-exists-p file))
+         (delete-file file))))
 
 (defun pk/difft--languages ()
   "Return list of language overrides supported by difftastic."
@@ -1137,16 +1160,11 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
                                        (symbol-name mode))))))
                 languages)))
 
-(defun pk/difft--files-internal (file-A file-B &optional lang-override del-A del-B)
-  "Create a buffer and run difftastic on a pair of files FILE-A and FILE-B.
+(defun pk/difft--files-internal (buffer file-temp-A file-temp-B &optional lang-override)
+  "Run difftastic on files FILE-TEMP-A and FILE-TEMP-B in BUFFER.
 
-LANG-OVERRIDE is passed to difftastic.  When DEL-A and/or DEL-B is/are non nil
-then delete FILE-A and/or FILE-B respectively after difftastic has been run."
-  (let ((buffer (get-buffer-create (concat "*difftastic "
-                                           (file-name-nondirectory file-A)
-                                           (file-name-nondirectory file-B)
-                                           "*")))
-        (requested-width (- (frame-width)
+LANG-OVERRIDE is passed to difftastic."
+  (let ((requested-width (- (frame-width)
                             (fringe-columns 'left)
                             (fringe-columns 'right))))
     (pk/difft--run-command
@@ -1156,8 +1174,8 @@ then delete FILE-A and/or FILE-B respectively after difftastic has been run."
        "--background" ,(format "%s" (frame-parameter nil 'background-mode))
        ,@(when lang-override (list "--override"
                                    (format "*:%s" lang-override)))
-       ,file-A
-       ,file-B)
+       ,(car file-temp-A)
+       ,(car file-temp-B))
      (lambda ()
        (pop-to-buffer
         buffer
@@ -1165,10 +1183,9 @@ then delete FILE-A and/or FILE-B respectively after difftastic has been run."
           (window-width . ,(+ requested-width
                               (fringe-columns 'left)
                               (fringe-columns 'right)))))
-       (when (and del-A (file-exists-p file-A))
-         (delete-file file-A))
-       (when (and del-B (file-exists-p file-B))
-         (delete-file file-B))))))
+       (pk/difft--delete-temp-file file-temp-A)
+       (pk/difft--delete-temp-file file-temp-B)))))
+
 
 (defun pk/difft-buffers (buffer-A buffer-B &optional lang-override)
   "Run difftastic on a pair of buffers, BUFFER-A and BUFFER-B.
@@ -1202,28 +1219,20 @@ then ask for language before running difftastic."
                                                           (get-buffer bf-B))))
                (completing-read "Language: " languages nil t suggested))))))
 
-  (let (del-A del-B file-A file-B)
+  (let (file-temp-A file-temp-B)
     (condition-case err
-        (let* ((buf-A (get-buffer buffer-A))
-               (buf-B (get-buffer buffer-B)))
-          (setq file-A (if-let ((buffer-file (buffer-file-name buf-A)))
-                           (progn
-                             (save-buffer buf-A)
-                             buffer-file)
-                         (setq del-A
-                               (pk/difft---make-temp-file "A" buf-A))))
-          (setq file-B (if-let ((buffer-file (buffer-file-name buf-B)))
-                           (progn
-                             (save-buffer buf-B)
-                             buffer-file)
-                         (setq del-B
-                               (pk/difft---make-temp-file "B" buf-B))))
-          (pk/difft--files-internal file-A file-B lang-override del-A del-B))
+        (progn
+          (setq file-temp-A (pk/difft--get-file "A" (get-buffer buffer-A))
+                file-temp-B (pk/difft--get-file "B" (get-buffer buffer-B)))
+          (pk/difft--files-internal
+           (get-buffer-create
+            (concat "*difftastic " buffer-A " " buffer-B "*"))
+           file-temp-A
+           file-temp-B
+           lang-override))
       ((error debug)
-       (when (and del-A (stringp file-A) (file-exists-p file-A))
-         (delete-file file-A))
-       (when (and del-B (stringp file-B) (file-exists-p file-B))
-         (delete-file file-B))
+       (pk/difft--delete-temp-file file-temp-A)
+       (pk/difft--delete-temp-file file-temp-B)
        (signal (car err) (cdr err))))))
 
 (defun pk/difft-files (file-A file-B &optional lang-override)
@@ -1258,7 +1267,15 @@ running difftastic."
 				                   (ediff-get-default-file-name f 1)))
            (when current-prefix-arg
              (completing-read "Language: " (pk/difft--languages) nil t)))))
-  (pk/difft--files-internal file-A file-B lang-override))
+  (pk/difft--files-internal
+   (get-buffer-create (concat "*difftastic "
+                              (file-name-nondirectory file-A)
+                              " "
+                              (file-name-nondirectory file-B)
+                              "*"))
+   (cons file-A nil)
+   (cons file-B nil)
+   lang-override))
 
 
 
