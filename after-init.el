@@ -886,7 +886,7 @@ call."
 ;;@todo: add equivalent of this to init-flycheck.el
 ;; (add-to-list 'flycheck-global-modes 'pk/difft-mode t)
 
-(defun pk/copy-tree (tree)
+(defun pk/dift--copy-tree (tree)
   "Make a copy of TREE.
 
 If TREE is a cons cell, this recursively copies both its car and
@@ -900,19 +900,19 @@ conses."
 	        (when (or (consp newcar)
                       (or (vectorp newcar)
                           (bool-vector-p newcar)))
-		      (setq newcar (pk/copy-tree newcar)))
+		      (setq newcar (pk/dift--copy-tree newcar)))
 	        (push newcar result))
 	      (setq tree (cdr tree)))
 	    (nconc (nreverse result)
                (if (or (vectorp tree)
                        (bool-vector-p tree))
-                   (pk/copy-tree tree)
+                   (pk/dift--copy-tree tree)
                  tree)))
     (cond
      ((vectorp tree)
       (let ((i (length (setq tree (copy-sequence tree)))))
 	    (while (>= (setq i (1- i)) 0)
-	      (aset tree i (pk/copy-tree (aref tree i) vecp)))
+	      (aset tree i (pk/dift--copy-tree (aref tree i) vecp)))
 	    tree))
      ;; Optimisation: bool vector doesn't need a deep copy
       ((bool-vector-p tree)
@@ -921,7 +921,7 @@ conses."
 
 ;; @todo: small test case:
 ;; (let* ((x (make-bool-vector 8 nil))
-;;        (y (pk/copy-tree `(,x 3 nil))))
+;;        (y (pk/dift--copy-tree `(,x 3 nil))))
 ;;   (aset x 0 t)
 ;;   (cl-assert (not (equal x (car y)))))
 
@@ -984,7 +984,7 @@ Utilise `pk/difft--ansi-color-add-background-cache' to cache
         (cdr cached)
       (let ((face (pk/difft--ansi-color-add-background
                    (funcall orig-fun face-vec))))
-        (push (cons (pk/copy-tree face-vec) face)
+        (push (cons (pk/dift--copy-tree face-vec) face)
               pk/difft--ansi-color-add-background-cache)
         face)))
 
