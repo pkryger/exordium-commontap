@@ -238,13 +238,14 @@ This will be used in be used in `pk/dispatch-cut-function'")
   :ensure nil
   :bind
   (:map emacs-lisp-mode-map
-        ;; Follow Anaconda default mapping
         ("M-." . #'xref-find-definitions)
-        ("M-," . #'xref-pop-marker-stack)
+        ("M-," . (if (version< "29" emacs-version)
+                     #'xref-go-back
+                   #'xref-pop-marker-stack))
         ("M-r" . #'xref-find-references)
         ("M-?" . #'helpful-at-point)))
 
-
+;;@todo: disable printing from eglot - perhaps set `eglot-events-buffer-size' 0
 (when (version< "28" emacs-version)
 (use-package eglot
   :after flycheck
@@ -1482,8 +1483,7 @@ All the reminder parts of the separator will have
 (use-package so-long
   :config
   (setq-default bidi-paragraph-direction 'left-to-right)
-  (when (version<= "27.1" emacs-version)
-    (setq bidi-inhibit-bpa t))
+  (setq bidi-inhibit-bpa t)
   (global-so-long-mode))
 
 
