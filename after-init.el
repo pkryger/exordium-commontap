@@ -801,10 +801,15 @@ display buffer at bottom."
     ;; difftastic diffs are usually 2-column side-by-side,
     ;; so ensure our window is wide enough.
     (let ((actual-width (if (version< emacs-version "28")
-                            ;;@todo: move this to init-lib ,add alias, and add couple tests
                             (save-excursion
-                              (bde-max-column-in-region
-                               (point-min) (point-max)))
+                              (goto-char (point-min))
+                              (let ((m 0)
+                                    (to (point-max)))
+                                (while (< (point) to)
+                                  (end-of-line)
+                                  (setq m (max m (current-column)))
+                                  (forward-line))
+                                m))
                           (cadr (buffer-line-statistics)))))
       (pop-to-buffer
        (current-buffer)
