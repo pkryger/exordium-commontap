@@ -815,10 +815,14 @@ display buffer at bottom."
        (current-buffer)
        `(,(when (< requested-width actual-width)
             #'display-buffer-at-bottom))))))
+(defgroup pk/difft nil
+  "Integration with difftastic."
+  :group 'tools)
 
 (defcustom pk/difft-executable "difft"
   "Location of difftastic executable."
-  :type 'file)
+  :type 'file
+  :group 'pk/difft)
 
 
 (defcustom pk/difft-normal-colors-vector
@@ -832,7 +836,8 @@ display buffer at bottom."
    font-lock-warning-face
    (pk/difft--ansi-color-face 'ansi-color-normal-colors-vector 7 "white"))
   "Faces to use for colors on difftastic output (normal)."
-  :type '(vector face face face face face face face face))
+  :type '(vector face face face face face face face face)
+  :group 'pk/difft)
 
 (defcustom pk/difft-bright-colors-vector
   (vector
@@ -845,7 +850,8 @@ display buffer at bottom."
    font-lock-warning-face
    (pk/difft--ansi-color-face 'ansi-color-bright-colors-vector 7 "white"))
   "Faces to use for colors on difftastic output (bright)."
-  :type '(vector face face face face face face face face))
+  :type '(vector face face face face face face face face)
+  :group 'pk/difft)
 
 (defcustom pk/difft-highlight-alist
   '((magit-diff-added . magit-diff-added-highlight)
@@ -853,12 +859,14 @@ display buffer at bottom."
   "Faces to replace underlined highlight in difftastic output.
 
 Set to nil if you prefer unaltered difftastic output."
-  :type '(alist :key-type face :value-type face))
+  :type '(alist :key-type face :value-type face)
+  :group 'pk/difft)
 
 (defcustom pk/difft-requested-window-width-function
   #'pk/difft-requested-window-width
   "Function used to calculate a requested width for difftastic call."
-  :type 'function)
+  :type 'function
+  :group 'pk/difft)
 
 (defcustom pk/difft-display-buffer-function
   #'pk/difft-pop-to-buffer
@@ -867,7 +875,8 @@ Set to nil if you prefer unaltered difftastic output."
 It will be called with two arguments: BUFFER-OR-NAME: a buffer to
 display and REQUESTED-WIDTH: a with requested for difftastic
 call."
-  :type 'function)
+  :type 'function
+  :group 'pk/difft)
 
 (defmacro pk/with-temp-advice (fn-orig where fn-advice &rest body)
   "Execute BODY with advice temporarily enabled."
