@@ -1176,10 +1176,12 @@ when it is a temporary file."
   "Return list of language overrides supported by difftastic."
   (append
    '("Text")
-   (string-split
-    (shell-command-to-string
-     (concat pk/difft-executable " --list-languages | grep -e '^[A-Z]'"))
-    "\n" t)))
+   (cl-remove-if (lambda (line)
+                   (string-match-p "^ \\*" line))
+                 (string-split
+                  (shell-command-to-string
+                   (concat pk/difft-executable " --list-languages"))
+                  "\n" t))))
 
 (defun pk/difft--make-suggestion (languages buffer-A buffer-B)
   "Guess one of LANGUAGES based on mode of BUFFER-A and BUFFER-B."
