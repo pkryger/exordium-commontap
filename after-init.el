@@ -981,6 +981,8 @@ adding background to faces if they have a foreground set."
                       (face-background difft-face nil 'default))))
     face))
 
+;; In practice there are only dozens or so different faces used,
+;; so we can cache them each time anew.
 (defvar-local pk/difft--ansi-color-add-background-cache nil)
 
 (defun pk/difft--ansi-color-add-background-cached (orig-fun face-vec)
@@ -1025,13 +1027,10 @@ perform cleanup."
       (erase-buffer)))
   ;; Now spawn a process calling the git COMMAND.
   (message "Running: %s..." (mapconcat #'identity command " "))
-  ;; In practice there are only dozens or so different faces used,
-  ;; so we can cache them each time anew.
   (make-process
    :name (buffer-name buffer)
    :buffer buffer
    :command command
-   ;; Don't query for running processes when emacs is quit.
    :noquery t
    :filter
    ;; Apply ANSI color sequences as they come
@@ -1129,8 +1128,8 @@ When ARG couldn't be guessed or called with prefix arg ask for ARG."
 (use-package magit
   :config
   (transient-append-suffix 'magit-diff '(-1 -1)
-  [("D" "Difftastic Diff (dwim)" pk/difft-magit-diff)
-   ("S" "Difftastic Show" pk/difft-magit-show)]))
+  [("D" "Difftastic diff (dwim)" pk/difft-magit-diff)
+   ("S" "Difftastic show" pk/difft-magit-show)]))
 
 (defun pk/difft---make-temp-file (prefix buffer)
   "Make a temp file for the BUFFER (with its content) that has PREFIX included."
