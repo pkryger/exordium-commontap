@@ -769,13 +769,14 @@ language."
   "Get face from VECTOR with OFFSET or make a new one with NAME.
 
 New face is made when VECTOR is not bound."
-;;This is for backward compatibility with Emacs-27.  Calls can be replaced with
-;; `(aref vector offset)'.
+;;This is for backward compatibility with Emacs-27.  When dropping
+;; compatibility calls can be replaced with `(aref vector offset)'.
   (if (version< emacs-version "28")
-      (defface pk/difft--ansi-color-black
-        `((t :foreground ,(cdr (aref (ansi-color-make-color-map)
-                                     (+ 30 offset)))))
-        (concat "Face used to render " name " color code."))
+      (custom-declare-face
+       `,(intern (concat "pk/difft--ansi-color-" name))
+       `((t :foreground ,(cdr (aref (ansi-color-make-color-map)
+                                    (+ 30 offset)))))
+       (concat "Face used to render " name " color code."))
     (aref (eval vector) offset)))
 
 (defun pk/difft-requested-window-width ()
