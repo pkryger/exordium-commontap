@@ -1321,6 +1321,11 @@ I.e., created with `scratch' or named scratch-"
   :config
   (persistent-scratch-setup-default))
 
+(use-package flycheck-package
+  :config
+  (eval-after-load 'flycheck
+  '(flycheck-package-setup)))
+
 (when-let ((path (let ((path "~/gh/pkryger/difft.el"))
                    (when (file-directory-p path)
                      path))))
