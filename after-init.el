@@ -239,9 +239,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
   :bind
   (:map emacs-lisp-mode-map
         ("M-." . #'xref-find-definitions)
-        ("M-," . (if (version< "29" emacs-version)
-                     #'xref-go-back
-                   #'xref-pop-marker-stack))
+        ("M-," . #'xref-pop-marker-stack)
         ("M-r" . #'xref-find-references)
         ("M-?" . #'helpful-at-point)))
 
