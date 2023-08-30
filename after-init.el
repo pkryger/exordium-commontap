@@ -1326,17 +1326,17 @@ I.e., created with `scratch' or named scratch-"
   (eval-after-load 'flycheck
   '(flycheck-package-setup)))
 
-(when-let ((path (let ((path "~/gh/pkryger/difft.el"))
+(when-let ((path (let ((path "~/gh/pkryger/difftastic.el"))
                    (when (file-directory-p path)
                      path))))
   (add-to-list 'load-path path)
-  (require 'difft))
+  (require 'difftastic))
 
 (use-package magit
   :config
   (transient-append-suffix 'magit-diff '(-1 -1)
-    [("D" "Difftastic diff (dwim)" difft-magit-diff)
-     ("S" "Difftastic show" difft-magit-show)]))
+    [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
+     ("S" "Difftastic show" difftastic-magit-show)]))
 
 (when-let ((path (let ((path "~/gh/pkryger/basic-stats"))
                    (when (file-directory-p path)
