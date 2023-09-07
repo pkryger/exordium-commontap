@@ -1041,8 +1041,9 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
         '("isort" "--profile" "black" (apheleia-formatters-fill-column "--line-length") "-"))
   (setf (alist-get 'ruff-isort apheleia-formatters)
         '("ruff" "check" "--select" "I" "--exit-zero" "--fix" "--stdin-filename" filepath "-"))
-  (setf (alist-get 'python-mode apheleia-mode-alist)
-        '(black ruff-isort)))
+  (dolist (mode '(python-mode python-ts-mode))
+    (setf (alist-get mode apheleia-mode-alist)
+          '(black ruff-isort))))
 
 ;; Cassandra - CQL support with sql-mode and ob-sql
 (require 'sql)
