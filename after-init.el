@@ -1327,22 +1327,34 @@ I.e., created with `scratch' or named scratch-"
   (eval-after-load 'flycheck
   '(flycheck-package-setup)))
 
-(when-let ((path (let ((path "~/gh/pkryger/difftastic.el"))
-                   (when (file-directory-p path)
-                     path))))
-  (add-to-list 'load-path path)
-  (require 'difftastic))
-
-(use-package magit
-  :config
-  (transient-append-suffix 'magit-diff '(-1 -1)
-    [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
-     ("S" "Difftastic show" difftastic-magit-show)]))
+(dolist (spec '(("difftastic" . "/Users/pkryger/gh/pkryger/difftastic.el")
+                ("basic-stats" . "/Users/pkryger/gh/pkryger/basic-stats")))
+  (let* ((name (car spec))
+         (dir (cdr spec))
+         (pkg-dir (expand-file-name name package-user-dir)))
+    (when (file-exists-p dir)
+      ;; simulate uninstall: remove from `load-path'
+      (setq load-path (cl-remove-if
+                       (lambda (dir)
+                         (when (string-match-p
+                                (concat "/" name "-[0-9]\+\.[0-9]\+$") dir)
+                           (when (file-directory-p dir)
+                             (delete-directory dir t))
+                           t))
+                       load-path))
+      ;; simulate uninstall: remove from `package-alist'
+      (setf package-alist (assoc-delete-all (intern name) package-alist))
+      ;; `package-vc-install-from-checkout' complains when the symlink exists
+      (when (file-exists-p pkg-dir)
+        (delete-file pkg-dir))
+      (package-vc-install-from-checkout dir name))))
 
-(when-let ((path (let ((path "~/gh/pkryger/basic-stats"))
-                   (when (file-directory-p path)
-                     path))))
-  (add-to-list 'load-path path)
-  (require 'basic-stats))
+(use-package difftastic
+  :ensure nil ;; @todo - remove when porting to exordium
+  :config
+  (eval-after-load 'magit-diff
+    '(transient-append-suffix 'magit-diff '(-1 -1)
+       [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
+        ("S" "Difftastic show" difftastic-magit-show)])))
 
 ;;
