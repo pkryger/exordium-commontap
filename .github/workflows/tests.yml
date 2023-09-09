@@ -28,18 +28,18 @@ jobs:
       - uses: purcell/setup-emacs@master
         with:
           version: ${{ matrix.emacs_version }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: 'emacs-exordium/exordium'
           path: '.emacs.d'
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: '.emacs.d/taps/commontap'
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: 'pkryger/difftastic.el'
           path: 'gh/pkryger/difftastic.el'
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: 'pkryger/basic-stats'
           path: 'gh/pkryger/basic-stats'
