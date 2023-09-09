@@ -1346,7 +1346,7 @@ I.e., created with `scratch' or named scratch-"
                            (when (string-match-p
                                   (rx line-start
                                       (eval
-                                       (expand-file-name "foo" package-user-dir))
+                                       (expand-file-name name package-user-dir))
                                       "-"
                                       (one-or-more digit)
                                       "."
