@@ -1341,12 +1341,13 @@ I.e., created with `scratch' or named scratch-"
                  (pkg-dir (expand-file-name name package-user-dir)))
         (message "Using checked out %s package at %s" name dir)
         ;; simulate uninstall: remove from `load-path'
-        (setq load-path (seq-filter
+        (setq load-path (seq-remove
                          (lambda (dir)
                            (when-let ((pkg-desc
                                        (cadr (assq (intern name) package-alist)))
-                                      (pkg-desc-dir "foo";; (package-desc-dir pkg-desc)
-                                                    )
+                                      ((not
+                                        (eq 'vc (package-desc-kind pkg-desc))))
+                                      (pkg-desc-dir (package-desc-dir pkg-desc))
                                       ((string= dir pkg-desc-dir)))
                              (when (file-directory-p dir)
                                (delete-directory dir t))
@@ -1362,7 +1363,6 @@ I.e., created with `scratch' or named scratch-"
            (if (fboundp 'package-vc-install-from-checkout)
                "no workspace"
              "no `package-vc-install-from-checkout'")))
-
 
 (use-package difftastic
   :ensure nil ;; @todo - remove when porting to exordium
