@@ -1327,9 +1327,6 @@ I.e., created with `scratch' or named scratch-"
   (eval-after-load 'flycheck
   '(flycheck-package-setup)))
 
-(require 'package-vc)
-(require 'package)
-
 (if-let (((fboundp 'package-vc-install-from-checkout))
          (workspace (or (getenv "GITHUB_WORKSPACE")
                         (getenv "HOME"))))
@@ -1348,7 +1345,8 @@ I.e., created with `scratch' or named scratch-"
                          (lambda (dir)
                            (when-let ((pkg-desc
                                        (cadr (assq (intern name) package-alist)))
-                                      (pkg-desc-dir (package-desc-dir pkg-desc))
+                                      (pkg-desc-dir "foo";; (package-desc-dir pkg-desc)
+                                                    )
                                       ((string= dir pkg-desc-dir)))
                              (when (file-directory-p dir)
                                (delete-directory dir t))
