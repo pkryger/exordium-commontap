@@ -1327,6 +1327,7 @@ I.e., created with `scratch' or named scratch-"
   (eval-after-load 'flycheck
   '(flycheck-package-setup)))
 
+
 (if-let (((fboundp 'package-vc-install-from-checkout))
          (workspace (or (getenv "GITHUB_WORKSPACE")
                         (getenv "HOME"))))
@@ -1341,18 +1342,12 @@ I.e., created with `scratch' or named scratch-"
                  (pkg-dir (expand-file-name name package-user-dir)))
         (message "Using checked out %s package at %s" name dir)
         ;; simulate uninstall: remove from `load-path'
-        (setq load-path (cl-remove-if
+        (setq load-path (seq-filter
                          (lambda (dir)
-                           (when (string-match-p
-                                  (rx line-start
-                                      (eval
-                                       (expand-file-name name package-user-dir))
-                                      "-"
-                                      (one-or-more digit)
-                                      "."
-                                      (one-or-more digit)
-                                      line-end)
-                                  dir)
+                           (when-let ((pkg-desc
+                                       (cadr (assq (intern name) package-alist)))
+                                      (pkg-desc-dir (package-desc-dir pkg-desc))
+                                      ((string= dir pkg-desc-dir)))
                              (when (file-directory-p dir)
                                (delete-directory dir t))
                              t))
