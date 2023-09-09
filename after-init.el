@@ -1327,7 +1327,8 @@ I.e., created with `scratch' or named scratch-"
   (eval-after-load 'flycheck
   '(flycheck-package-setup)))
 
-(when-let ((workspace (or (getenv "GITHUB_WORKSPACE")
+(when-let (((fboundp 'package-vc-install-from-checkout))
+           (workspace (or (getenv "GITHUB_WORKSPACE")
                           (getenv "HOME"))))
   (dolist
       (spec `(("difftastic"
