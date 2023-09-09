@@ -1340,21 +1340,9 @@ I.e., created with `scratch' or named scratch-"
                  (name (car spec))
                  (pkg-dir (expand-file-name name package-user-dir)))
         (message "Using checked out %s package at %s" name dir)
-        ;; simulate uninstall: remove from `load-path'
-        (setq load-path (seq-remove
-                         (lambda (dir)
-                           (when-let ((pkg-desc
-                                       (cadr (assq (intern name) package-alist)))
-                                      ((not
-                                        (eq 'vc (package-desc-kind pkg-desc))))
-                                      (pkg-desc-dir (package-desc-dir pkg-desc))
-                                      ((string= dir pkg-desc-dir)))
-                             (when (file-directory-p dir)
-                               (delete-directory dir t))
-                             t))
-                         load-path))
-        ;; simulate uninstall: remove from `package-alist'
-        (setf package-alist (assoc-delete-all (intern name) package-alist))
+        (when-let ((pkg-desc (cadr (assq (intern name) package-alist)))
+                   ((not (eq 'vc (package-desc-kind pkg-desc)))))
+          (package-delete pkg-desc))
         ;; `package-vc-install-from-checkout' complains when the symlink exists
         (when (file-exists-p pkg-dir)
           (delete-file pkg-dir))
