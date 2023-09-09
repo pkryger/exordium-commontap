@@ -1342,7 +1342,12 @@ I.e., created with `scratch' or named scratch-"
         (message "Using checked out %s package at %s" name dir)
         (when-let ((pkg-desc (cadr (assq (intern name) package-alist)))
                    ((not (eq 'vc (package-desc-kind pkg-desc)))))
-          (package-delete pkg-desc))
+          (package-delete pkg-desc)
+          ;; after uninstall: remove from `load-path'
+          (setq load-path (seq-remove
+                           (lambda (dir)
+                             (string= dir (package-desc-dir pkg-desc)))
+                           load-path)))
         ;; `package-vc-install-from-checkout' complains when the symlink exists
         (when (file-exists-p pkg-dir)
           (delete-file pkg-dir))
