@@ -1327,42 +1327,46 @@ I.e., created with `scratch' or named scratch-"
   (eval-after-load 'flycheck
   '(flycheck-package-setup)))
 
-(when-let (((fboundp 'package-vc-install-from-checkout))
-           (workspace (or (getenv "GITHUB_WORKSPACE")
-                          (getenv "HOME"))))
-  (dolist
-      (spec `(("difftastic"
-               . ,(file-name-concat workspace "gh" "pkryger" "difftastic.el"))
-              ("basic-stats"
-               . ,(file-name-concat workspace "gh" "pkryger" "basic-stats"))))
-    (when-let ((dir (cdr spec))
-               ((file-exists-p dir))
-               (name (car spec))
-               (pkg-dir (expand-file-name name package-user-dir)))
-      (message "Using checked out %s package at %s" name dir)
-      ;; simulate uninstall: remove from `load-path'
-      (setq load-path (cl-remove-if
-                       (lambda (dir)
-                         (when (string-match-p
-                                (rx line-start
-                                    (eval
-                                     (expand-file-name "foo" package-user-dir))
-                                    "-"
-                                    (one-or-more digit)
-                                    "."
-                                    (one-or-more digit)
-                                    line-end)
-                                dir)
-                           (when (file-directory-p dir)
-                             (delete-directory dir t))
-                           t))
-                       load-path))
-      ;; simulate uninstall: remove from `package-alist'
-      (setf package-alist (assoc-delete-all (intern name) package-alist))
-      ;; `package-vc-install-from-checkout' complains when the symlink exists
-      (when (file-exists-p pkg-dir)
-        (delete-file pkg-dir))
-      (package-vc-install-from-checkout dir name)))))
+(if-let (((fboundp 'package-vc-install-from-checkout))
+         (workspace (or (getenv "GITHUB_WORKSPACE")
+                        (getenv "HOME"))))
+    (dolist
+        (spec `(("difftastic"
+                 . ,(file-name-concat workspace "gh" "pkryger" "difftastic.el"))
+                ("basic-stats"
+                 . ,(file-name-concat workspace "gh" "pkryger" "basic-stats"))))
+      (when-let ((dir (cdr spec))
+                 ((file-exists-p dir))
+                 (name (car spec))
+                 (pkg-dir (expand-file-name name package-user-dir)))
+        (message "Using checked out %s package at %s" name dir)
+        ;; simulate uninstall: remove from `load-path'
+        (setq load-path (cl-remove-if
+                         (lambda (dir)
+                           (when (string-match-p
+                                  (rx line-start
+                                      (eval
+                                       (expand-file-name "foo" package-user-dir))
+                                      "-"
+                                      (one-or-more digit)
+                                      "."
+                                      (one-or-more digit)
+                                      line-end)
+                                  dir)
+                             (when (file-directory-p dir)
+                               (delete-directory dir t))
+                             t))
+                         load-path))
+        ;; simulate uninstall: remove from `package-alist'
+        (setf package-alist (assoc-delete-all (intern name) package-alist))
+        ;; `package-vc-install-from-checkout' complains when the symlink exists
+        (when (file-exists-p pkg-dir)
+          (delete-file pkg-dir))
+        (package-vc-install-from-checkout dir name)))
+  (message "Skipping installation of packages from repositories: %s"
+           (if (fboundp 'package-vc-install-from-checkout)
+               "no workspace"
+             "no `package-vc-install-from-checkout'")))
 
 
 (use-package difftastic
