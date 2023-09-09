@@ -1329,6 +1329,7 @@ I.e., created with `scratch' or named scratch-"
 
 (when-let ((workspace (or (getenv "GITHUB_WORKSPACE")
                           (getenv "HOME"))))
+  (message "*** %S" workspace)
   (dolist
       (spec '(("difftastic"
                . (file-name-concat workspace "gh" "pkryger" "difftastic.el"))
