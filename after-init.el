@@ -1275,6 +1275,41 @@ With prefix arg REVERSED sort in descending order."
       ", "))))
 
 
+;; Slightly modified version of https://www.emacswiki.org/emacs/AddCommasToNumbers
+
+(defun pk/add-number-grouping (number &optional separator)
+  "Add commas to NUMBER and return it as a string.
+Optional SEPARATOR is the string to use to separate groups.  It
+defaults to a comma."
+  (let ((num (if (stringp number)
+                 number
+               (number-to-string number)))
+        (op (or separator ",")))
+    (save-match-data
+      (while (string-match "\\(.*[0-9]\\)\\([0-9]\\{3\\}[0-9,\.]*\\)" num)
+        (setq num (concat (match-string 1 num)
+                          op
+                          (match-string 2 num)))))
+    num))
+
+
+(defun pk/remove-number-grouping (number &optional separator)
+  "Remove commas from NUMBER and return it as a number.
+Optional SEPARATOR is the string to use to separate groups.  It
+defaults to a comma."
+  (let ((sep (or separator ?,)))
+       (string-to-number (cl-remove sep number))))
+
+
+(defun pk/mapcar-grouped-numbers (numbers &optional separator)
+  "Remove commas from NUMBERS and return them a list of numbers.
+Optional SEPARATOR is the string to use to separate groups.  It
+defaults to a comma."
+  (mapcar (lambda (num)
+            (pk/remove-number-grouping num separator))
+          numbers))
+
+
 (use-package graphviz-dot-mode)
 
 ;; what variables should be updated has been copied from exec-path-from-shell-setenv
