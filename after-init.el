@@ -399,11 +399,14 @@ This will be used in be used in `pk/dispatch-cut-function'")
 
 (use-package rust-mode)
 
+
 (use-package compile
+  :ensure nil
+  :hook
+  (compilation-filter . ansi-color-compilation-filter)
   :custom
+  (ansi-color-for-compilation-mode t)
   (compilation-scroll-output 'first-error))
-;; update version control status (git) in mode line
-;;(setq auto-revert-check-vc-info t)
 
 
 (defconst pk/gc-cons-threshold (* 16 1024 1024))
