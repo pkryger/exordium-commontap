@@ -1364,6 +1364,16 @@ I.e., created with `scratch' or named scratch-"
   :config
   (eval-after-load 'flycheck
   '(flycheck-package-setup)))
+
+
+(use-package dwim-shell-command
+  :ensure t
+  :bind (([remap shell-command] . dwim-shell-command)
+         :map dired-mode-map
+         ([remap dired-do-async-shell-command] . dwim-shell-command)
+         ([remap dired-do-shell-command] . dwim-shell-command)
+         ([remap dired-smart-shell-command] . dwim-shell-command)))
+
 
 (if-let (((fboundp 'package-vc-install-from-checkout))
          (workspace (or (getenv "GITHUB_WORKSPACE")
