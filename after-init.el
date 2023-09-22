@@ -1366,6 +1366,7 @@ I.e., created with `scratch' or named scratch-"
   '(flycheck-package-setup)))
 
 
+(when (version< "28" emacs-version)
 (use-package dwim-shell-command
   :ensure t
   :bind (([remap shell-command] . dwim-shell-command)
@@ -1373,6 +1374,7 @@ I.e., created with `scratch' or named scratch-"
          ([remap dired-do-async-shell-command] . dwim-shell-command)
          ([remap dired-do-shell-command] . dwim-shell-command)
          ([remap dired-smart-shell-command] . dwim-shell-command)))
+) ;; (when (version< "28" emacs-version)
 
 
 (if-let (((fboundp 'package-vc-install-from-checkout))
