@@ -311,20 +311,34 @@ This will be used in be used in `pk/dispatch-cut-function'")
   :custom
   (completion-styles '(orderless)))
 
-;; (condition-case nil
-;;     (let ((orig-cc (getenv "CC")))
-;;       (setenv "CC" "clang")
-;;       ;; (use-package jinx
-;;       ;;   :hook (emacs-startup . global-jinx-mode)
-;;       ;;   :custom
-;;       ;;   (jinx-languages . "en_GB pl_PL")
-;;       ;;   :bind (("M-$" . jinx-correct)
-;;       ;;          ("C-M-$" . jinx-languages))
-;;       ;;   :config
-;;       ;;   ;;(remove-hook 'post-command-hook #'flyspell-post-command-hook)
-;;       ;;   ;;(remove-hook 'pre-command-hook #'flyspell-pre-command-hook)
-;;       ;;   (remove-hook 'prog-mode-hook #'flyspell-prog-mode))
-;;       (setenv "CC" orig-cc)))
+
+;; this almost works, but seems like the https://github.com/minad/jinx/pull/91
+;; will need to be branched and maintained
+;; (defvar pk/jinx--mutex (make-mutex "pk/jinx--mutex")
+;;   "Mutex for thread safe access to jinx-mod dynamic module.")
+
+;; (defun pk/jinx--load-dicts (orig-fun &rest args)
+;;   "Apply ORIG-FUN with ARGS in a worker thread."
+;;   (make-thread #'(lambda ()
+;;                    (with-mutex pk/jinx--mutex
+;;                      (apply orig-fun args)))
+;;                "pk/jinx--load-dicts-thread"))
+
+;; (use-package jinx
+;;   ;; :hook (emacs-startup . global-jinx-mode)
+;;   :custom
+;;   (jinx-languages "en_GB pl_PL")
+;;   :bind (("M-$" . jinx-correct)
+;;          ("C-M-$" . jinx-languages))
+;;   :init
+;;   (remove-hook 'prog-mode-hook #'flyspell-prog-mode)
+;;   (remove-hook 'text-mode-hook #'flyspell-mode)
+;;   (flyspell-mode-off)
+;;   ;; from: https://github.com/minad/jinx/pull/91#issuecomment-1636703692
+;;   :defer t
+;;   :config
+;;   (advice-add 'jinx--load-dicts :around #'pk/jinx--load-dicts))
+
 
 (use-package ispell
 ;;   :ensure-system-package aspell
@@ -1359,6 +1373,7 @@ I.e., created with `scratch' or named scratch-"
   (persistent-scratch-scratch-buffer-p-function #'pk/persistent-scratch--scratch-buffer-p)
   :config
   (persistent-scratch-setup-default))
+
 
 (use-package flycheck-package
   :config
