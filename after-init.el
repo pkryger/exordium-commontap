@@ -311,69 +311,40 @@ This will be used in be used in `pk/dispatch-cut-function'")
   :custom
   (completion-styles '(orderless)))
 
-
-;; this almost works, but seems like the https://github.com/minad/jinx/pull/91
-;; will need to be branched and maintained
-;; (defvar pk/jinx--mutex (make-mutex "pk/jinx--mutex")
-;;   "Mutex for thread safe access to jinx-mod dynamic module.")
-
-;; (defun pk/jinx--load-dicts (orig-fun &rest args)
-;;   "Apply ORIG-FUN with ARGS in a worker thread."
-;;   (make-thread #'(lambda ()
-;;                    (with-mutex pk/jinx--mutex
-;;                      (apply orig-fun args)))
-;;                "pk/jinx--load-dicts-thread"))
-
-;; (use-package jinx
-;;   ;; :hook (emacs-startup . global-jinx-mode)
+;; (use-package ispell
+;; ;;   :ensure-system-package aspell
 ;;   :custom
-;;   (jinx-languages "en_GB pl_PL")
-;;   :bind (("M-$" . jinx-correct)
-;;          ("C-M-$" . jinx-languages))
+;;   ;; spell checks as suggested by
+;;   ;; http://blog.binchen.org/posts/effective-spell-check-in-emacs.html
+;;   ;; http://blog.binchen.org/posts/how-to-spell-check-functionvariable-in-emacs.html
+;;   (ispell-program-name "aspell")
+;;   (ispell-extra-args `("--sug-mode=ultra"
+;;                             "--run-together"
+;;                             "--run-together-limit=6"
+;;                            ,@(when exordium-osx '("--camel-case"))))
+;;   (ispell-dictionary "british"))
+
+;; (use-package flyspell
+;;   :diminish
 ;;   :init
-;;   (remove-hook 'prog-mode-hook #'flyspell-prog-mode)
-;;   (remove-hook 'text-mode-hook #'flyspell-mode)
-;;   (flyspell-mode-off)
-;;   ;; from: https://github.com/minad/jinx/pull/91#issuecomment-1636703692
-;;   :defer t
+
 ;;   :config
-;;   (advice-add 'jinx--load-dicts :around #'pk/jinx--load-dicts))
+;;   (setq flyspell-issue-message-flag nil)
 
+;;   :hook
+;;   ((git-commit-mode . flyspell-mode)
+;;    (org-mode        . flyspell-mode)
+;;    (text-mode       . flyspell-mode))
 
-(use-package ispell
-;;   :ensure-system-package aspell
-  :custom
-  ;; spell checks as suggested by
-  ;; http://blog.binchen.org/posts/effective-spell-check-in-emacs.html
-  ;; http://blog.binchen.org/posts/how-to-spell-check-functionvariable-in-emacs.html
-  (ispell-program-name "aspell")
-  (ispell-extra-args `("--sug-mode=ultra"
-                            "--run-together"
-                            "--run-together-limit=6"
-                           ,@(when exordium-osx '("--camel-case"))))
-  (ispell-dictionary "british"))
+;;   :bind (:map flyspell-mode-map
+;;          ("C-;" . flyspell-correct-wrapper)
+;;          ([(control ?\,)] . nil)
+;;          ([(control ?\.)] . nil)))
 
-(use-package flyspell
-  :diminish
-  :init
-
-  :config
-  (setq flyspell-issue-message-flag nil)
-
-  :hook
-  ((git-commit-mode . flyspell-mode)
-   (org-mode        . flyspell-mode)
-   (text-mode       . flyspell-mode))
-
-  :bind (:map flyspell-mode-map
-         ("C-;" . flyspell-correct-wrapper)
-         ([(control ?\,)] . nil)
-         ([(control ?\.)] . nil)))
-
-(use-package flyspell-correct-helm
-  :after (flyspell)
-  :custom
-  (flyspell-correct-interface #'flyspell-correct-helm))
+;; (use-package flyspell-correct-helm
+;;   :after (flyspell)
+;;   :custom
+;;   (flyspell-correct-interface #'flyspell-correct-helm))
 
 
 (set-time-zone-rule "/usr/share/zoneinfo/Europe/London")
@@ -1396,7 +1367,9 @@ I.e., created with `scratch' or named scratch-"
          (workspace (or (getenv "GITHUB_WORKSPACE")
                         (getenv "HOME"))))
     (dolist
-        (spec `(("difftastic"
+        (spec `(("jinx"
+                 . ,(file-name-concat workspace "gh" "minad" "jinx"))
+                ("difftastic"
                  . ,(file-name-concat workspace "gh" "pkryger" "difftastic.el"))
                 ("basic-stats"
                  . ,(file-name-concat workspace "gh" "pkryger" "basic-stats"))))
@@ -1429,5 +1402,20 @@ I.e., created with `scratch' or named scratch-"
     '(transient-append-suffix 'magit-diff '(-1 -1)
        [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
         ("S" "Difftastic show" difftastic-magit-show)])))
+
+(use-package jinx
+  :ensure nil
+  :diminish t
+  :hook
+  (emacs-startup . global-jinx-mode)
+  :custom
+  (jinx-languages "en_GB pl_PL")
+  :bind
+  (("M-$" . jinx-correct)
+   ("C-M-$" . jinx-languages))
+  :init
+  (remove-hook 'prog-mode-hook #'flyspell-prog-mode)
+  (remove-hook 'text-mode-hook #'flyspell-mode)
+  (flyspell-mode-off))
 
 ;;
