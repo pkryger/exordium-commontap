@@ -30,7 +30,8 @@ jobs:
           version: ${{ matrix.emacs_version }}
       - uses: actions/checkout@v4
         with:
-          repository: 'emacs-exordium/exordium'
+          # repository: 'emacs-exordium/exordium'
+          repository: 'pkryger/exordium'
           path: '.emacs.d'
       - uses: actions/checkout@v4
         with:
