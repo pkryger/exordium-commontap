@@ -168,7 +168,12 @@
   (setq mac-option-modifier 'meta)
   (setq mac-right-option-modifier 'meta)
   (setq mac-command-modifier 'hyper)
-  (setq mac-frame-tabbing nil))
+  (setq mac-frame-tabbing nil)
+  (setq find-function-C-source-directory
+        (when-let ((emacs-src-dir
+                    (file-name-concat (getenv "HOME") "gh" "mituharu" "emacs-mac" "src"))
+                   (file-exists-p emacs-src-dir))
+          emacs-src-dir)))
 
 (defun pk/iterm-cut-base64 (text)
   "Take TEXT and send it to iTerm2 to copy."
