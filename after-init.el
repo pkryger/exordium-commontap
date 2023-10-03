@@ -988,6 +988,22 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   (pk/insert-link-dwim 'pk/markdown--make-link-string 'markdown-insert-link))
 
 (use-package org
+  :init
+  (defun pk/orgtbl-to-gfm (table params)
+    "Convert the Orgtbl mode TABLE to GitHub Flavored Markdown."
+    (let* ((hline (concat (mapconcat (lambda (x)
+                                       (pcase x
+                                         ("r" "|--:")
+                                         ("c" "|:-:")
+                                         ("l" "|:--")
+                                         (_  "|---")))
+                                     org-table-last-alignment "")
+                          "|")))
+      (orgtbl-to-generic table (org-combine-plists
+                                (list :splice t
+	                                  :hline hline
+                                      :lstart "| " :lend " |" :sep " | ")
+                                params))))
   :bind
   (:map org-mode-map
         ([remap org-insert-link] . #'pk/org-insert-link-dwim)))
