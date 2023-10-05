@@ -1376,6 +1376,11 @@ I.e., created with `scratch' or named scratch-"
          ([remap dired-do-async-shell-command] . dwim-shell-command)
          ([remap dired-do-shell-command] . dwim-shell-command)
          ([remap dired-smart-shell-command] . dwim-shell-command)))
+
+(use-package dwim-shell-commands
+  :ensure nil
+  :after dwim-shell-command
+  :commands dwim-shell-commands-kill-process)
 ) ;; (when (version< "28" emacs-version)
 
 
