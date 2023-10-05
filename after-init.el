@@ -1375,7 +1375,31 @@ I.e., created with `scratch' or named scratch-"
          :map dired-mode-map
          ([remap dired-do-async-shell-command] . dwim-shell-command)
          ([remap dired-do-shell-command] . dwim-shell-command)
-         ([remap dired-smart-shell-command] . dwim-shell-command)))
+         ([remap dired-smart-shell-command] . dwim-shell-command))
+
+  :config
+  (defun pk/dwim-shell-command-pip-install-requirements-in ()
+    "Pip install from requirements in files."
+    (interactive)
+    (when-let ((project-root (projectile-project-root))
+               ((or (getenv "VIRTUAL_ENV")
+                    (y-or-n-p
+                     "No virtual environment is active.  Install requirements?"))))
+      ;; when `default-directory' is used the `dwim-shell-command-execute-script'
+      ;; jumps to the directory where it's been started
+      (dwim-shell-command-execute-script
+       "pip install -r <<requirements.in>>"
+       (format
+        "cd %s
+         for f in requirements.in requirements-dev/{lint,misc,test}.in; do
+           if [ -f \"${f}\" ]; then
+             echo \"Installing requirements from ${f}\"
+             pip install -r \"${f}\" --upgrade
+           fi
+         done"
+        project-root)
+       :error-autofocus t
+       :silent-success t))))
 
 (use-package dwim-shell-commands
   :ensure nil
