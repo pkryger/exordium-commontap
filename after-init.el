@@ -1447,9 +1447,13 @@ I.e., created with `scratch' or named scratch-"
          ("S" . difftastic-magit-show))
   :config
   (eval-after-load 'magit-diff
-    '(transient-append-suffix 'magit-diff '(-1 -1)
-       [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
-        ("S" "Difftastic show" difftastic-magit-show)])))
+    '(let ((last-suffix (transient-get-suffix 'magit-diff '(-1 -1))))
+       (transient-append-suffix 'magit-diff '(-1 -1)
+         [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
+          ("S" "Difftastic show" difftastic-magit-show)])
+       (when (equal (transient-get-suffix 'magit-diff '(-1 -1)) last-suffix)
+         (transient-remove-suffix 'magit-diff '(-1 -1))))))
+
 
 ;; (use-package jinx
 ;;   :ensure nil
