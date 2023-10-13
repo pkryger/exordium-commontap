@@ -1390,7 +1390,7 @@ I.e., created with `scratch' or named scratch-"
       (dwim-shell-command-execute-script
        "pip install -r <<requirements.in>>"
        (format
-        "cd %s
+        "cd '%s'
          for f in requirements.in requirements-dev/{lint,misc,test}.in; do
            if [ -f \"${f}\" ]; then
              echo \"Installing requirements from ${f}\"
