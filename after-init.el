@@ -1383,7 +1383,7 @@ I.e., created with `scratch' or named scratch-"
   (defun pk/dwim-shell-command-pip-install-requirements-in ()
     "Pip install from requirements in files."
     (interactive)
-    (when-let ((project-root (projectile-project-root))
+    (when-let ((default-directory (projectile-project-root))
                ((or (getenv "VIRTUAL_ENV")
                     (y-or-n-p
                      "No virtual environment is active.  Install requirements?"))))
@@ -1391,15 +1391,12 @@ I.e., created with `scratch' or named scratch-"
       ;; jumps to the directory where it's been started
       (dwim-shell-command-execute-script
        "pip install -r <<requirements.in>>"
-       (format
-        "cd '%s'
-         for f in requirements.in requirements-dev/{lint,misc,test}.in; do
-           if [ -f \"${f}\" ]; then
-             echo \"Installing requirements from ${f}\"
-             pip install -r \"${f}\" --upgrade
-           fi
-         done"
-        project-root)
+       "for f in requirements.in requirements-dev/{lint,misc,test}.in; do
+          if [ -f \"${f}\" ]; then
+            echo \"Installing requirements from ${f}\"
+            pip install -r \"${f}\" --upgrade
+          fi
+        done"
        :error-autofocus t
        :silent-success t))))
 
