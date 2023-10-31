@@ -1045,6 +1045,8 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
         '("isort" "--profile" "black" (apheleia-formatters-fill-column "--line-length") "-"))
   (setf (alist-get 'ruff-isort apheleia-formatters)
         '("ruff" "check" "--select" "I" "--exit-zero" "--fix" "--stdin-filename" filepath "-"))
+  (setf (alist-get 'ruff-format apheleia-formatters)
+        '("ruff" "format" "--quiet" "--stdin-filename" filepath "-"))
   (dolist (mode '(python-mode python-ts-mode))
     (setf (alist-get mode apheleia-mode-alist)
           '(black ruff-isort))))
