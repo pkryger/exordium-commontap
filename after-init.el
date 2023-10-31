@@ -1442,6 +1442,7 @@ I.e., created with `scratch' or named scratch-"
 
 (use-package difftastic
   :ensure nil ;; @todo - remove when porting to exordium
+  :demand t
   :bind (:map magit-blame-read-only-mode-map
          ("D" . difftastic-magit-show)
          ("S" . difftastic-magit-show))
