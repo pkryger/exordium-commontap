@@ -1410,6 +1410,58 @@ I.e., created with `scratch' or named scratch-"
 ) ;; (when (version< "28" emacs-version)
 
 
+(defun pk/ipynb-find-and-render-file (filename)
+  "Find FILENAME and open is as html."
+  (interactive
+   (list (read-file-name "Find ipynb file to render: " nil nil t)))
+  (let* ((shortname (file-name-nondirectory filename))
+         (command "jupyter nbconvert --to html --log-level WARN --stdout --stdin"))
+    (with-temp-buffer
+      (insert-file-contents filename)
+      (shell-command-on-region (point-min) (point-max) command nil 'no-mark)
+      (shr-render-buffer (current-buffer)))
+    (with-current-buffer "*html*"
+      (rename-buffer shortname 'unique)
+      (read-only-mode t))))
+
+(defun pk/ipynb-render-buffer (buffer)
+  "Render ipynb BUFFER as html."
+  (interactive
+   (list (read-buffer "ipynb buffer to render: " (current-buffer) t)))
+  (when-let ((filename (buffer-file-name)))
+    (let* ((shortname (file-name-nondirectory filename))
+           (command "jupyter nbconvert --to html --log-level WARN --stdout --stdin"))
+    (with-temp-buffer
+      (insert-buffer-substring (get-buffer buffer))
+      (shell-command-on-region (point-min) (point-max) command nil 'no-mark)
+      (shr-render-buffer (current-buffer)))
+    (with-current-buffer "*html*"
+      (rename-buffer shortname 'unique)
+      (read-only-mode t)))))
+
+(defun pk/ipynb-find-and-browse-file (filename)
+  "Find FILENAME and open is as html."
+  (interactive
+   (list (read-file-name "Find ipynb file to browse: " nil nil t)))
+  (let* ((shortname (file-name-nondirectory filename))
+         (command "jupyter nbconvert --to html --log-level WARN --stdout --stdin"))
+    (with-temp-buffer
+      (insert-file-contents filename)
+      (shell-command-on-region (point-min) (point-max) command nil 'no-mark)
+      (browse-url-of-buffer))))
+
+(defun pk/ipynb-browse-buffer (buffer)
+  "Render ipynb BUFFER as html."
+  (interactive
+   (list (read-buffer "ipynb buffer to browse: " (current-buffer) t)))
+  (when-let ((filename (buffer-file-name)))
+    (let* ((shortname (file-name-nondirectory filename))
+           (command "jupyter nbconvert --to html --log-level WARN --stdout --stdin"))
+    (with-temp-buffer
+      (insert-buffer-substring (get-buffer buffer))
+      (shell-command-on-region (point-min) (point-max) command nil 'no-mark)
+      (browse-url-of-buffer)))))
+
 (if-let (((fboundp 'package-vc-install-from-checkout))
          (workspace (or (getenv "GITHUB_WORKSPACE")
                         (getenv "HOME"))))
