@@ -1373,6 +1373,7 @@ I.e., created with `scratch' or named scratch-"
 (when (version< "28" emacs-version)
 (use-package dwim-shell-command
   :ensure t
+  :demand t
   :bind (([remap shell-command] . dwim-shell-command)
          :map dired-mode-map
          ([remap dired-do-async-shell-command] . dwim-shell-command)
@@ -1402,6 +1403,7 @@ I.e., created with `scratch' or named scratch-"
 
 (use-package dwim-shell-commands
   :ensure nil
+  :demand t
   :after dwim-shell-command
   :commands dwim-shell-commands-kill-process)
 ) ;; (when (version< "28" emacs-version)
