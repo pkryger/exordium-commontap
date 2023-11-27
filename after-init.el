@@ -490,6 +490,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 (use-package python
   :ensure nil
   :custom
+  (python-shell-dedicated 'project)
   (python-shell-interpreter  "python3"))
 
 (use-package toml)
