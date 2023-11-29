@@ -1039,6 +1039,40 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 (use-package protobuf-mode)
 
 (use-package apheleia
+  :after (project)
+  :init
+  (defun pk/apheleia--detect-formatters ()
+    "Turn on `apheleia-mode' for python mode with formatters as per lint.in."
+    (when-let (((and (or (derived-mode-p 'python-ts-mode)
+                         (derived-mode-p 'python-mode))))
+               (project-root (project-root (project-current)))
+               (lint-in
+                (seq-find #'file-exists-p
+                          (list
+                           (file-name-concat project-root "requirements-dev" "lint.in")
+                           (file-name-concat project-root "requirements" "lint.in")
+                           (file-name-concat project-root "requirements-dev.txt"))))
+               (buffer (current-buffer)))
+      (with-temp-buffer
+        (insert-file-contents lint-in)
+        (let ((code-formatter (progn
+                                (goto-char (point-min))
+                                (if (re-search-forward "^\\W*black\\b" nil t)
+                                    'black
+                                  'ruff-format)))
+              (imports-sorter (progn
+                                (goto-char (point-min))
+                                (if (re-search-forward "^\\W*isort\\b" nil t)
+                                    'isort
+                                  'ruff-isort))))
+          (with-current-buffer buffer
+            (make-local-variable 'apheleia-mode-alist)
+            (setf (alist-get major-mode apheleia-mode-alist)
+                  (list code-formatter imports-sorter))
+            (apheleia-mode))))))
+
+  :hook
+  (find-file . pk/apheleia--detect-formatters)
   :custom
   (apheleia-formatters-respect-fill-column t)
   :config
@@ -1048,9 +1082,23 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
         '("ruff" "check" "--select" "I" "--exit-zero" "--fix" "--stdin-filename" filepath "-"))
   (setf (alist-get 'ruff-format apheleia-formatters)
         '("ruff" "format" "--stdin-filename" filepath "-"))
+
+  (setf (alist-get 'json-mode apheleia-mode-alist) 'jq)
+  (setf (alist-get 'js-json-mode apheleia-mode-alist) 'jq)
+  (setf (alist-get 'json-ts-mode apheleia-mode-alist) 'jq)
+
+  (alist-get 'rubocop apheleia-formatters)
+
+  (setf (alist-get 'ruby-mode apheleia-mode-alist) 'rubocop)
+  (setf (alist-get 'enh-ruby-mode apheleia-mode-alist) 'rubocop)
+
+  (setf (alist-get 'sh-mode apheleia-mode-alist)
+        (alist-get 'bash-ts-mode apheleia-mode-alist))
+
   (dolist (mode '(python-mode python-ts-mode))
     (setf (alist-get mode apheleia-mode-alist)
           '(black ruff-isort))))
+
 
 ;; Cassandra - CQL support with sql-mode and ob-sql
 (require 'sql)
