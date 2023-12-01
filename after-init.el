@@ -1041,38 +1041,38 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 (use-package apheleia
   :after (project)
   :init
-  (defun pk/apheleia--detect-formatters ()
+  (defun pk/apheleia-update-python-formatters ()
     "Turn on `apheleia-mode' for python mode with formatters as per lint.in."
+    (interactive)
     (when-let (((and (or (derived-mode-p 'python-ts-mode)
                          (derived-mode-p 'python-mode))))
                (project-root (project-root (project-current)))
                (lint-in
-                (seq-find #'file-exists-p
-                          (list
-                           (file-name-concat project-root "requirements-dev" "lint.in")
-                           (file-name-concat project-root "requirements" "lint.in")
-                           (file-name-concat project-root "requirements-dev.txt"))))
+                (seq-find
+                 #'file-exists-p
+                 (mapcar (lambda (elt)
+                           (apply #'file-name-concat (cons project-root elt)))
+                         '(("requirements-dev" "lint.in")
+                           ("requirements" "lint.in")
+                           ("requirements-dev.txt")))))
                (buffer (current-buffer)))
       (with-temp-buffer
         (insert-file-contents lint-in)
-        (let ((code-formatter (progn
-                                (goto-char (point-min))
-                                (if (re-search-forward "^\\W*black\\b" nil t)
-                                    'black
-                                  'ruff-format)))
-              (imports-sorter (progn
-                                (goto-char (point-min))
-                                (if (re-search-forward "^\\W*isort\\b" nil t)
-                                    'isort
-                                  'ruff-isort))))
+        (let ((formatters (mapcar
+                           (lambda (elt)
+                             (goto-char (point-min))
+                             (if (re-search-forward (format "^\\W*%s\\b" (car elt)) nil t)
+                                 (cadr elt)
+                               (caddr elt)))
+                           '(("black" black ruff-format)
+                             ("isort" isort ruff-isort)))))
           (with-current-buffer buffer
             (make-local-variable 'apheleia-mode-alist)
-            (setf (alist-get major-mode apheleia-mode-alist)
-                  (list code-formatter imports-sorter))
+            (setf (alist-get major-mode apheleia-mode-alist) formatters)
             (apheleia-mode))))))
 
   :hook
-  (find-file . pk/apheleia--detect-formatters)
+  (find-file . pk/apheleia-update-python-formatters)
   :custom
   (apheleia-formatters-respect-fill-column t)
   :config
@@ -1097,7 +1097,7 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 
   (dolist (mode '(python-mode python-ts-mode))
     (setf (alist-get mode apheleia-mode-alist)
-          '(black ruff-isort))))
+          '(ruff-format ruff-isort))))
 
 
 ;; Cassandra - CQL support with sql-mode and ob-sql
