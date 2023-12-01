@@ -138,12 +138,26 @@
            `(helm-M-x-key ((t (,@c :inherit modus-themes-key-binding))))
            `(helm-M-x-short-doc ((t (,@c :inherit completions-annotations)))))))))
 
-  :hook
-  (modus-themes-after-load-theme . pk/modus-themes--custom-faces)
+  (defun pk/modus-themes--on-appearance-change ()
+    "Switch theme according to current system setting."
+    (when-let ((appearance (plist-get (mac-application-state) :appearance))
+               (desired-theme (let ((case-fold-search t))
+                                (if (string-match-p "dark" appearance)
+                                    (cadr modus-themes-to-toggle)
+                                  (car modus-themes-to-toggle))))
+               ((not (eq desired-theme (car custom-enabled-themes)))))
+      (modus-themes-load-theme desired-theme)))
 
   :config
+  (when (boundp 'mac-effective-appearance-change-hook)
+    (add-hook 'mac-effective-appearance-change-hook
+              #'pk/modus-themes--on-appearance-change))
+
   (load-theme 'modus-operandi :no-confirm)
   (pk/modus-themes--custom-faces)
+
+  :hook
+  (modus-themes-after-load-theme . pk/modus-themes--custom-faces)
 
   :bind
   ("<f5>" . modus-themes-toggle))
