@@ -1454,8 +1454,8 @@ I.e., created with `scratch' or named scratch-"
       ;; when `default-directory' is used the `dwim-shell-command-execute-script'
       ;; jumps to the directory where it's been started
       (dwim-shell-command-execute-script
-       "pip install -r <<requirements.in>>"
-       "for f in requirements.in requirements-dev/{lint,misc,test}.in; do
+       "pip install -r <<**/requirements*.in>>"
+       "for f in requirements{,-dev}.in requirements-dev/{lint,misc,test}.in; do
           if [ -f \"${f}\" ]; then
             echo \"Installing requirements from ${f}\"
             pip install -r \"${f}\" --upgrade
