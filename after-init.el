@@ -760,6 +760,11 @@ language."
           (lambda ()
             (setq auto-composition-mode nil)))
 
+(use-package ediff
+  :ensure nil
+  :custom
+  (ediff-window-setup-function . #'ediff-setup-windows-plain))
+
 ;; TODO: move to exordium and likely hide behind the
 ;; `exordium-use-variable-pitch' and `exordium-complete-mode' set to `:company'
 (use-package company-posframe
