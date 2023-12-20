@@ -1282,12 +1282,11 @@ This is intended to be used as an advise for
 
 
 (use-package json-mode
-  :config
-  (add-hook 'json-mode-hook
-            #'(lambda ()
-                ;; Disable js2-mode that exordium turns on for `javascrip-mode'
-                ;; to disable js-lint
-                (js2-minor-mode -1))))
+  ;; Disable js2-mode that exordium turns on for `javascrip-mode'
+  ;; to disable js-lint
+  :hook
+  (json-mode . (lambda ()
+                 (js2-minor-mode -1))))
 
 ;; From Steve Yegge's emacs: https://sites.google.com/site/steveyegge2/my-dot-emacs-file
 
