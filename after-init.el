@@ -763,7 +763,7 @@ language."
 (use-package ediff
   :ensure nil
   :custom
-  (ediff-window-setup-function . #'ediff-setup-windows-plain))
+  (ediff-window-setup-function #'ediff-setup-windows-plain))
 
 ;; TODO: move to exordium and likely hide behind the
 ;; `exordium-use-variable-pitch' and `exordium-complete-mode' set to `:company'
