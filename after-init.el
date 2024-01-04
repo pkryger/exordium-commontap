@@ -1462,7 +1462,7 @@ I.e., created with `scratch' or named scratch-"
        "for f in requirements{,-dev}.in requirements-dev/{lint,misc,test}.in; do
           if [ -f \"${f}\" ]; then
             echo \"Installing requirements from ${f}\"
-            pip install -r \"${f}\" --upgrade
+            pip install -r \"${f}\" --upgrade --prefer-binary
           fi
         done"
        :error-autofocus t
