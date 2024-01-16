@@ -503,6 +503,23 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 
 (use-package python
   :ensure nil
+  :init
+  (defun pk/python-mode--set-fill-column()
+    (ignore-errors ;; to suppress errors, mainly from `toml:read'
+      (when-let ((project (project-current))
+                 (pyproject.toml (expand-file-name "pyproject.toml"
+                                                   (project-root project)))
+                 ((file-exists-p pyproject.toml))
+                 (buffer (current-buffer)))
+        (with-temp-buffer
+          (insert-file-contents pyproject.toml)
+          (let-alist (toml:read t)
+            (let ((line-length (or .tool.ruff.line-length
+                                   .tool.black.line-length)))
+              (with-current-buffer buffer
+                (setq fill-column line-length))))))))
+  :hook
+  (python-ts-mode . pk/python-mode--set-fill-column)
   :custom
   (python-shell-dedicated 'project)
   (python-shell-interpreter  "python3"))
