@@ -505,19 +505,25 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   :ensure nil
   :init
   (defun pk/python-mode--set-fill-column()
-    (ignore-errors ;; to suppress errors, mainly from `toml:read'
-      (when-let ((project (project-current))
-                 (pyproject.toml (expand-file-name "pyproject.toml"
-                                                   (project-root project)))
-                 ((file-exists-p pyproject.toml))
-                 (buffer (current-buffer)))
-        (with-temp-buffer
-          (insert-file-contents pyproject.toml)
-          (let-alist (toml:read t)
-            (let ((line-length (or .tool.ruff.line-length
-                                   .tool.black.line-length)))
-              (with-current-buffer buffer
-                (setq fill-column line-length))))))))
+    (when-let ((project (project-current))
+               (pyproject.toml (expand-file-name "pyproject.toml"
+                                                 (project-root project)))
+               ((file-exists-p pyproject.toml))
+               (buffer (current-buffer)))
+      (with-temp-buffer
+        (insert-file-contents pyproject.toml)
+        (when-let ((line-length-node
+                    (alist-get
+                     'line-length
+                     (treesit-query-capture
+                      (treesit-parser-root-node (treesit-parser-create 'toml))
+                      '((table (dotted_key) @table-name
+                               (pair (bare_key) @key "=" (integer) @line-length)
+                               (:match "tool\\.\\(ruff\\|black\\)" @table-name)
+                               (:equal "line-length" @key)))))))
+          (with-current-buffer buffer
+            (setq fill-column
+                  (string-to-number (treesit-node-text line-length-node))))))))
   :hook
   (python-ts-mode . pk/python-mode--set-fill-column)
   :custom
