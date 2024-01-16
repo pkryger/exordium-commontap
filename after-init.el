@@ -525,6 +525,8 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   ;; (python-mode . anaconda-eldoc-mode)
   )
 
+(use-package pip-requirements)
+
 (use-package company-anaconda
   :after (company)
   :config
