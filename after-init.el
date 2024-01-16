@@ -1556,7 +1556,9 @@ I.e., created with `scratch' or named scratch-"
                 ("difftastic"
                  . ,(file-name-concat workspace "gh" "pkryger" "difftastic.el"))
                 ("basic-stats"
-                 . ,(file-name-concat workspace "gh" "pkryger" "basic-stats"))))
+                 . ,(file-name-concat workspace "gh" "pkryger" "basic-stats"))
+                ("emacs-toml"
+                 . ,(file-name-concat workspace "gh" "gongo" "emacs-toml"))))
       (when-let ((dir (cdr spec))
                  ((file-exists-p dir))
                  (name (car spec))
