@@ -505,25 +505,37 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   :ensure nil
   :init
   (defun pk/python-mode--set-fill-column()
-    (when-let ((project (project-current))
-               (pyproject.toml (expand-file-name "pyproject.toml"
-                                                 (project-root project)))
-               ((file-exists-p pyproject.toml))
+    (when-let ((project-root (project-root (project-current)))
+               ;; do not override directory local variable
+               ((not
+                 (alist-get
+                  'fill-column
+                  (alist-get
+                   major-mode
+                   (alist-get
+                    (car (alist-get
+                          (file-name-as-directory project-root)
+                          dir-locals-directory-cache nil nil #'string=))
+                    dir-locals-class-alist)))))
+               (pyproject-toml (expand-file-name "pyproject.toml" project-root))
+               ((file-exists-p pyproject-toml))
                (buffer (current-buffer)))
       (with-temp-buffer
-        (insert-file-contents pyproject.toml)
+        (insert-file-contents pyproject-toml)
         (when-let ((line-length-node
                     (alist-get
                      'line-length
                      (treesit-query-capture
-                      (treesit-parser-root-node (treesit-parser-create 'toml))
-                      '((table (dotted_key) @table-name
-                               (pair (bare_key) @key "=" (integer) @line-length)
-                               (:match "tool\\.\\(ruff\\|black\\)" @table-name)
-                               (:equal "line-length" @key)))))))
+                      'toml
+                      '(((table
+                          (dotted_key) @table-name
+                          (pair (bare_key) @key "=" (integer) @line-length))
+                         (:match "tool\\.\\(ruff\\|black\\)" @table-name)
+                         (:equal "line-length" @key))))))
+                   (line-length (string-to-number
+                                 (treesit-node-text line-length-node))))
           (with-current-buffer buffer
-            (setq fill-column
-                  (string-to-number (treesit-node-text line-length-node))))))))
+            (setq fill-column line-length))))))
   :hook
   (python-ts-mode . pk/python-mode--set-fill-column)
   :custom
