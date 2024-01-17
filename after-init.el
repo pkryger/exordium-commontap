@@ -1485,8 +1485,8 @@ I.e., created with `scratch' or named scratch-"
          ([remap dired-smart-shell-command] . dwim-shell-command))
 
   :config
-  (defun pk/dwim-shell-command-pip-install-requirements-in ()
-    "Pip install from requirements in files."
+  (defun pk/dwim-shell-command-pip-install-requirements ()
+    "Pip install from requirements '*.in' or '*.txt' files."
     (interactive)
     (when-let ((default-directory (projectile-project-root))
                ((or (getenv "VIRTUAL_ENV")
@@ -1495,13 +1495,23 @@ I.e., created with `scratch' or named scratch-"
       ;; when `default-directory' is used the `dwim-shell-command-execute-script'
       ;; jumps to the directory where it's been started
       (dwim-shell-command-execute-script
-       "pip install -r <<**/requirements*.in>>"
-       "for f in requirements{,-dev}.in requirements-dev/{lint,misc,test}.in; do
+       "pip install -r <<**/requirements*.{in,txt}>>"
+       "have_in=
+        for f in requirements{,-dev}.in requirements-dev/{lint,misc,test}.in; do
           if [ -f \"${f}\" ]; then
+            have_in=yes
             echo \"Installing requirements from ${f}\"
             pip install -r \"${f}\" --upgrade --prefer-binary
           fi
-        done"
+        done
+        if [ -z ${have_in} ]; then
+          for f in requirements{,-dev}.txt; do
+            if [ -f \"${f}\" ]; then
+              echo \"Installing requirements from ${f}\"
+              pip install -r \"${f}\" --upgrade --prefer-binary
+            fi
+          done
+        fi"
        :error-autofocus t
        :silent-success t))))
 
