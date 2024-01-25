@@ -1484,6 +1484,18 @@ I.e., created with `scratch' or named scratch-"
          ([remap dired-smart-shell-command] . dwim-shell-command))
 
   :config
+  (defun pk/dwim-shell-command-pip-upgrade-requirements()
+    "Upgrade all requirements in current venv."
+    (interactive)
+    (when-let ((default-directory (project-root (project-current)))
+               ((or (getenv "VIRTUAL_ENV")
+                    (user-error "No virtual environment is active"))))
+      (dwim-shell-command-execute-script
+       (format "[%s] pip upgrade"(project-name (project-current)))
+       "pip --disable-pip-version-check list --outdated --format=json | \
+          jq -r '.[] | .name' | \
+          xargs -n1 pip install -U")))
+
   (defun pk/dwim-shell-command-pip-install-requirements ()
     "Pip install from requirements '*.in' or '*.txt' files."
     (interactive)
