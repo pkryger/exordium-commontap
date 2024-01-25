@@ -1604,6 +1604,15 @@ I.e., created with `scratch' or named scratch-"
     (browse-url-of-buffer)))
 
 
+
+(use-package scala-ts-mode
+  :after (eglot)
+  :config
+  (unless (eglot--lookup-mode 'scala-ts-mode)
+    (setf (alist-get `scala-ts-mode eglot-server-programs)
+          '("metals"))))
+
+
 (if-let (((fboundp 'package-vc-install-from-checkout))
          (workspace (or (getenv "GITHUB_WORKSPACE")
                         (getenv "HOME"))))
