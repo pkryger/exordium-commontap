@@ -1123,8 +1123,7 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
                            '(("black" black ruff-format)
                              ("isort" isort ruff-isort)))))
           (with-current-buffer buffer
-            (make-local-variable 'apheleia-mode-alist)
-            (setf (alist-get major-mode apheleia-mode-alist) formatters)
+            (setq apheleia-formatter formatters)
             (apheleia-mode))))))
 
   :hook
