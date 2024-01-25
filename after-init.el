@@ -1487,14 +1487,15 @@ I.e., created with `scratch' or named scratch-"
   (defun pk/dwim-shell-command-pip-install-requirements ()
     "Pip install from requirements '*.in' or '*.txt' files."
     (interactive)
-    (when-let ((default-directory (projectile-project-root))
+    (when-let ((default-directory (project-root (project-current)))
                ((or (getenv "VIRTUAL_ENV")
                     (y-or-n-p
                      "No virtual environment is active.  Install requirements?"))))
       ;; when `default-directory' is used the `dwim-shell-command-execute-script'
       ;; jumps to the directory where it's been started
       (dwim-shell-command-execute-script
-       "pip install -r <<**/requirements*.{in,txt}>>"
+       (format "[%s] pip install -r <<**/requirements*.{in,txt}>>"
+               (project-name (project-current)))
        "have_in=
         for f in requirements{,-dev}.in requirements-dev/{lint,misc,test}.in; do
           if [ -f \"${f}\" ]; then
