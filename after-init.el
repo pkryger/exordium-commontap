@@ -1127,7 +1127,7 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
             (apheleia-mode))))))
 
   :hook
-  (find-file . pk/apheleia-update-python-formatters)
+  (python-ts-mode . pk/apheleia-update-python-formatters)
   :custom
   (apheleia-formatters-respect-fill-column t)
   :config
