@@ -1491,7 +1491,7 @@ I.e., created with `scratch' or named scratch-"
                ((or (getenv "VIRTUAL_ENV")
                     (user-error "No virtual environment is active"))))
       (dwim-shell-command-execute-script
-       (format "[%s] pip upgrade"(project-name (project-current)))
+       (format "pip upgrade<%s>" (project-name (project-current)))
        "pip --disable-pip-version-check list --outdated --format=json | \
           jq -r '.[] | .name' | \
           xargs -n1 pip install -U")))
@@ -1506,7 +1506,7 @@ I.e., created with `scratch' or named scratch-"
       ;; when `default-directory' is used the `dwim-shell-command-execute-script'
       ;; jumps to the directory where it's been started
       (dwim-shell-command-execute-script
-       (format "[%s] pip install -r <<**/requirements*.{in,txt}>>"
+       (format "pip install -r <<**/requirements*.{in,txt}>><%s>"
                (project-name (project-current)))
        "have_in=
         for f in requirements{,-dev}.in requirements-dev/{lint,misc,test}.in; do
