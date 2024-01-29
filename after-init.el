@@ -1624,7 +1624,9 @@ I.e., created with `scratch' or named scratch-"
                 ("basic-stats"
                  . ,(file-name-concat workspace "gh" "pkryger" "basic-stats"))
                 ("emacs-toml"
-                 . ,(file-name-concat workspace "gh" "gongo" "emacs-toml"))))
+                 . ,(file-name-concat workspace "gh" "gongo" "emacs-toml"))
+                ("ultra-scroll-mac"
+                 . ,(file-name-concat workspace "gh" "jdtsmith" "ultra-scroll-mac"))))
       (when-let ((dir (cdr spec))
                  ((file-exists-p dir))
                  (name (car spec))
@@ -1661,6 +1663,15 @@ I.e., created with `scratch' or named scratch-"
           ("S" "Difftastic show" difftastic-magit-show)])
        (when (equal (transient-get-suffix 'magit-diff '(-1 -1)) last-suffix)
          (transient-remove-suffix 'magit-diff '(-1 -1))))))
+
+
+(use-package ultra-scroll-mac
+  :ensure nil
+  :if (eq window-system 'mac)
+  :init
+  (setq scroll-conservatively 101) ; important for jumbo images
+  :config
+  (ultra-scroll-mac-mode))
 
 
 ;; (use-package jinx
