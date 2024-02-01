@@ -1509,7 +1509,7 @@ I.e., created with `scratch' or named scratch-"
        (format "pip install -r <<**/requirements*.{in,txt}>><%s>"
                (project-name (project-current)))
        "have_in=
-        for f in requirements{,-dev}.in requirements-dev/{lint,misc,test}.in; do
+        for f in requirements{,-dev}.in requirements{,-dev}/{lint,misc,test}.in; do
           if [ -f \"${f}\" ]; then
             have_in=yes
             echo \"Installing requirements from ${f}\"
