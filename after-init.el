@@ -262,7 +262,21 @@ This will be used in be used in `pk/dispatch-cut-function'")
         ("M-r" . #'xref-find-references)
         ("M-?" . #'helpful-at-point)))
 
-;;@todo: disable printing from eglot - perhaps set `eglot-events-buffer-size' 0
+(use-package flycheck
+  :config
+  (flycheck-define-checker pk/python-blocklint
+    "Blocklint: blocks usage of non-inclusive wording.
+See: https://github.com/PrincetonUniversity/blocklint"
+    :command ("blocklint" "--max-issue-threshold" "1" source-inplace)
+    :error-patterns
+    ((error line-start (file-name) ":" line ":" column ": " (message) line-end))
+    :modes (python-mode python-ts-mode))
+
+  (add-to-list 'flycheck-checkers 'pk/python-blocklint)
+  (mapc (lambda (checker)
+          (flycheck-add-next-checker checker '(warning . pk/python-blocklint) t))
+        '(python-flake8 python-pylint python-pycompile)))
+;;@todo: disable printing from eglot - perhaps set `eglot-events-buffer-size' 0
 (when (version< "28" emacs-version)
 (use-package eglot
   :after flycheck
