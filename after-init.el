@@ -1488,6 +1488,9 @@ I.e., created with `scratch' or named scratch-"
 
 
 (when (version< "28" emacs-version)
+(defcustom pk/dwim-shell-command-pip-no-binary nil
+  "List of packages to pass to --no-binary pip flag.")
+
 (use-package dwim-shell-command
   :ensure t
   :demand t
@@ -1503,12 +1506,24 @@ I.e., created with `scratch' or named scratch-"
     (interactive)
     (when-let ((default-directory (project-root (project-current)))
                ((or (getenv "VIRTUAL_ENV")
-                    (user-error "No virtual environment is active"))))
+                    (user-error "No virtual environment is active")))
+               (no-binary
+                (if pk/dwim-shell-command-pip-no-binary
+                    (concat "--no-binary "
+                            (mapconcat (lambda (package)
+                                         (if (symbolp package)
+                                             (symbol-name package)
+                                           package))
+                                       pk/dwim-shell-command-pip-no-binary
+                                       ","))
+                  "")))
       (dwim-shell-command-execute-script
        (format "pip upgrade<%s>" (project-name (project-current)))
-       "pip --disable-pip-version-check list --outdated --format=json | \
-          jq -r '.[] | .name' | \
-          xargs -n1 pip install -U")))
+       (format
+        "pip --disable-pip-version-check list --outdated --format=json | \
+           jq -r '.[] | .name' | \
+           xargs -n1 pip install -U --prefer-binary %s"
+        no-binary))))
 
   (defun pk/dwim-shell-command-pip-install-requirements ()
     "Pip install from requirements '*.in' or '*.txt' files."
@@ -1516,28 +1531,40 @@ I.e., created with `scratch' or named scratch-"
     (when-let ((default-directory (project-root (project-current)))
                ((or (getenv "VIRTUAL_ENV")
                     (y-or-n-p
-                     "No virtual environment is active.  Install requirements?"))))
+                     "No virtual environment is active.  Install requirements?")))
+               (no-binary
+                (if pk/dwim-shell-command-pip-no-binary
+                    (concat "--no-binary "
+                            (mapconcat (lambda (package)
+                                         (if (symbolp package)
+                                             (symbol-name package)
+                                           package))
+                                       pk/dwim-shell-command-pip-no-binary
+                                       ","))
+                  "")))
       ;; when `default-directory' is used the `dwim-shell-command-execute-script'
       ;; jumps to the directory where it's been started
       (dwim-shell-command-execute-script
        (format "pip install -r <<**/requirements*.{in,txt}>><%s>"
                (project-name (project-current)))
-       "have_in=
-        for f in requirements{,-dev}.in requirements{,-dev}/{lint,misc,test}.in; do
-          if [ -f \"${f}\" ]; then
-            have_in=yes
-            echo \"Installing requirements from ${f}\"
-            pip install -r \"${f}\" --upgrade --prefer-binary
-          fi
-        done
-        if [ -z ${have_in} ]; then
-          for f in requirements{,-dev}.txt; do
-            if [ -f \"${f}\" ]; then
-              echo \"Installing requirements from ${f}\"
-              pip install -r \"${f}\" --upgrade --prefer-binary
-            fi
-          done
-        fi"
+       (format
+        "have_in=
+         for f in requirements{,-dev}.in requirements{,-dev}/{lint,misc,test}.in; do
+           if [ -f \"${f}\" ]; then
+             have_in=yes
+             echo \"Installing requirements from ${f}\"
+             pip install -r \"${f}\" --upgrade --prefer-binary %s
+           fi
+         done
+         if [ -z ${have_in} ]; then
+           for f in requirements{,-dev}.txt; do
+             if [ -f \"${f}\" ]; then
+               echo \"Installing requirements from ${f}\"
+               pip install -r \"${f}\" --upgrade --prefer-binary %s
+             fi
+           done
+         fi"
+        no-binary no-binary)
        :error-autofocus t
        :silent-success t))))
 
