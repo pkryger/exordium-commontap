@@ -217,7 +217,7 @@ This will be used in be used in `pk/dispatch-cut-function'")
 ;; See `split-window-sensibly' doc...
 ;; this setup basically forces a vertical split, but only up to 2 windows in a frame
 (setq split-height-threshold nil)
-(setq split-width-threshold 160)
+(setq split-width-threshold 180)
 
 (use-package use-package-ensure-system-package)
 ;;(use-package quelpa-use-package)
