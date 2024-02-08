@@ -588,6 +588,18 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   :config
   (direnv-mode))
 
+(use-package compile
+  :ensure nil
+  :config
+  ;; To ignore: PipDeprecationWarning: DEPRECATION:
+  ;; file:///.#egg=package.name>=0.dev contains an egg fragment with a non-PEP
+  ;; 508 name pip 25.0 will enforce this behaviour change. A possible
+  ;; replacement is to use the req @ url syntax, and remove the egg
+  ;; fragment. Discussion can be found at
+  ;; https://github.com/pypa/pip/issues/11617
+  (add-to-list
+   'compilation-transform-file-match-alist
+   '("/.*/lib/python[0-9\\.]+/site-packages/pip/_internal/models/link.py\\'" nil)))
 
 
 ;; Diminish some modes
