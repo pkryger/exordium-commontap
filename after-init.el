@@ -404,6 +404,31 @@ See: https://github.com/PrincetonUniversity/blocklint"
   ;;              (concat (file-name-directory (or load-file-name
   ;;                                               (buffer-file-name))) "snippets"))
   )
+
+(use-package projectile
+  :init
+  (defun pk/projectile--emacs-package-build ()
+    (when-let* ((project-name (projectile-project-name))
+                (pkg-desc (cadr
+                           (cl-find-if
+                            (lambda (package)
+                              (string-match-p
+                               (rx string-start
+                                   (literal (symbol-name (car package)))
+                                   (zero-or-one ".el")
+                                   string-end)
+                               project-name))
+                            package-alist))))
+      (package-vc-rebuild pkg-desc)))
+  (defun pk/projectile--emacs-packate-test ()
+    (call-interactively #'ert))
+  :config
+  (projectile-register-project-type
+   'pk/emacs-package nil
+   :install #'pk/projectile--emacs-package-build
+   :test #'pk/projectile--emacs-packate-test
+   :test-dir "test/"
+   :test-suffix ".t"))
 
 
 (use-package yaml-mode
