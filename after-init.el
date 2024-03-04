@@ -481,12 +481,14 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 
 
 (defconst pk/desktop-files-not-to-save
-  (rx-let ((path (+ (or alnum digit "." "/" "-" "_" "~"))))
+  (rx-let ((path (+ (or alnum "." "/" "-" "_" "~"))))
     (rx (or (seq string-start "/" (zero-or-more (not (any "/" ":"))) ":")
             (seq "(ftp)" string-end)
             (seq string-start path "/emacs/" path "/lisp/" path
                  ".el.gz" string-end)
-            (seq string-start path "/.emacs.d/elpa/" path
+            (seq string-start path "/.emacs.d/elpa"
+                 (zero-or-one "-" (one-or-more digit) "." (one-or-more alnum))
+                 "/" path
                  ".el" string-end)))))
 
 (use-package desktop
@@ -501,6 +503,12 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (add-to-list 'desktop-modes-not-to-save 'helm-major-mode)
   (add-to-list 'desktop-modes-not-to-save 'magit-mode)
   (add-to-list 'desktop-modes-not-to-save 'magit-log-mode)
+  (add-to-list 'desktop-modes-not-to-save 'magit-status-mode)
+  (add-to-list 'desktop-modes-not-to-save 'magit-process-mode)
+  (add-to-list 'desktop-modes-not-to-save 'magit-diff-mode)
+  (add-to-list 'desktop-modes-not-to-save 'forge-pullreq-mode)
+  (add-to-list 'desktop-modes-not-to-save 'forge-notifications-mode)
+  (add-to-list 'desktop-modes-not-to-save 'difftastic-mode)
   :custom
   (desktop-files-not-to-save pk/desktop-files-not-to-save)
   (desktop-restore-eager 8)
