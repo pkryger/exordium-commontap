@@ -670,6 +670,58 @@ If the input is empty, select the previous history element instead."
 ;;   :ensure-system-package (rg . ripgrep)
 ;;   :config
 ;;   (magit-todos-mode))
+
+;; (define-advice
+;;     magit-remote--cleanup-push-variables
+;;     (:after (old &optional new)
+;;             pk/magit-remove--cleanup-push-variables--cleanup-forge-remote)
+;;   "cleanup local forge.remote variable to follow the `new' remote.
+;; preferably the local value is used, but if not defined then fallback to global.
+;; the local value is removed when it was pointing to a removed remote or it is
+;; the same as global. in detail, the pseudo-code is:
+;; - rename
+;;  - have global
+;;   - global matches old
+;;    - set local to new
+;;  - have local
+;;   - local matches old
+;;    - set local to new
+;;  - have global and local
+;;   - local matches old and global doesn't match new
+;;    - set local to new
+;;   - local matches old and global matches new
+;;    - remove local
+;;  - old matches \"origin\"
+;;   - local is nil and global doesn't match new
+;;    - set local to new
+;; - remove
+;;  - have local
+;;   - local matches old
+;;    - remove local
+;;  - have global and local
+;;   - local matches old
+;;    - remove local"
+;;   (let ((global (when new (magit-get "--global" "forge.remote")))
+;;         (local (magit-get "--local" "forge.remote")))
+;;     (if new
+;;                                         ; rename
+;;         (cond
+;;          ((and local global)
+;;           (when (string= local old)
+;;             (if (string= global new)
+;;                 (magit-set nil "--local" "forge.remote")
+;;               (magit-set new "--local" "forge.remote"))))
+;;          ((or (and local (string= local old))
+;;               (and global (string= global old))
+;;               (and (not local)
+;;                    (and global (not (string= global new)))
+;;                    (string= "origin" old)))
+;;           (magit-set new "--local" "forge.remote")))
+;;                                         ; remove
+;;       (when (and local (string= local old))
+;;         (magit-set nil "--local" "forge.remote")))))
+
+
 
 ;; Load R as well
 (use-package ess
