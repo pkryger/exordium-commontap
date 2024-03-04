@@ -1100,6 +1100,19 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
         ([remap org-insert-link] . #'pk/org-insert-link-dwim)))
 
 (use-package markdown-mode
+  :custom
+  ;; Use `github-markup' for makrdown with a github style
+  ;; This requires `github-markup' gem to be installed, i.e.:
+  ;; $ sudo gem install github-markup
+  (markdown-command "github-markup")
+  (markdown-command-needs-filename t)
+  (markdown-css-paths (list (concat
+                                "file://"
+                                (file-name-directory
+                                 (or load-file-name buffer-file-name))
+                                "github-markdown.css")))
+  (markdown-xhtml-body-preamble "<article class=\"markdown-body\">")
+  (markdown-xhtml-body-footer "</article>")
   :bind
   (:map markdown-mode-map
         ([remap markdown-insert-link] . #'pk/markdown-insert-link-dwim)))
