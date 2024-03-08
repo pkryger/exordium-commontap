@@ -1728,6 +1728,8 @@ I.e., created with `scratch' or named scratch-"
   (unless (eglot--lookup-mode 'scala-ts-mode)
     (setf (alist-get `scala-ts-mode eglot-server-programs)
           '("metals"))))
+
+(use-package el-mock)
 
 
 (if-let (((fboundp 'package-vc-install-from-checkout))
