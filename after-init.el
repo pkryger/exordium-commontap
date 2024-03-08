@@ -506,12 +506,14 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 
 
 (defconst pk/desktop-files-not-to-save
-  (rx-let ((path (+ (or alnum digit "." "/" "-" "_" "~"))))
+  (rx-let ((path (+ (or alnum "." "/" "-" "_" "~"))))
     (rx (or (seq string-start "/" (zero-or-more (not (any "/" ":"))) ":")
             (seq "(ftp)" string-end)
             (seq string-start path "/emacs/" path "/lisp/" path
                  ".el.gz" string-end)
-            (seq string-start path "/.emacs.d/elpa/" path
+            (seq string-start path "/.emacs.d/elpa"
+                 (zero-or-one "-" (one-or-more digit) "." (one-or-more alnum))
+                 "/" path
                  ".el" string-end)))))
 
 (use-package desktop
@@ -526,6 +528,12 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (add-to-list 'desktop-modes-not-to-save 'helm-major-mode)
   (add-to-list 'desktop-modes-not-to-save 'magit-mode)
   (add-to-list 'desktop-modes-not-to-save 'magit-log-mode)
+  (add-to-list 'desktop-modes-not-to-save 'magit-status-mode)
+  (add-to-list 'desktop-modes-not-to-save 'magit-process-mode)
+  (add-to-list 'desktop-modes-not-to-save 'magit-diff-mode)
+  (add-to-list 'desktop-modes-not-to-save 'forge-pullreq-mode)
+  (add-to-list 'desktop-modes-not-to-save 'forge-notifications-mode)
+  (add-to-list 'desktop-modes-not-to-save 'difftastic-mode)
   :custom
   (desktop-files-not-to-save pk/desktop-files-not-to-save)
   (desktop-restore-eager 8)
@@ -687,6 +695,58 @@ If the input is empty, select the previous history element instead."
 ;;   :ensure-system-package (rg . ripgrep)
 ;;   :config
 ;;   (magit-todos-mode))
+
+;; (define-advice
+;;     magit-remote--cleanup-push-variables
+;;     (:after (old &optional new)
+;;             pk/magit-remove--cleanup-push-variables--cleanup-forge-remote)
+;;   "cleanup local forge.remote variable to follow the `new' remote.
+;; preferably the local value is used, but if not defined then fallback to global.
+;; the local value is removed when it was pointing to a removed remote or it is
+;; the same as global. in detail, the pseudo-code is:
+;; - rename
+;;  - have global
+;;   - global matches old
+;;    - set local to new
+;;  - have local
+;;   - local matches old
+;;    - set local to new
+;;  - have global and local
+;;   - local matches old and global doesn't match new
+;;    - set local to new
+;;   - local matches old and global matches new
+;;    - remove local
+;;  - old matches \"origin\"
+;;   - local is nil and global doesn't match new
+;;    - set local to new
+;; - remove
+;;  - have local
+;;   - local matches old
+;;    - remove local
+;;  - have global and local
+;;   - local matches old
+;;    - remove local"
+;;   (let ((global (when new (magit-get "--global" "forge.remote")))
+;;         (local (magit-get "--local" "forge.remote")))
+;;     (if new
+;;                                         ; rename
+;;         (cond
+;;          ((and local global)
+;;           (when (string= local old)
+;;             (if (string= global new)
+;;                 (magit-set nil "--local" "forge.remote")
+;;               (magit-set new "--local" "forge.remote"))))
+;;          ((or (and local (string= local old))
+;;               (and global (string= global old))
+;;               (and (not local)
+;;                    (and global (not (string= global new)))
+;;                    (string= "origin" old)))
+;;           (magit-set new "--local" "forge.remote")))
+;;                                         ; remove
+;;       (when (and local (string= local old))
+;;         (magit-set nil "--local" "forge.remote")))))
+
+
 
 ;; Load R as well
 (use-package ess
@@ -1117,6 +1177,19 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
         ([remap org-insert-link] . #'pk/org-insert-link-dwim)))
 
 (use-package markdown-mode
+  :custom
+  ;; Use `github-markup' for makrdown with a github style
+  ;; This requires `github-markup' gem to be installed, i.e.:
+  ;; $ sudo gem install github-markup
+  (markdown-command "github-markup")
+  (markdown-command-needs-filename t)
+  (markdown-css-paths (list (concat
+                                "file://"
+                                (file-name-directory
+                                 (or load-file-name buffer-file-name))
+                                "github-markdown.css")))
+  (markdown-xhtml-body-preamble "<article class=\"markdown-body\">")
+  (markdown-xhtml-body-footer "</article>")
   :bind
   (:map markdown-mode-map
         ([remap markdown-insert-link] . #'pk/markdown-insert-link-dwim)))
