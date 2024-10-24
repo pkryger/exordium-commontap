@@ -543,9 +543,14 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 (use-package savehist
   :ensure nil
   :config
+  (add-to-list 'savehist-additional-variables 'command-history)
+  (add-to-list 'savehist-additional-variables 'extended-command-history)
   (add-to-list 'savehist-additional-variables 'kill-ring)
+  (add-to-list 'savehist-additional-variables 'search-ring)
+  (add-to-list 'savehist-additional-variables 'regexp-search-ring)
   (add-to-list 'savehist-additional-variables 'register-alist)
   (add-to-list 'savehist-additional-variables 'compile-command)
+  (add-to-list 'savehist-additional-variables 'compile-history)
   (savehist-mode))
 
 (use-package python
