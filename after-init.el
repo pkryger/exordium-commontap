@@ -1820,6 +1820,11 @@ I.e., created with `scratch' or named scratch-"
 (use-package el-mock)
 
 
+(use-package casual
+  :bind
+  (:map calc-mode-map
+        ("C-o" . 'casual-main-menu)))
+
 (if-let (((fboundp 'package-vc-install-from-checkout))
          (workspace (or (getenv "GITHUB_WORKSPACE")
                         (getenv "HOME"))))
