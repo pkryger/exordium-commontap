@@ -1276,14 +1276,20 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
               "-i" "2"
               "-ci"
               "-"))
+  (setf (alist-get 'rubocop-homebrew apheleia-formatters)
+        ;; too slow (append '("brew") (alist-get 'rubocop apheleia-formatters))
+        (append '("ruby"
+                  (file-name-concat (or (getenv "HOMEBREW_LIBRARY")
+                                        "/opt/homebrew/Library")
+                                    "Homebrew" "utils" "rubocop.rb"))
+                (cdr (alist-get 'rubocop apheleia-formatters))))
 
   (setf (alist-get 'json-mode apheleia-mode-alist) 'jq)
   (setf (alist-get 'js-json-mode apheleia-mode-alist) 'jq)
   (setf (alist-get 'json-ts-mode apheleia-mode-alist) 'jq)
 
-  (alist-get 'rubocop apheleia-formatters)
-
   (setf (alist-get 'ruby-mode apheleia-mode-alist) 'rubocop)
+  (setf (alist-get 'ruby-ts-mode apheleia-mode-alist) 'rubocop)
   (setf (alist-get 'enh-ruby-mode apheleia-mode-alist) 'rubocop)
 
   (setf (alist-get 'sh-mode apheleia-mode-alist)
