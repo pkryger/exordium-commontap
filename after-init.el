@@ -1073,17 +1073,17 @@ All the reminder parts of the separator will have
 
 
 ;; evil likes to turn itself on, let's disable it so no surprises
-(use-package evil
-  :init
-  (defun pk/disable-evil-mode ()
-    (unless exordium-enable-evil-mode
-      (when (or evil-mode evil-local-mode)
-        (turn-off-evil-mode))))
-  :hook
-  ((evil-mode . pk/disable-evil-mode)
-   (evil-local-mode . pk/disable-evil-mode))
-  :config
-  (advice-remove #'select-window #'ad-Advice-select-window))
+;; (use-package evil
+;;   :init
+;;   (defun pk/disable-evil-mode ()
+;;     (unless exordium-enable-evil-mode
+;;       (when (or evil-mode evil-local-mode)
+;;         (turn-off-evil-mode))))
+;;   :hook
+;;   ((evil-mode . pk/disable-evil-mode)
+;;    (evil-local-mode . pk/disable-evil-mode))
+;;   :config
+;;   (advice-remove #'select-window #'ad-Advice-select-window))
 
 
 (use-package so-long
