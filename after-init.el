@@ -426,7 +426,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
   (projectile-register-project-type
    'pk/emacs-package nil
    :install #'pk/projectile--emacs-package-build
-   :test #'pk/projectile--emacs-packate-test
+   :test "make compile lint test"
    :test-dir "test/"
    :test-suffix ".t"))
 
