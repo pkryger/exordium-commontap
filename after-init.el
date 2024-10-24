@@ -1266,6 +1266,16 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
         '("ruff" "check" "--select" "I" "--exit-zero" "--fix" "--stdin-filename" filepath "-"))
   (setf (alist-get 'ruff-format apheleia-formatters)
         '("ruff" "format" "--stdin-filename" filepath "-"))
+  (setf (alist-get 'shfmt-homebrew apheleia-formatters)
+        ;; from ${HOMEBREW_PREFIX}/.vscode/settings.json
+        '((file-name-concat (or (getenv "HOMEBREW_LIBRARY")
+                                 "/opt/homebrew/Library")
+                             "Homebrew" "utils" "shfmt.sh")
+              "-filename" filepath
+              "-ln" "bash"
+              "-i" "2"
+              "-ci"
+              "-"))
 
   (setf (alist-get 'json-mode apheleia-mode-alist) 'jq)
   (setf (alist-get 'js-json-mode apheleia-mode-alist) 'jq)
