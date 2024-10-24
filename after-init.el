@@ -1816,12 +1816,6 @@ I.e., created with `scratch' or named scratch-"
 
 
 
-(use-package scala-ts-mode
-  :after (eglot)
-  :config
-  (unless (eglot--lookup-mode 'scala-ts-mode)
-    (setf (alist-get `scala-ts-mode eglot-server-programs)
-          '("metals"))))
 
 (use-package el-mock)
 
