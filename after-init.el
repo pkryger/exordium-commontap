@@ -275,7 +275,49 @@ See: https://github.com/PrincetonUniversity/blocklint"
   (add-to-list 'flycheck-checkers 'pk/python-blocklint)
   (mapc (lambda (checker)
           (flycheck-add-next-checker checker '(warning . pk/python-blocklint) t))
-        '(python-flake8 python-pylint python-pycompile)))
+        '(python-flake8 python-pylint python-pycompile))
+
+  (flycheck-define-checker pk/sorbet-homebrew
+    "Sorbet for Homebrew"
+    :command ("bundle" "exec" "srb" "tc"
+              "--color" "never"
+              "--no-error-count"
+              "--no-error-sections"
+              "--suppress-error-code" "1001"
+              "--suppress-error-code" "1003")
+    :working-directory
+    (lambda (_)
+      (when-let ((homebrew-prefix (getenv "HOMEBREW_PREFIX")))
+        (file-name-concat homebrew-prefix "Library" "Homebrew")))
+    :predicate (lambda () (flycheck-buffer-saved-p))
+    :error-patterns
+    ((error
+      line-start (file-name) ":" (optional line ": ")
+      (message (one-or-more not-newline)
+               " https://srb.help/" (id (one-or-more digit)) "\n"
+               (optional
+                         (one-or-more " ") (one-or-more digit) " |"
+                         (one-or-more " ") (one-or-more not-newline) "\n"
+                         (one-or-more " ") (one-or-more "^") (one-or-more "\n")))
+      line-end))
+  :error-filter
+  (lambda (errors)
+    (flycheck-sanitize-errors (flycheck-dedent-error-messages errors)))
+  :error-explainer
+  (lambda (err)
+    (let ((error-code (flycheck-error-id err))
+          (url "https://srb.help/%s"))
+      (and error-code `(url . ,(format url error-code)))))
+  :modes (ruby-mode ruby-ts-mode enh-ruby-mode)
+  :enabled
+  (lambda ()
+    (when-let ((homebrew-prefix (getenv "HOMEBREW_PREFIX")))
+      (string-match-p (rx-to-string `(seq string-start ,homebrew-prefix) t)
+                      (project-root (project-current))))))
+
+  (add-to-list 'flycheck-checkers 'pk/sorbet-homebrew)
+  (flycheck-add-next-checker 'ruby '(warning . pk/sorbet-homebrew) t))
+
 ;;@todo: disable printing from eglot - perhaps set `eglot-events-buffer-size' 0
 (when (version< "28" emacs-version)
 (use-package eglot
