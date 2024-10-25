@@ -272,7 +272,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
     ((error line-start (file-name) ":" line ":" column ": " (message) line-end))
     :modes (python-mode python-ts-mode))
 
-  (add-to-list 'flycheck-checkers 'pk/python-blocklint)
+  (add-to-list 'flycheck-checkers 'pk/python-blocklint 'append)
   (mapc (lambda (checker)
           (flycheck-add-next-checker checker '(warning . pk/python-blocklint) t))
         '(python-flake8 python-pylint python-pycompile))
@@ -318,7 +318,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
       (string-match-p (rx-to-string `(seq string-start ,homebrew-prefix) t)
                       (project-root project-current)))))
 
-  (add-to-list 'flycheck-checkers 'pk/sorbet-homebrew)
+  (add-to-list 'flycheck-checkers 'pk/sorbet-homebrew 'append)
   (flycheck-add-next-checker 'ruby '(warning . pk/sorbet-homebrew) t))
 
 ;;@todo: disable printing from eglot - perhaps set `eglot-events-buffer-size' 0
