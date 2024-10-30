@@ -326,7 +326,6 @@ See: https://github.com/PrincetonUniversity/blocklint"
   (flycheck-add-next-checker 'ruby '(warning . pk/sorbet-homebrew) t))
 
 ;;@todo: disable printing from eglot - perhaps set `eglot-events-buffer-size' 0
-(when (version< "28" emacs-version)
 (use-package eglot
   :after flycheck
   :init
@@ -349,28 +348,26 @@ See: https://github.com/PrincetonUniversity/blocklint"
   :bind
   (("C-c e e" . eglot)
    :map eglot-mode-map
-        ("C-c e r" . eglot-rename)
-        ("C-c e a" . eglot-code-actions)
-        ("C-c e q" . eglot-shutdown)
-        ("C-c e ?" . eldoc)
-        ("C-c e h" . eldoc)
-        ("C-c e L" . helm-flycheck)
-        ("C-c e l" . flycheck-list-errors)
-        ("C-c e C" . eglot-show-workspace-configuration)
-        ("C-c e S" . eglot-signal-didChangeConfiguration)
-        ("C-c e x r" . eglot-reconnect)
-        ("C-c e x l" . eglot-list-connections)
-        ("C-c e x E" . eglot-stderr-buffer)
-        ("C-c e x e" . eglot-events-buffer)))
+   ("C-c e r" . eglot-rename)
+   ("C-c e a" . eglot-code-actions)
+   ("C-c e q" . eglot-shutdown)
+   ("C-c e ?" . eldoc)
+   ("C-c e h" . eldoc)
+   ("C-c e L" . helm-flycheck)
+   ("C-c e l" . flycheck-list-errors)
+   ("C-c e C" . eglot-show-workspace-configuration)
+   ("C-c e S" . eglot-signal-didChangeConfiguration)
+   ("C-c e x r" . eglot-reconnect)
+   ("C-c e x l" . eglot-list-connections)
+   ("C-c e x E" . eglot-stderr-buffer)
+   ("C-c e x e" . eglot-events-buffer)))
 
-(use-package flycheck-eglot
-  :after (flycheck eglot)
-  :custom
-  (flycheck-eglot-exclusive nil)
-  :config
-  (global-flycheck-eglot-mode 1))
-
-) ;; (when (version< "28" emacs-version)
+  (use-package flycheck-eglot
+    :after (flycheck eglot)
+    :custom
+    (flycheck-eglot-exclusive nil)
+    :config
+    (global-flycheck-eglot-mode 1))
 
 
 (use-package eldoc
