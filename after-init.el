@@ -262,6 +262,10 @@ This will be used in be used in `pk/dispatch-cut-function'")
         ("M-r" . #'xref-find-references)
         ("M-?" . #'helpful-at-point)))
 
+(use-package eldoc
+  :ensure nil
+  :diminish)
+
 (use-package flycheck
   :config
   (flycheck-define-checker pk/python-blocklint
