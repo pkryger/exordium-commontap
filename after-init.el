@@ -1907,7 +1907,19 @@ I.e., created with `scratch' or named scratch-"
 (use-package casual
   :bind
   (:map calc-mode-map
-        ("C-o" . 'casual-main-menu)))
+   ("C-o" . casual-calc-tmenu)
+   :map calc-alg-map
+   ("C-o" . 'casual-calc-tmenu)
+   :map dired-mode-map
+   ("C-o" . casual-dired-tmenu)
+   :map ibuffer-mode-map
+   ("C-o" . casual-ibuffer-tmenu)
+   :map reb-mode-map
+   ("C-o". casual-re-builder-tmenu)
+   :map reb-lisp-mode-map
+   ("C-o" . casual-re-builder-tmenu)
+   :map Info-mode-map
+   ("C-o" . casual-info-tmenu)))
 
 (if-let* (((fboundp 'package-vc-install-from-checkout))
           (workspace (or (getenv "GITHUB_WORKSPACE")
