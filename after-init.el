@@ -71,10 +71,14 @@
            `(exordium-org-stop ((t (,@c :inherit 'org-todo :foreground ,fg-dim))))
            `(iedit-occurrence
              ((t (,@c :inherit nil
-                      :box (:line-width -2 :color ,(face-attribute 'modus-themes-completion-match-0 :foreground))))))
+                      :box (:line-width -2 ,@(when-let* ((color (face-attribute 'modus-themes-completion-match-0 :foreground))
+                                                         ((not (eq color 'unspecified))))
+                                               (list :color color)))))))
            `(iedit-read-only-occurrence
              ((t (,@c :inherit nil
-                      :box (:line-width -2 :color ,(face-attribute 'modus-themes-completion-match-1 :foreground))))))
+                      :box (:line-width -2 ,@(when-let* ((color (face-attribute 'modus-themes-completion-match-1 :foreground))
+                                                         ((not (eq color 'unspecified))))
+                                               (list :color color)))))))
            `(aw-leading-char-face ((t (,@c :foreground ,red :bold t :height 1.5))))
            ;; Redoing helm, inspired by last removed version in:
            ;; https://github.com/protesilaos/modus-themes/commit/1efaa7ef79682ec13493351d52ed1b339fb6ace2
