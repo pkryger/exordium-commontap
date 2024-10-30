@@ -140,12 +140,12 @@
 
   (defun pk/modus-themes--on-appearance-change ()
     "Switch theme according to current system setting."
-    (when-let ((appearance (plist-get (mac-application-state) :appearance))
-               (desired-theme (let ((case-fold-search t))
-                                (if (string-match-p "dark" appearance)
-                                    (cadr modus-themes-to-toggle)
-                                  (car modus-themes-to-toggle))))
-               ((not (eq desired-theme (car custom-enabled-themes)))))
+    (when-let* ((appearance (plist-get (mac-application-state) :appearance))
+                (desired-theme (let ((case-fold-search t))
+                                 (if (string-match-p "dark" appearance)
+                                     (cadr modus-themes-to-toggle)
+                                   (car modus-themes-to-toggle))))
+                ((not (eq desired-theme (car custom-enabled-themes)))))
       (modus-themes-load-theme desired-theme)))
 
   :config
@@ -184,9 +184,9 @@
   (setq mac-command-modifier 'hyper)
   (setq mac-frame-tabbing nil)
   (setq find-function-C-source-directory
-        (when-let ((emacs-src-dir
-                    (file-name-concat (getenv "HOME") "gh" "mituharu" "emacs-mac" "src"))
-                   (file-exists-p emacs-src-dir))
+        (when-let* ((emacs-src-dir
+                     (file-name-concat (getenv "HOME") "gh" "mituharu" "emacs-mac" "src"))
+                    (file-exists-p emacs-src-dir))
           emacs-src-dir)))
 
 (defun pk/iterm-cut-base64 (text)
@@ -291,7 +291,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
               "--suppress-error-code" "1003")
     :working-directory
     (lambda (_)
-      (when-let ((homebrew-prefix (getenv "HOMEBREW_PREFIX")))
+      (when-let* ((homebrew-prefix (getenv "HOMEBREW_PREFIX")))
         (file-name-concat homebrew-prefix "Library" "Homebrew")))
     :predicate (lambda () (flycheck-buffer-saved-p))
     :error-patterns
@@ -300,27 +300,27 @@ See: https://github.com/PrincetonUniversity/blocklint"
       (message (one-or-more not-newline)
                " https://srb.help/" (id (one-or-more digit)) "\n"
                (optional
-                         (one-or-more " ") (one-or-more digit) " |"
-                         (one-or-more " ") (one-or-more not-newline) "\n"
-                         (one-or-more " ") (one-or-more "^") (one-or-more "\n")))
+                (one-or-more " ") (one-or-more digit) " |"
+                (one-or-more " ") (one-or-more not-newline) "\n"
+                (one-or-more " ") (one-or-more "^") (one-or-more "\n")))
       line-end))
-  :error-filter
-  (lambda (errors)
-    (flycheck-sanitize-errors (flycheck-dedent-error-messages errors)))
-  :error-explainer
-  (lambda (err)
-    (let ((error-code (flycheck-error-id err))
-          (url "https://srb.help/%s"))
-      (and error-code `(url . ,(format url error-code)))))
-  :modes (ruby-mode ruby-ts-mode enh-ruby-mode)
-  :enabled
-  (lambda ()
-    (when-let ((buffer-file-name)
-               (default-directory (file-name-directory buffer-file-name))
-               (homebrew-prefix (getenv "HOMEBREW_PREFIX"))
-               (project-current (project-current)))
-      (string-match-p (rx-to-string `(seq string-start ,homebrew-prefix) t)
-                      (project-root project-current)))))
+    :error-filter
+    (lambda (errors)
+      (flycheck-sanitize-errors (flycheck-dedent-error-messages errors)))
+    :error-explainer
+    (lambda (err)
+      (let ((error-code (flycheck-error-id err))
+            (url "https://srb.help/%s"))
+        (and error-code `(url . ,(format url error-code)))))
+    :modes (ruby-mode ruby-ts-mode enh-ruby-mode)
+    :enabled
+    (lambda ()
+      (when-let* ((buffer-file-name)
+                  (default-directory (file-name-directory buffer-file-name))
+                  (homebrew-prefix (getenv "HOMEBREW_PREFIX"))
+                  (project-current (project-current)))
+        (string-match-p (rx-to-string `(seq string-start ,homebrew-prefix) t)
+                        (project-root project-current)))))
 
   (add-to-list 'flycheck-checkers 'pk/sorbet-homebrew 'append)
   (flycheck-add-next-checker 'ruby '(warning . pk/sorbet-homebrew) t))
@@ -391,16 +391,16 @@ See: https://github.com/PrincetonUniversity/blocklint"
   (completion-styles '(orderless)))
 
 (use-package ispell
-;;   :ensure-system-package aspell
+  ;;   :ensure-system-package aspell
   :custom
   ;; spell checks as suggested by
   ;; http://blog.binchen.org/posts/effective-spell-check-in-emacs.html
   ;; http://blog.binchen.org/posts/how-to-spell-check-functionvariable-in-emacs.html
   (ispell-program-name "aspell")
   (ispell-extra-args `("--sug-mode=ultra"
-                            "--run-together"
-                            "--run-together-limit=6"
-                           ,@(when exordium-osx '("--camel-case"))))
+                       "--run-together"
+                       "--run-together-limit=6"
+                       ,@(when exordium-osx '("--camel-case"))))
   (ispell-dictionary "british"))
 
 (use-package flyspell
@@ -603,35 +603,35 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   :ensure nil
   :init
   (defun pk/python-mode--set-fill-column()
-    (when-let ((project-root (project-root (project-current)))
-               ;; do not override directory local variable
-               ((not
-                 (alist-get
-                  'fill-column
+    (when-let* ((project-root (project-root (project-current)))
+                ;; do not override directory local variable
+                ((not
                   (alist-get
-                   major-mode
+                   'fill-column
                    (alist-get
-                    (car (alist-get
-                          (file-name-as-directory project-root)
-                          dir-locals-directory-cache nil nil #'string=))
-                    dir-locals-class-alist)))))
-               (pyproject-toml (expand-file-name "pyproject.toml" project-root))
-               ((file-exists-p pyproject-toml))
-               (buffer (current-buffer)))
+                    major-mode
+                    (alist-get
+                     (car (alist-get
+                           (file-name-as-directory project-root)
+                           dir-locals-directory-cache nil nil #'string=))
+                     dir-locals-class-alist)))))
+                (pyproject-toml (expand-file-name "pyproject.toml" project-root))
+                ((file-exists-p pyproject-toml))
+                (buffer (current-buffer)))
       (with-temp-buffer
         (insert-file-contents pyproject-toml)
-        (when-let ((line-length-node
-                    (alist-get
-                     'line-length
-                     (treesit-query-capture
-                      'toml
-                      '(((table
-                          (dotted_key) @table-name
-                          (pair (bare_key) @key "=" (integer) @line-length))
-                         (:match "tool\\.\\(ruff\\|black\\)" @table-name)
-                         (:equal "line-length" @key))))))
-                   (line-length (string-to-number
-                                 (treesit-node-text line-length-node))))
+        (when-let* ((line-length-node
+                     (alist-get
+                      'line-length
+                      (treesit-query-capture
+                       'toml
+                       '(((table
+                           (dotted_key) @table-name
+                           (pair (bare_key) @key "=" (integer) @line-length))
+                          (:match "tool\\.\\(ruff\\|black\\)" @table-name)
+                          (:equal "line-length" @key))))))
+                    (line-length (string-to-number
+                                  (treesit-node-text line-length-node))))
           (with-current-buffer buffer
             (setq fill-column line-length))))))
   :hook
@@ -668,7 +668,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 ;; See https://blog.adam-uhlir.me/python-virtual-environments-made-super-easy-with-direnv-307611c3a49a
 ;; for layout thing
 (use-package direnv
-;;   :ensure-system-package direnv
+  ;;   :ensure-system-package direnv
   :config
   (direnv-mode))
 
@@ -892,53 +892,53 @@ supports such a composition.  Some fonts provide ligatures for
 several combinations of symbolic characters so such a combination
 looks like a single unit of an operator symbol in a programming
 language."
-  :init-value nil
-  :global t
-  (if pk/mac-auto-operator-composition-mode
-      (when (eq (terminal-live-p (frame-terminal)) 'mac)
-        ;; Transform the `pk/mac-auto-operator-composition-strings' list into an alist.
-        ;; The transformation is as follows:
-        ;; - group all elements of the list by the first letter,
-        ;; - each car of an alist element is first letter for a given group,
-        ;; - each cdr of an alist element is list of substrings starting
-        ;;   from the 1st position for each string in a given group.
-        ;; i.e., ("ab" "a" "bc") -> ((?a "b" "") (?b "c"))
-        (let (char-strings-alist)
-          (mapc (lambda (string)
-                  (push (if (< (length string) 1)
-                            ""
-                          (substring string 1))
-                        (map-elt char-strings-alist (string-to-char string))))
-                pk/mac-auto-operator-composition-strings)
-          (mapc (lambda (char-strings)
-                  (let ((new-rules `([,(concat "." (regexp-opt (cdr char-strings))) 0
-                                      mac-auto-operator-composition-shape-gstring]))
-                        (old-rules (aref composition-function-table (car char-strings))))
-                    (set-char-table-range composition-function-table
-                                          (car char-strings)
-                                          (if (listp old-rules)
-                                              (append old-rules new-rules)
-                                            new-rules))))
-                char-strings-alist))
-        (set-char-table-range composition-function-table
-                              ?0
-                              '([".\\(?:x[a-fA-F0-9]\\)" 0
-                                 mac-auto-operator-composition-shape-gstring]))
-        (global-auto-composition-mode 1))
-    (map-char-table
-     (lambda (c rules)
-       (when (consp rules)
-         (let (new-rules removed-p)
-           (dolist (rule rules)
-             (if (eq (aref rule 2) 'mac-auto-operator-composition-shape-gstring)
-                 (setq removed-p t)
-               (push rule new-rules)))
-           (if removed-p
-               (set-char-table-range composition-function-table c
-                                     (nreverse new-rules))))))
-     composition-function-table)
-    (clrhash mac-auto-operator-composition-cache)))
-(pk/mac-auto-operator-composition-mode))
+    :init-value nil
+    :global t
+    (if pk/mac-auto-operator-composition-mode
+        (when (eq (terminal-live-p (frame-terminal)) 'mac)
+          ;; Transform the `pk/mac-auto-operator-composition-strings' list into an alist.
+          ;; The transformation is as follows:
+          ;; - group all elements of the list by the first letter,
+          ;; - each car of an alist element is first letter for a given group,
+          ;; - each cdr of an alist element is list of substrings starting
+          ;;   from the 1st position for each string in a given group.
+          ;; i.e., ("ab" "a" "bc") -> ((?a "b" "") (?b "c"))
+          (let (char-strings-alist)
+            (mapc (lambda (string)
+                    (push (if (< (length string) 1)
+                              ""
+                            (substring string 1))
+                          (map-elt char-strings-alist (string-to-char string))))
+                  pk/mac-auto-operator-composition-strings)
+            (mapc (lambda (char-strings)
+                    (let ((new-rules `([,(concat "." (regexp-opt (cdr char-strings))) 0
+                                        mac-auto-operator-composition-shape-gstring]))
+                          (old-rules (aref composition-function-table (car char-strings))))
+                      (set-char-table-range composition-function-table
+                                            (car char-strings)
+                                            (if (listp old-rules)
+                                                (append old-rules new-rules)
+                                              new-rules))))
+                  char-strings-alist))
+          (set-char-table-range composition-function-table
+                                ?0
+                                '([".\\(?:x[a-fA-F0-9]\\)" 0
+                                   mac-auto-operator-composition-shape-gstring]))
+          (global-auto-composition-mode 1))
+      (map-char-table
+       (lambda (c rules)
+         (when (consp rules)
+           (let (new-rules removed-p)
+             (dolist (rule rules)
+               (if (eq (aref rule 2) 'mac-auto-operator-composition-shape-gstring)
+                   (setq removed-p t)
+                 (push rule new-rules)))
+             (if removed-p
+                 (set-char-table-range composition-function-table c
+                                       (nreverse new-rules))))))
+       composition-function-table)
+      (clrhash mac-auto-operator-composition-cache)))
+  (pk/mac-auto-operator-composition-mode))
 
 ;; Org mode are not a real ligatures - use prettify symbols for it
 (add-hook 'org-mode-hook
@@ -1235,10 +1235,10 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   (markdown-command "github-markup")
   (markdown-command-needs-filename t)
   (markdown-css-paths (list (concat
-                                "file://"
-                                (file-name-directory
-                                 (or load-file-name buffer-file-name))
-                                "github-markdown.css")))
+                             "file://"
+                             (file-name-directory
+                              (or load-file-name buffer-file-name))
+                             "github-markdown.css")))
   (markdown-xhtml-body-preamble "<article class=\"markdown-body\">")
   (markdown-xhtml-body-footer "</article>")
   :bind
@@ -1275,18 +1275,18 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   (defun pk/apheleia-update-python-formatters ()
     "Turn on `apheleia-mode' for python mode with formatters as per lint.in."
     (interactive)
-    (when-let (((and (or (derived-mode-p 'python-ts-mode)
-                         (derived-mode-p 'python-mode))))
-               (project-root (project-root (project-current)))
-               (lint-in
-                (seq-find
-                 #'file-exists-p
-                 (mapcar (lambda (elt)
-                           (apply #'file-name-concat (cons project-root elt)))
-                         '(("requirements-dev" "lint.in")
-                           ("requirements" "lint.in")
-                           ("requirements-dev.txt")))))
-               (buffer (current-buffer)))
+    (when-let* (((and (or (derived-mode-p 'python-ts-mode)
+                          (derived-mode-p 'python-mode))))
+                (project-root (project-root (project-current)))
+                (lint-in
+                 (seq-find
+                  #'file-exists-p
+                  (mapcar (lambda (elt)
+                            (apply #'file-name-concat (cons project-root elt)))
+                          '(("requirements-dev" "lint.in")
+                            ("requirements" "lint.in")
+                            ("requirements-dev.txt")))))
+                (buffer (current-buffer)))
       (with-temp-buffer
         (insert-file-contents lint-in)
         (let ((formatters (mapcar
@@ -1315,13 +1315,13 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   (setf (alist-get 'shfmt-homebrew apheleia-formatters)
         ;; from ${HOMEBREW_PREFIX}/.vscode/settings.json
         '((file-name-concat (or (getenv "HOMEBREW_LIBRARY")
-                                 "/opt/homebrew/Library")
-                             "Homebrew" "utils" "shfmt.sh")
-              "-filename" filepath
-              "-ln" "bash"
-              "-i" "2"
-              "-ci"
-              "-"))
+                                "/opt/homebrew/Library")
+                            "Homebrew" "utils" "shfmt.sh")
+          "-filename" filepath
+          "-ln" "bash"
+          "-i" "2"
+          "-ci"
+          "-"))
   (setf (alist-get 'rubocop-homebrew apheleia-formatters)
         ;; too slow (append '("brew") (alist-get 'rubocop apheleia-formatters))
         (append '("ruby"
@@ -1489,8 +1489,8 @@ This is intended to be used as an advise for `org-font-lock-ensure'."
   (when (and org-src-fontify-natively
              (eq major-mode 'sql-mode))
     (sql-set-product (if pk/sql--ob-fontify-engine
-                         (if-let ((product (intern pk/sql--ob-fontify-engine))
-                                  ((assoc product sql-product-alist)))
+                         (if-let* ((product (intern pk/sql--ob-fontify-engine))
+                                   ((assoc product sql-product-alist)))
                              product
                            'ansi)
                        'ansi)))
@@ -1523,34 +1523,34 @@ This is intended to be used as an advise for
 ;; From Steve Yegge's emacs: https://sites.google.com/site/steveyegge2/my-dot-emacs-file
 
 (defun pk/rename-file-and-buffer (new-name)
- "Rename both current buffer and file it's visiting to NEW-NAME."
- (interactive "sNew name: ")
- (let ((name (buffer-name))
-       (filename (buffer-file-name)))
-   (if (not filename)
-       (message "Buffer '%s' is not visiting a file!" name)
-     (if (get-buffer new-name)
-         (message "A buffer named '%s' already exists!" new-name)
-       (rename-file filename new-name 1)
-       (rename-buffer new-name)
-       (set-visited-file-name new-name)
-       (set-buffer-modified-p nil)))))
+  "Rename both current buffer and file it's visiting to NEW-NAME."
+  (interactive "sNew name: ")
+  (let ((name (buffer-name))
+        (filename (buffer-file-name)))
+    (if (not filename)
+        (message "Buffer '%s' is not visiting a file!" name)
+      (if (get-buffer new-name)
+          (message "A buffer named '%s' already exists!" new-name)
+        (rename-file filename new-name 1)
+        (rename-buffer new-name)
+        (set-visited-file-name new-name)
+        (set-buffer-modified-p nil)))))
 
 (defun pk/move-buffer-file (dir)
- "Move both current buffer and file it's visiting to DIR."
- (interactive "DNew directory: ")
- (let* ((name (buffer-name))
-        (filename (buffer-file-name))
-        (dir (if (string-match dir "\\(?:/\\|\\\\)$")
-                 (substring dir 0 -1)
-               dir))
-        (new-name (concat dir "/" name)))
-   (if (not filename)
-       (message "Buffer '%s' is not visiting a file!" name)
-     (copy-file filename new-name 1)
-     (delete-file filename)
-     (set-visited-file-name new-name)
-     (set-buffer-modified-p nil))))
+  "Move both current buffer and file it's visiting to DIR."
+  (interactive "DNew directory: ")
+  (let* ((name (buffer-name))
+         (filename (buffer-file-name))
+         (dir (if (string-match dir "\\(?:/\\|\\\\)$")
+                  (substring dir 0 -1)
+                dir))
+         (new-name (concat dir "/" name)))
+    (if (not filename)
+        (message "Buffer '%s' is not visiting a file!" name)
+      (copy-file filename new-name 1)
+      (delete-file filename)
+      (set-visited-file-name new-name)
+      (set-buffer-modified-p nil))))
 
 
 ;; Inspired by Bart and Piotr Kazanowski's:
@@ -1598,7 +1598,7 @@ defaults to a comma."
 Optional SEPARATOR is the string to use to separate groups.  It
 defaults to a comma."
   (let ((sep (or separator ?,)))
-       (string-to-number (cl-remove sep number))))
+    (string-to-number (cl-remove sep number))))
 
 
 (defun pk/mapcar-grouped-numbers (numbers &optional separator)
@@ -1617,7 +1617,7 @@ defaults to a comma."
   "Fixup PATH variable: my bin, homebrew bin, reminder of the elements."
   (interactive)
   (let* ((home (getenv "HOME"))
-         (brew-prefix (when-let ((brew (executable-find "brew")))
+         (brew-prefix (when-let* ((brew (executable-find "brew")))
                         (string-trim (shell-command-to-string (concat brew " --prefix")))))
          (path (mapconcat
                 #'identity
@@ -1661,10 +1661,9 @@ I.e., created with `scratch' or named scratch-"
 (use-package flycheck-package
   :config
   (eval-after-load 'flycheck
-  '(flycheck-package-setup)))
+    '(flycheck-package-setup)))
 
 
-(when (version< "28" emacs-version)
 (defcustom pk/dwim-shell-command-pip-no-binary nil
   "List of packages to pass to --no-binary pip flag.")
 
@@ -1681,19 +1680,19 @@ I.e., created with `scratch' or named scratch-"
   (defun pk/dwim-shell-command-pip-upgrade-requirements()
     "Upgrade all requirements in current venv."
     (interactive)
-    (when-let ((default-directory (project-root (project-current)))
-               ((or (getenv "VIRTUAL_ENV")
-                    (user-error "No virtual environment is active")))
-               (no-binary
-                (if pk/dwim-shell-command-pip-no-binary
-                    (concat "--no-binary "
-                            (mapconcat (lambda (package)
-                                         (if (symbolp package)
-                                             (symbol-name package)
-                                           package))
-                                       pk/dwim-shell-command-pip-no-binary
-                                       ","))
-                  "")))
+    (when-let* ((default-directory (project-root (project-current)))
+                ((or (getenv "VIRTUAL_ENV")
+                     (user-error "No virtual environment is active")))
+                (no-binary
+                 (if pk/dwim-shell-command-pip-no-binary
+                     (concat "--no-binary "
+                             (mapconcat (lambda (package)
+                                          (if (symbolp package)
+                                              (symbol-name package)
+                                            package))
+                                        pk/dwim-shell-command-pip-no-binary
+                                        ","))
+                   "")))
       (dwim-shell-command-execute-script
        (format "pip upgrade<%s>" (project-name (project-current)))
        (format
@@ -1705,20 +1704,20 @@ I.e., created with `scratch' or named scratch-"
   (defun pk/dwim-shell-command-pip-install-requirements ()
     "Pip install from requirements '*.in' or '*.txt' files."
     (interactive)
-    (when-let ((default-directory (project-root (project-current)))
-               ((or (getenv "VIRTUAL_ENV")
-                    (y-or-n-p
-                     "No virtual environment is active.  Install requirements?")))
-               (no-binary
-                (if pk/dwim-shell-command-pip-no-binary
-                    (concat "--no-binary "
-                            (mapconcat (lambda (package)
-                                         (if (symbolp package)
-                                             (symbol-name package)
-                                           package))
-                                       pk/dwim-shell-command-pip-no-binary
-                                       ","))
-                  "")))
+    (when-let* ((default-directory (project-root (project-current)))
+                ((or (getenv "VIRTUAL_ENV")
+                     (y-or-n-p
+                      "No virtual environment is active.  Install requirements?")))
+                (no-binary
+                 (if pk/dwim-shell-command-pip-no-binary
+                     (concat "--no-binary "
+                             (mapconcat (lambda (package)
+                                          (if (symbolp package)
+                                              (symbol-name package)
+                                            package))
+                                        pk/dwim-shell-command-pip-no-binary
+                                        ","))
+                   "")))
       ;; when `default-directory' is used the `dwim-shell-command-execute-script'
       ;; jumps to the directory where it's been started
       (dwim-shell-command-execute-script
@@ -1750,7 +1749,6 @@ I.e., created with `scratch' or named scratch-"
   :demand t
   :after dwim-shell-command
   :commands dwim-shell-commands-kill-process)
-) ;; (when (version< "28" emacs-version)
 
 
 (defvar pk/ipynb--convert-command
@@ -1779,14 +1777,14 @@ I.e., created with `scratch' or named scratch-"
 (defun pk/ipynb-next-in-or-out ()
   "Move to the next file."
   (interactive)
-  (if-let ((next (pk/ipynb--next-in-or-out)))
+  (if-let* ((next (pk/ipynb--next-in-or-out)))
       (goto-char next)
     (user-error "No more In nor Out")))
 
 (defun pk/ipynb-previous-in-or-out ()
   "Move to the previous file."
   (interactive)
-  (if-let ((previous (pk/ipynb--prev-in-or-out)))
+  (if-let* ((previous (pk/ipynb--prev-in-or-out)))
       (goto-char previous)
     (user-error "No more In nor Out")))
 
@@ -1796,9 +1794,9 @@ I.e., created with `scratch' or named scratch-"
   "P"     #'pk/ipynb-previous-in-or-out)
 
 (define-derived-mode pk/ipynb-render-mode fundamental-mode "ipynb-render"
-   "Major mode to display output of rendered ipynb files."
-   (view-mode)
-   (setq buffer-read-only t))
+  "Major mode to display output of rendered ipynb files."
+  (view-mode)
+  (setq buffer-read-only t))
 
 (defun pk/ipynb-find-and-render-file (file-name)
   "Find FILENAME and open is as html."
@@ -1911,9 +1909,9 @@ I.e., created with `scratch' or named scratch-"
   (:map calc-mode-map
         ("C-o" . 'casual-main-menu)))
 
-(if-let (((fboundp 'package-vc-install-from-checkout))
-         (workspace (or (getenv "GITHUB_WORKSPACE")
-                        (getenv "HOME"))))
+(if-let* (((fboundp 'package-vc-install-from-checkout))
+          (workspace (or (getenv "GITHUB_WORKSPACE")
+                         (getenv "HOME"))))
     (dolist
         (spec `(;; ("jinx"
                 ;;  . ,(file-name-concat workspace "gh" "minad" "jinx"))
@@ -1925,13 +1923,13 @@ I.e., created with `scratch' or named scratch-"
                  . ,(file-name-concat workspace "gh" "gongo" "emacs-toml"))
                 ("ultra-scroll-mac"
                  . ,(file-name-concat workspace "gh" "jdtsmith" "ultra-scroll-mac"))))
-      (when-let ((dir (cdr spec))
-                 ((file-exists-p dir))
-                 (name (car spec))
-                 (pkg-dir (expand-file-name name package-user-dir)))
+      (when-let* ((dir (cdr spec))
+                  ((file-exists-p dir))
+                  (name (car spec))
+                  (pkg-dir (expand-file-name name package-user-dir)))
         (message "Using checked out %s package at %s" name dir)
-        (when-let ((pkg-desc (cadr (assq (intern name) package-alist)))
-                   ((not (eq 'vc (package-desc-kind pkg-desc)))))
+        (when-let* ((pkg-desc (cadr (assq (intern name) package-alist)))
+                    ((not (eq 'vc (package-desc-kind pkg-desc)))))
           (package-delete pkg-desc)
           ;; after uninstall: remove from `load-path'
           (setq load-path (seq-remove
