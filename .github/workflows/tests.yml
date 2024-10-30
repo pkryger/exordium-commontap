@@ -18,10 +18,12 @@ jobs:
     strategy:
       matrix:
         include:
+          # - os: ubuntu-latest
+          #   emacs_version: 29.4
           - os: ubuntu-latest
-            emacs_version: 29.4
-          - os: macos-latest
-            emacs_version: 29.4
+            emacs_version: snapshot
+          # - os: macos-latest
+          #   emacs_version: 29.4
           - os: macos-latest
             emacs_version: snapshot
     steps:
