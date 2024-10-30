@@ -223,9 +223,6 @@ This will be used in be used in `pk/dispatch-cut-function'")
 (setq split-height-threshold nil)
 (setq split-width-threshold 180)
 
-(use-package use-package-ensure-system-package)
-;;(use-package quelpa-use-package)
-
 ;; ITERM2 MOUSE SUPPORT from https://www.emacswiki.org/emacs/iTerm2
 (unless window-system
   (require 'mouse)
