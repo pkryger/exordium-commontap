@@ -31,8 +31,6 @@ jobs:
       - uses: purcell/setup-emacs@master
         with:
           version: ${{ matrix.emacs_version }}
-      - name: Install sqlite
-        run: nix profile install nixpkgs#emacsPackages.emacsql-sqlite
       - uses: actions/checkout@v4
         with:
           # repository: 'emacs-exordium/exordium'
