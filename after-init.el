@@ -5,6 +5,7 @@
   (setq native-comp-async-report-warnings-errors 'silent))
 
 (use-package modus-themes
+  :unless (bound-and-true-p exordium-theme)
   :init
   (require 'modus-themes nil t)
   ;; Add all your customizations prior to loading the themes
