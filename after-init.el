@@ -13,7 +13,6 @@
         modus-themes-completions '((matches . (extrabold background intense))
                                    (selection . (semibold accented intense))
                                    (popup . (semibold accented)))
-        modus-themes-org-blocks 'gray-background
         modus-themes-headings (let* ((low-level-properties '(variable-pitch rainbow regular))
                                      (high-level-properties `(,@low-level-properties overline)))
                                 `((1 . (,@high-level-properties 1.27))
@@ -51,6 +50,46 @@
           (ignore c ,@colors)
           ;; -- end of macro preface --
 
+          (setq org-src-block-faces
+                `(("clojure" modus-themes-nuanced-magenta)
+                  ("clojurescript" modus-themes-nuanced-magenta)
+                  ("elisp" modus-themes-nuanced-magenta)
+                  ("emacs-lisp" modus-themes-nuanced-magenta)
+                  ("lisp" modus-themes-nuanced-magenta)
+                  ("scheme" modus-themes-nuanced-magenta)
+
+                  ("c" modus-themes-nuanced-blue)
+                  ("c++" modus-themes-nuanced-blue)
+                  ("fortran" modus-themes-nuanced-blue)
+                  ("java" modus-themes-nuanced-blue)
+
+                  ("awk" modus-themes-nuanced-yellow)
+                  ("ipython" modus-themes-nuanced-yellow)
+                  ("js" modus-themes-nuanced-yellow)
+                  ("perl" modus-themes-nuanced-yellow)
+                  ("python" modus-themes-nuanced-yellow)
+                  ("r" modus-themes-nuanced-yellow)
+                  ("ruby" modus-themes-nuanced-yellow)
+                  ("sed" modus-themes-nuanced-yellow)
+                  ("sh" modus-themes-nuanced-yellow)
+                  ("shell" modus-themes-nuanced-yellow)
+
+                  ("dot" modus-themes-nuanced-green)
+                  ("html" modus-themes-nuanced-green)
+                  ("latex" modus-themes-nuanced-green)
+                  ("org" modus-themes-nuanced-green)
+                  ("plantuml" modus-themes-nuanced-green)
+                  ("xml" modus-themes-nuanced-green)
+
+                  ("css" modus-themes-nuanced-red)
+                  ("scss" modus-themes-nuanced-red)
+                  ("sql" modus-themes-nuanced-red)
+
+                  ("conf" modus-themes-nuanced-cyan)
+                  ("docker" modus-themes-nuanced-cyan)
+                  ("json" modus-themes-nuanced-cyan)
+                  ("makefile" modus-themes-nuanced-cyan)
+                  ("yaml" modus-themes-nuanced-cyan)))
           ;; helm-rg uses ansi colours from rg output to highlight matches,
           ;; unfortunateally this doesn't allow for custom overrides so
           ;; use advice to hack around
