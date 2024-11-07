@@ -230,8 +230,15 @@
   (setq find-function-C-source-directory
         (when-let* ((emacs-src-dir
                      (file-name-concat (getenv "HOME") "gh" "mituharu" "emacs-mac" "src"))
-                    (file-exists-p emacs-src-dir))
-          emacs-src-dir)))
+                    ((file-exists-p emacs-src-dir)))
+          emacs-src-dir))
+  ;; Workaround to prevent freezes when frame is resized during startup
+  ;; in Emacs-29.4 on macOS 15 Sequoia
+  (add-hook 'kill-emacs-hook #'(lambda ()
+                                 (dolist (frame (frame-list))
+                                   (when (eq 'fullscreen
+                                             (frame-parameter frame 'fullscreen))
+                                     (set-frame-parameter frame 'fullscreen nil))))))
 
 (defun pk/iterm-cut-base64 (text)
   "Take TEXT and send it to iTerm2 to copy."
