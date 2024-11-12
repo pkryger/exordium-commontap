@@ -691,27 +691,14 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 (use-package toml)
 
 (use-package python-pytest
+  :after (python)
   :bind (:map python-mode-map
               ("C-c t" . python-pytest-dispatch))
-  :init
-  (setq python-pytest-executable
-        (concat python-shell-interpreter " -m pytest")))
-
-(use-package anaconda-mode
   :custom
-  (anaconda-mode-use-posframe-show-doc t)
-  ;; :hook
-  ;; to let to choose eglot
-  ;; (python-mode . anaconda-mode)
-  ;; (python-mode . anaconda-eldoc-mode)
-  )
+  (python-pytest-executable
+   (concat python-shell-interpreter " -m pytest")))
 
 (use-package pip-requirements)
-
-(use-package company-anaconda
-  :after (company)
-  :config
-  (add-to-list 'company-backends '(company-anaconda :with company-capf)))
 
 ;; See https://blog.adam-uhlir.me/python-virtual-environments-made-super-easy-with-direnv-307611c3a49a
 ;; for layout thing
