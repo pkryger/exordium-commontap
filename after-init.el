@@ -6,6 +6,9 @@
 
 (use-package modus-themes
   :unless (bound-and-true-p exordium-theme)
+  :functions (pk/modus-themes--on-appearance-change)
+  :autoload (modus-themes-load-theme
+             modus-themes--current-theme-palette)
   :init
   (require 'modus-themes nil t)
   ;; Add all your customizations prior to loading the themes
@@ -190,6 +193,7 @@
                                      (cadr modus-themes-to-toggle)
                                    (car modus-themes-to-toggle))))
                 ((not (eq desired-theme (car custom-enabled-themes)))))
+      (message "Loading theme: %s" desired-theme)
       (modus-themes-load-theme desired-theme)))
 
   :config
@@ -197,7 +201,16 @@
     (add-hook 'mac-effective-appearance-change-hook
               #'pk/modus-themes--on-appearance-change))
 
-  (load-theme 'modus-operandi :no-confirm)
+  (when-let* (((fboundp 'mac-application-state))
+              (appearance (plist-get (mac-application-state) :appearance))
+              (desired-theme (let ((case-fold-search t))
+                               (if (string-match-p "dark" appearance)
+                                   (cadr modus-themes-to-toggle)
+                                 (car modus-themes-to-toggle))))
+              ((not (eq desired-theme (car custom-enabled-themes)))))
+    (message "Loading theme: %s" desired-theme)
+    (modus-themes-load-theme desired-theme))
+
   (pk/modus-themes--custom-faces)
 
   :hook
