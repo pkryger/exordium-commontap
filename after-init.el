@@ -385,7 +385,21 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
   (add-to-list 'flycheck-checkers 'pk/sorbet-homebrew 'append)
   (flycheck-add-next-checker 'ruby '(warning . pk/sorbet-homebrew) t))
-
+
+(use-package clang-format
+  :config
+  (use-package cc-mode :ensure nil
+    :bind
+    (:map c-mode-map
+          ("C-c C-f" . #'clang-format-region)
+     :map c++-mode-map
+          ("C-c C-f" . #'clang-format-region)))
+  (use-package c-ts-mode :ensure nil
+    :bind
+    (:map c-ts-mode-map
+          ("C-c C-f" . #'clang-format-region)
+     :map c++-ts-mode-map
+          ("C-c C-f" . #'clang-format-region))))
 ;;@todo: disable printing from eglot - perhaps set `eglot-events-buffer-size' 0
 (use-package eglot
   :after flycheck
