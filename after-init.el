@@ -440,6 +440,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
   (use-package flycheck-eglot
     :after (flycheck eglot)
+    :defer t
     :custom
     (flycheck-eglot-exclusive nil)
     :config
@@ -448,6 +449,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 (use-package eldoc
   :ensure nil
+  :defer t
   :custom
   (eldoc-idle-delay 0.25)
   (eldoc-echo-area-prefer-doc-buffer t))
