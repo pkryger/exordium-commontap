@@ -387,6 +387,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
   (flycheck-add-next-checker 'ruby '(warning . pk/sorbet-homebrew) t))
 
 (use-package clang-format
+  :defer t
   :config
   (use-package cc-mode :ensure nil
     :bind
@@ -452,6 +453,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
   (eldoc-echo-area-prefer-doc-buffer t))
 
 (use-package dumb-jump
+  :defer t
   :config
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
   :bind
@@ -467,6 +469,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 (use-package ispell
   ;;   :ensure-system-package aspell
+  :defer t
   :custom
   ;; spell checks as suggested by
   ;; http://blog.binchen.org/posts/effective-spell-check-in-emacs.html
@@ -480,6 +483,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 (use-package flyspell
   :diminish
+  :defer t
   :config
   (setq flyspell-issue-message-flag nil)
   :hook
@@ -491,6 +495,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 (use-package flyspell-correct-helm
   :after (flyspell)
+  :defer t
   :custom
   (flyspell-correct-interface #'flyspell-correct-helm))
 
@@ -501,6 +506,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 (use-package jenkinsfile-mode
   :after (flycheck)
+  :defer t
   :config
   (flycheck-add-mode 'groovy 'jenkinsfile-mode))
 
@@ -553,13 +559,15 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 
 (use-package yaml-mode
-  :config
-  (add-to-list 'auto-mode-alist '("\\.yaml\\.template\\'" . yaml-mode)))
+  :defer t
+  :mode "\\.yaml\\.template\\'")
 
-(use-package rust-mode)
+(use-package rust-mode
+  :defer t)
 
 
 (use-package compile
+  :defer t
   :ensure nil
   :hook
   (compilation-filter . ansi-color-compilation-filter)
@@ -611,8 +619,10 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (setq deft-auto-save-interval 0))
 
 
-(use-package posframe)
+(use-package posframe
+  :defer t)
 (use-package ace-window
+  :defer t
   :after (posframe)
   :diminish "AW"
   :custom
@@ -863,6 +873,7 @@ If the input is empty, select the previous history element instead."
 
 ;; Load R as well
 (use-package ess
+  :defer t
   :custom
   (ess-ask-for-ess-directory nil) ; workaround for helm not being able to start
   :config
@@ -875,6 +886,7 @@ If the input is empty, select the previous history element instead."
            '((R . t)))))
 
 (use-package url
+  :defer t
   :ensure nil
   :config
   (defun pk/url-netrc-auth (url &optional _prompt _overwrite _realm _args)
@@ -900,9 +912,12 @@ If the input is empty, select the previous history element instead."
                                       'utf-8)))))
   (url-register-auth-scheme "netrc" #'pk/url-netrc-auth 1))
 
-(use-package restclient)
-(use-package restclient-helm)
+(use-package restclient
+  :defer t)
+(use-package restclient-helm
+  :defer t)
 (use-package ob-restclient
+  :defer t
   :config
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -910,10 +925,12 @@ If the input is empty, select the previous history element instead."
            '((restclient . t)))))
 
 (use-package company-restclient
+  :defer t
   :config
   (add-to-list 'company-backends 'company-restclient))
 
 (use-package org-tree-slide
+  :defer t
   :bind
   (:map org-mode-map
         ("<f8>" . org-tree-slide-mode)
@@ -1578,6 +1595,7 @@ This is intended to be used as an advise for
 (use-package json-mode
   ;; Disable js2-mode that exordium turns on for `javascrip-mode'
   ;; to disable js-lint
+  :defer t
   :hook
   (json-mode . (lambda ()
                  (js2-minor-mode -1))))
@@ -1721,6 +1739,7 @@ I.e., created with `scratch' or named scratch-"
 
 
 (use-package flycheck-package
+  :defer t
   :config
   (eval-after-load 'flycheck
     '(flycheck-package-setup)))
