@@ -497,11 +497,12 @@ See: https://github.com/PrincetonUniversity/blocklint"
    (org-mode        . flyspell-mode)
    (text-mode       . flyspell-mode))
   :bind
-  (([remap ispell-word] . flyspell-correct-wrapper)))
+  (([remap ispell-word] . #'flyspell-correct-wrapper)))
 
 (use-package flyspell-correct-helm
-  :after (flyspell)
+  :after (flyspell flyspell-correct)
   :defer t
+  :autoload (flyspell-correct-helm)
   :custom
   (flyspell-correct-interface #'flyspell-correct-helm))
 
