@@ -388,7 +388,25 @@ See: https://github.com/PrincetonUniversity/blocklint"
         t)))
 
   (add-to-list 'flycheck-checkers 'pk/sorbet-homebrew 'append)
-  (flycheck-add-next-checker 'ruby '(warning . pk/sorbet-homebrew) t))
+  (flycheck-add-next-checker 'ruby '(warning . pk/sorbet-homebrew) t)
+
+  ;; Fix for https://github.com/flycheck/flycheck/issues/2092
+  (let* ((p '(error line-start (file-name) ":"
+                   (zero-or-more whitespace) "Error:" (zero-or-more whitespace)
+                   (message (or "End of file during parsing"
+                                (seq "Invalid read syntax:" (zero-or-more (not ",")))))
+                   (optional "," (zero-or-more whitespace) line
+                             "," (zero-or-more whitespace) column)))
+         ;; pre-compile pattern like `flycheck-define-command-checker' does
+         (pattern (cons (flycheck-rx-to-string `(and ,@(cdr p))
+                                               'no-group)
+                        (car p))))
+    (unless (cl-find-if (lambda (p)
+                          (and (eq (cdr p) (cdr pattern))
+                               (equal (car p) (car pattern))))
+                        (flycheck-checker-get 'emacs-lisp 'error-patterns))
+      (push pattern (flycheck-checker-get 'emacs-lisp 'error-patterns)))))
+
 
 (use-package clang-format
   :defer t
