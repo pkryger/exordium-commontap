@@ -341,7 +341,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
   (mapc (lambda (checker)
           (flycheck-add-next-checker checker '(warning . pk/python-blocklint) t))
         '(python-flake8 python-pylint python-pycompile))
-
+
   (flycheck-define-checker pk/sorbet-homebrew
     "Sorbet for Homebrew"
     :command ("bundle" "exec" "srb" "tc"
@@ -379,9 +379,13 @@ See: https://github.com/PrincetonUniversity/blocklint"
       (when-let* ((buffer-file-name)
                   (default-directory (file-name-directory buffer-file-name))
                   (homebrew-prefix (getenv "HOMEBREW_PREFIX"))
-                  (project-current (project-current)))
-        (string-match-p (rx-to-string `(seq string-start ,homebrew-prefix) t)
-                        (project-root project-current)))))
+                  (project-current (project-current))
+                  ((string-match-p (rx-to-string `(seq string-start ,homebrew-prefix) t)
+                                   (project-root project-current))))
+        ;; Ensure sorbet and gems are up to date, by running "brew typecheck"
+        (let ((display-buffer-alist '((t . (display-buffer-no-window)))))
+          (async-shell-command "brew typecheck"))
+        t)))
 
   (add-to-list 'flycheck-checkers 'pk/sorbet-homebrew 'append)
   (flycheck-add-next-checker 'ruby '(warning . pk/sorbet-homebrew) t))
