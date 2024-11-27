@@ -45,5 +45,15 @@ jobs:
         with:
           repository: 'pkryger/basic-stats'
           path: 'gh/pkryger/basic-stats'
+
+      - name: Link $GITHUB_WORKSPACE/.emacs.d to $HOME/.emacs.d
+        run: ln -s "${GITHUB_WORKSPACE}/.emacs.d" "${HOME}/.emacs.d"
+
+      - name: Install bash # Needed for mapfile on macOS,
+                           # Installing early so all scripts run in
+                           # the same environment
+        if: matrix.os == 'macos-latest'
+        run: brew install bash
+
       - name: First start # So most modules are pulled in from melpa and gnu
-        run: '.emacs.d/.ci/first-start.sh .emacs.d'
+        run: '"${HOME}/.emacs.d/.ci/first-start.sh"'
