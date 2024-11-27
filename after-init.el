@@ -206,8 +206,7 @@
               (desired-theme (let ((case-fold-search t))
                                (if (string-match-p "dark" appearance)
                                    (cadr modus-themes-to-toggle)
-                                 (car modus-themes-to-toggle))))
-              ((not (eq desired-theme (car custom-enabled-themes)))))
+                                 (car modus-themes-to-toggle)))))
     (message "Loading theme: %s" desired-theme)
     (modus-themes-load-theme desired-theme))
 
