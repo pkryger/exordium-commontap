@@ -328,6 +328,12 @@ This will be used in be used in `pk/dispatch-cut-function'")
   :diminish)
 
 (use-package flycheck
+  :autoload (flycheck-add-next-checker
+             flycheck-sanitize-errors
+             flycheck-dedent-error-messages
+             flycheck-rx-to-string
+             flycheck-buffer-saved-p
+             flycheck-checker-get)
   :config
   (flycheck-define-checker pk/python-blocklint
     "Blocklint: blocks usage of non-inclusive wording.
