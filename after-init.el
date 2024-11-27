@@ -431,6 +431,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
           ("C-c C-f" . #'clang-format-region))))
 ;;@todo: disable printing from eglot - perhaps set `eglot-events-buffer-size' 0
 (use-package eglot
+  :exordium-force-elpa "gnu"
   :after flycheck
   :init
   (defun pk/eglot--disable-standard-c/c++-checkers ()
