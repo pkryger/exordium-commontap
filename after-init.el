@@ -961,6 +961,7 @@ If the input is empty, select the previous history element instead."
   (add-to-list 'company-backends 'company-restclient))
 
 (use-package org-tree-slide
+  :after org
   :defer t
   :bind
   (:map org-mode-map
@@ -1369,7 +1370,9 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   :custom
   (dired-du-used-space-program `(,(if exordium-osx "gdu" "du") "-sb")))
 
-(use-package ob-async)
+(use-package ob-async
+  :defer t
+  :after org)
 
 (use-package transpose-frame)
 
