@@ -1364,11 +1364,16 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 (use-package dired
   :ensure nil
   :custom
-  (dired-dwim-target t))
+  (dired-chown-program (or (executable-find "gchown") "chown"))
+  (dired-touch-program (or (executable-find "gtouch") "touch"))
+  (dired-use-ls-dired 'unspecified)
+  (dired-dwim-target t)
+  :config
+  (setq insert-directory-program (or (executable-find "gls") "ls")))
 
 (use-package dired-du
   :custom
-  (dired-du-used-space-program `(,(if exordium-osx "gdu" "du") "-sb")))
+  (dired-du-used-space-program `(,(or (executable-find "gdu") "du") "-sb")))
 
 (use-package ob-async
   :defer t
