@@ -122,6 +122,7 @@
                       :box (:line-width -2 ,@(when-let* ((color (face-attribute 'modus-themes-completion-match-1 :foreground))
                                                          ((not (eq color 'unspecified))))
                                                (list :color color)))))))
+           `(highlight-symbol-face ((t (,@c :background ,bg-cyan-nuanced))))
            `(aw-leading-char-face ((t (,@c :foreground ,red :bold t :height 1.5))))
            ;; Redoing helm, inspired by last removed version in:
            ;; https://github.com/protesilaos/modus-themes/commit/1efaa7ef79682ec13493351d52ed1b339fb6ace2
@@ -313,14 +314,15 @@ This will be used in be used in `pk/dispatch-cut-function'")
         ("g" . #'helm-google-suggest)))
 
 
-(use-package elisp-mode
-  :ensure nil
-  :bind
-  (:map emacs-lisp-mode-map
-        ("M-." . #'xref-find-definitions)
-        ("M-," . #'xref-pop-marker-stack)
-        ("M-r" . #'xref-find-references)
-        ("M-?" . #'helpful-at-point)))
+;; @todo : remove when exordium has it
+;; (use-package elisp-mode
+;;   :ensure nil
+;;   :bind
+;;   (:map emacs-lisp-mode-map
+;;         ("M-." . #'xref-find-definitions)
+;;         ("M-," . #'xref-pop-marker-stack)
+;;         ("M-r" . #'xref-find-references)
+;;         ("M-?" . #'helpful-at-point)))
 
 (use-package eldoc
   :ensure nil
@@ -650,21 +652,21 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (setq deft-auto-save-interval 0))
 
 
-(use-package posframe
-  :defer t)
-(use-package ace-window
-  :defer t
-  :after (posframe)
-  :diminish "AW"
-  :custom
-  (aw-scope 'frame)
-  (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
-  (aw-translate-char-function #'(lambda (c)
-                                  (if (eq ?\M-o c) ?n c)))
-  :config
-  (global-set-key (kbd "M-o") #'ace-window)
-  (when (and (require 'posframe nil t) (posframe-workable-p))
-    (ace-window-posframe-mode)))
+;; (use-package posframe
+;;   :defer t)
+;; (use-package ace-window
+;;   :defer t
+;;   :after (posframe)
+;;   :diminish "AW"
+;;   :custom
+;;   (aw-scope 'frame)
+;;   (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+;;   (aw-translate-char-function #'(lambda (c)
+;;                                   (if (eq ?\M-o c) ?n c)))
+;;   :config
+;;   (global-set-key (kbd "M-o") #'ace-window)
+;;   (when (and (require 'posframe nil t) (posframe-workable-p))
+;;     (ace-window-posframe-mode)))
 
 
 (defconst pk/desktop-files-not-to-save
