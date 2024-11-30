@@ -1784,6 +1784,14 @@ I.e., created with `scratch' or named scratch-"
     '(flycheck-package-setup)))
 
 
+(use-package cperl-mode
+  :ensure nil
+  :mode "\\.p[lm]\\'"
+  :interpreter "perl"
+  :commands (cperl-set-style)
+  :config
+  (cperl-set-style "CPerl"))
+
 (defcustom pk/dwim-shell-command-pip-no-binary nil
   "List of packages to pass to --no-binary pip flag.")
 
