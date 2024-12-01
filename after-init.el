@@ -2035,21 +2035,82 @@ I.e., created with `scratch' or named scratch-"
 
 
 (use-package casual
-  :bind
-  (:map calc-mode-map
-   ("C-o" . casual-calc-tmenu)
-   :map calc-alg-map
-   ("C-o" . 'casual-calc-tmenu)
-   :map dired-mode-map
-   ("C-o" . casual-dired-tmenu)
-   :map ibuffer-mode-map
-   ("C-o" . casual-ibuffer-tmenu)
-   :map reb-mode-map
-   ("C-o". casual-re-builder-tmenu)
-   :map reb-lisp-mode-map
-   ("C-o" . casual-re-builder-tmenu)
-   :map Info-mode-map
-   ("C-o" . casual-info-tmenu)))
+  :init
+  (use-package casual-agenda
+    :ensure casual
+    :after (org-agenda)
+    :init
+    (declare-function org-agenda-clock-goto "org-agenda")
+    :bind
+    (:map org-agenda-mode-map
+     ("C-o" . #'casual-agenda-tmenu)
+     ("M-j" . #'org-agenda-clock-goto)
+     ("J" . #'bookmark-jump)))
+  (use-package casual-bookmarks
+    :ensure casual
+    :after (bookmark)
+    :bind
+    (:map bookmark-bmenu-mode-map
+     ("C-o" .  #'casual-bookmarks-tmenu)
+     ("J" . #'bookmark-jump)))
+  (use-package casual-calc
+    :ensure casual
+    :after (calc)
+    :bind
+    (:map calc-mode-map
+     ("C-o" . #'casual-calc-tmenu)
+     :map calc-alg-map
+     ("C-o" . #'casual-calc-tmenu)))
+  (use-package casual-calendar
+    :ensure casual
+    :after (calendar)
+    :bind
+    (:map calendar-mode-map
+     ("C-o" . #'casual-calendar)))
+  (use-package casual-dired
+    :ensure casual
+    :after (dired)
+    :commands (casual-dired-sort-by-tmenu
+               casual-dired-search-replace-tmenu)
+    :bind
+    (:map dired-mode-map
+     ("C-o" . #'casual-dired-tmenu)
+     ("s" . #'casual-dired-sort-by-tmenu)
+     ("/" . #'casual-dired-search-replace-tmenu)))
+  (use-package casual-editkit
+    :ensure casual
+    :bind ("C-o" . #'casual-editkit-main-tmenu))
+  (use-package casual-ibuffer
+    :ensure casual
+    :after (ibuffer)
+    :commands (casual-ibuffer-filter-tmenu
+               casual-ibuffer-sortby-tmenu)
+    :bind
+    (:map ibuffer-mode-map
+     ("C-o" . #'casual-ibuffer-tmenu)
+     ("F" . #'casual-ibuffer-filter-tmenu)
+     ("s".  #'casual-ibuffer-sortby-tmenu)))
+  (use-package casual-info
+    :ensure casual
+    :after (info)
+    :bind
+    (:map Info-mode-map
+     ("C-o" . #'casual-info-tmenu)))
+  (use-package casual-isearch
+    :ensure casual
+    :after (isearch)
+    :commands (casual-isearch-tmenu)
+    :bind
+    (:map isearch-mode-map
+     ("C-o" . #'casual-isearch-tmenu)))
+  (use-package casual-re-builder
+    :ensure casual
+    :after (re-builder)
+    :bind
+    (:map reb-mode-map
+     ("C-o". casual-re-builder-tmenu)
+     :map reb-lisp-mode-map
+     ("C-o" . casual-re-builder-tmenu))))
 
 (if-let* (((fboundp 'package-vc-install-from-checkout))
           (workspace (or (getenv "GITHUB_WORKSPACE")
