@@ -314,17 +314,18 @@ This will be used in be used in `pk/dispatch-cut-function'")
   (interactive)
   (kill-new pk/shrug-string))
 
-(use-package helm
-  :diminish
-  :custom
-  (helm-split-window-other-side-when-one-window 'right)
-  (helm-M-x-show-short-doc t)
-  :bind
-  (("C-x b" . #'helm-buffers-list)
-   :map ctl-x-map
-        ("b" . #'helm-buffers-list)
-   :map helm-command-map
-        ("g" . #'helm-google-suggest)))
+;; @todo remove when exordium has it
+;; (use-package helm
+;;   :diminish
+;;   :custom
+;;   (helm-split-window-other-side-when-one-window 'right)
+;;   (helm-M-x-show-short-doc t)
+;;   :bind
+;;   (("C-x b" . #'helm-buffers-list)
+;;    :map ctl-x-map
+;;         ("b" . #'helm-buffers-list)
+;;    :map helm-command-map
+;;         ("g" . #'helm-google-suggest)))
 
 
 ;; @todo : remove when exordium has it
