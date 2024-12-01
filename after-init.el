@@ -1,5 +1,17 @@
-;; -*- lexical-binding: t; -*-
+;;; after-init.el --- commontap   -*- lexical-binding: t; -*-
+;;; Commentary:
 ;;; Code:
+
+(eval-when-compile
+  (unless (featurep 'init-require)
+    (load (file-name-concat (locate-user-emacs-file "modules") "init-require"))))
+(exordium-require 'init-prefs)
+(exordium-require 'init-environment)
+
+
+(defgroup pk/exordium nil
+  "PKs Exordium extras."
+  :group 'local)
 
 (when (boundp 'native-comp-async-report-warnings-errors)
   (setq native-comp-async-report-warnings-errors 'silent))
@@ -240,6 +252,7 @@
   (setq mac-right-option-modifier 'meta)
   (setq mac-command-modifier 'hyper)
   (setq mac-frame-tabbing nil)
+  (defvar find-function-C-source-directory)
   (setq find-function-C-source-directory
         (when-let* ((emacs-src-dir
                      (file-name-concat (getenv "HOME") "gh" "mituharu" "emacs-mac" "src"))
@@ -335,6 +348,10 @@ This will be used in be used in `pk/dispatch-cut-function'")
              flycheck-rx-to-string
              flycheck-buffer-saved-p
              flycheck-checker-get)
+  :init
+  (use-package project
+    :ensure nil
+    :autoload (project-root))
   :config
   (flycheck-define-checker pk/python-blocklint
     "Blocklint: blocks usage of non-inclusive wording.
@@ -388,7 +405,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
                   (homebrew-prefix (getenv "HOMEBREW_PREFIX"))
                   (project-current (project-current))
                   ((string-match-p (rx-to-string `(seq string-start ,homebrew-prefix) t)
-                                   (project-root project-current))))
+                                   (project-root (project-current)))))
         ;; Ensure sorbet and gems are up to date, by running "brew typecheck"
         (let ((display-buffer-alist '((t . (display-buffer-no-window)))))
           (async-shell-command "brew typecheck"))
@@ -492,7 +509,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
   (:map c-mode-base-map
         ;; Override exordium's greedy rtags
         ("M-." . #'xref-find-definitions)
-        ("M-," . #'xref-pop-marker-stack)))
+        ("M-," . #'xref-go-back)))
 
 
 (use-package orderless
@@ -538,7 +555,9 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 
 (use-package jenkinsfile-mode
-  :after (flycheck)
+  :init
+  (use-package flycheck
+    :autoload (flycheck-add-mode))
   :defer t
   :config
   (flycheck-add-mode 'groovy 'jenkinsfile-mode))
@@ -550,22 +569,27 @@ See: https://github.com/PrincetonUniversity/blocklint"
     (setq-local projectile-create-missing-test-files t))
   :hook
   ((groovy-mode . yas-minor-mode)
-   (groovy-mode . pk/groovy-mode--create-test-files))
+   (groovy-mode . pk/groovy-mode--create-test-files)))
+
+(use-package yasnippet
+  :defines (yas-snippet-dirs)
+  :defer t
   :config
-  (projectile-register-project-type 'pbnj '("pom.xml" "pbnj_lib_config.yaml")
-                                    :project-file "pom.xml"
-                                    :compile "pbnj_release_brancher --branch=release-dev --remote=pkryger"
-                                    :test "mvn --batch-mode verify"
-                                    :test-suffix "Test"
-                                    :src-dir "src/"
-                                    :test-dir "test/")
+  (when-let* ((file-name (or load-file-name
+                             (buffer-file-name)))
+              (snippets-directory (file-name-concat
+                                   (file-name-directory file-name)
+                                   "snippets"))
+              ((file-directory-p snippets-directory)))
+    (customize-set-variable 'yas-snippet-dirs
+                            (cons snippets-directory yas-snippet-dirs)
+                            "Customized with use-package yasnippet")))
 
-  ;; (add-to-list 'yas-snippet-dirs
-  ;;              (concat (file-name-directory (or load-file-name
-  ;;                                               (buffer-file-name))) "snippets"))
-  )
 
 (use-package projectile
+  :autoload (projectile-project-name
+             projectile-register-project-type)
+  :functions (pk/projectile--emacs-package-build)
   :init
   (defun pk/projectile--emacs-package-build ()
     (when-let* ((project-name (projectile-project-name))
@@ -593,12 +617,11 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 (use-package yaml-mode
   :defer t
-  :mode "\\.yaml\\.template\\'")
+  :mode "\\.ya?ml\\.template\\'")
 
 (use-package rust-mode
   :defer t)
 
-
 (use-package compile
   :defer t
   :ensure nil
@@ -720,6 +743,9 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 (use-package python
   :ensure nil
   :init
+  (use-package treesit
+    :ensure nil
+    :autoload (treesit-node-text))
   (defun pk/python-mode--set-fill-column()
     (when-let* ((project-root (project-root (project-current)))
                 ;; do not override directory local variable
@@ -801,14 +827,23 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 
 (use-package swiper
   :init
-  (defun pk/swiper-C-r (&optional arg)
-    "Move cursor vertically up ARG candidates.
+  (use-package ivy
+    :autoload (ivy-previous-history-element
+               ivy-previous-line
+               ivy-exit-with-action)
+    :init
+    (defun pk/swiper-C-r (&optional arg)
+      "Move cursor vertically up ARG candidates.
 If the input is empty, select the previous history element instead."
-    (interactive "p")
-    (if (string= ivy-text "")
-        (ivy-previous-history-element 1)
-      (ivy-previous-line arg)))
+      (interactive "p")
+      (if (string= ivy-text "")
+          (ivy-previous-history-element 1)
+        (ivy-previous-line arg))))
+
   (use-package iedit
+    :autoload (iedit-lib-cleanup
+               iedit-start
+               iedit-done)
     :init
     (defun pk/swiper-iedit ()
       (interactive)
@@ -829,23 +864,31 @@ If the input is empty, select the previous history element instead."
                    ((equal result 'not-same-length)
                     (message "Matches are not the same length.")
                     (iedit-done)))))))))
+
   :bind
   (("C-s" . swiper-isearch)
    ("C-r" . swiper-isearch-backward)
    :map swiper-map
-        ("C-r" . pk/swiper-C-r)
-        ("C-c ;" . pk/swiper-iedit)))
+   ("C-r" . pk/swiper-C-r)
+   ("C-c ;" . pk/swiper-iedit)))
 
 
 ;; Disable some ido hooks for helm mode
 (when exordium-helm-everywhere
-  (advice-remove 'call-interactively #'call-interactively@ido-cr+-record-current-command)
-  (remove-hook 'minibuffer-setup-hook #'ido-minibuffer-setup))
+  (when (fboundp 'call-interactively@ido-cr+-record-current-command)
+    (advice-remove 'call-interactively #'call-interactively@ido-cr+-record-current-command))
+  (when (fboundp 'ido-minibuffer-setup)
+    (remove-hook 'minibuffer-setup-hook #'ido-minibuffer-setup)))
 
-;; Use python3 for org
-(setq org-babel-python-command "python3")
-;; Make tabs work nativly in org mode's src blocks
-(setq org-src-tab-acts-natively t)
+(use-package ob-python
+  :ensure nil
+  :custom
+  (org-babel-python-command "python3"))
+
+(use-package org
+  :ensure nil
+  :custom
+  (org-src-tab-acts-natively t))
 
 ;; (use-package magit-todos
 ;;   :ensure-system-package (rg . ripgrep)
@@ -921,7 +964,8 @@ If the input is empty, select the previous history element instead."
 (use-package url
   :defer t
   :ensure nil
-  :config
+  :functions (pk/url-netrc-auth)
+  :init
   (defun pk/url-netrc-auth (url &optional _prompt _overwrite _realm _args)
     "Get the token stored in `netrc' for the given URL."
     (let* ((href (if (stringp url)
@@ -943,6 +987,7 @@ If the input is empty, select the previous history element instead."
                                           (funcall secret)
                                         secret)
                                       'utf-8)))))
+  :config
   (url-register-auth-scheme "netrc" #'pk/url-netrc-auth 1))
 
 (use-package restclient
@@ -972,25 +1017,26 @@ If the input is empty, select the previous history element instead."
 
 
 (require 'map)
-(when (fboundp 'mac-auto-operator-composition-shape-gstring)
-  (defcustom pk/mac-auto-operator-composition-strings
-    '(;; c++
-      "!=" "%" "%=" "&" "&&" "&&=" "&=" "*" "**" "***" "*/" "*=" "++" "+="
-      "--" "-=" "->" ".*" "..." "/" "/*" "/**" "//" "///" "/=" "::" "<" "<<"
-      "<<<" "<=" "<=>" "=" "==" ">" ">=" ">>" ">>>" "?:" "\\\\"
-      "\\\\\\" "^=" "|" "|=" "||" "||=" "~" "~=" "[]"
-      ;; programming in non-c++ and nice stuff
-      "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
-      "<-" "-->" "->>" ";;" "\\n" "www" ".."
-      ;; org-mode ballots -> they are unicode chars, not glyph
-      ;; "[ ]" "[X]" "[-]"
-      ;; fira sans
-      "ffi" "fi" "fl"
-      )
-    "Sequence of strings used in automatic operator composition.
+(defcustom pk/mac-auto-operator-composition-strings
+  '(;; c++
+    "!=" "%" "%=" "&" "&&" "&&=" "&=" "*" "**" "***" "*/" "*=" "++" "+="
+    "--" "-=" "->" ".*" "..." "/" "/*" "/**" "//" "///" "/=" "::" "<" "<<"
+    "<<<" "<=" "<=>" "=" "==" ">" ">=" ">>" ">>>" "?:" "\\\\"
+    "\\\\\\" "^=" "|" "|=" "||" "||=" "~" "~=" "[]"
+    ;; programming in non-c++ and nice stuff
+    "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
+    "<-" "-->" "->>" ";;" "\\n" "www" ".."
+    ;; org-mode ballots -> they are unicode chars, not glyph
+    ;; "[ ]" "[X]" "[-]"
+    ;; fira sans
+    "ffi" "fi" "fl"
+    )
+  "Sequence of strings used in automatic operator composition.
 Customised for FiraCode font: https://github.com/tonsky/FiraCode"
-    :type 'list)
-
+  :type '(repeat string)
+  :group 'pk/exordium)
+(when (fboundp 'mac-auto-operator-composition-shape-gstring)
+  (defvar pk/mac-auto-operator-composition-mode)
   ;; ligatures, based on `mac-auto-operator-composition-mode'
   (define-minor-mode pk/mac-auto-operator-composition-mode
     "Toggle Mac Auto Operator Composition mode.
@@ -1050,7 +1096,8 @@ language."
                  (set-char-table-range composition-function-table c
                                        (nreverse new-rules))))))
        composition-function-table)
-      (clrhash mac-auto-operator-composition-cache)))
+      (clrhash mac-auto-operator-composition-cache))))
+(when (fboundp 'pk/mac-auto-operator-composition-mode)
   (pk/mac-auto-operator-composition-mode))
 
 ;; Org mode are not a real ligatures - use prettify symbols for it
@@ -1081,13 +1128,16 @@ language."
 ;; `exordium-use-variable-pitch' and `exordium-complete-mode' set to `:company'
 (use-package company-posframe
   :after (posframe)
+  :autoload (company-posframe-quickhelp-toggle
+             company-select-next
+             company-select-previous)
   :when exordium-osx
   :diminish
   :bind
   (:map company-posframe-active-map
-        ("C-h" . #'company-posframe-quickhelp-toggle)
-        ("C-n" . #'company-select-next)
-        ("C-p" . #'company-select-previous))
+   ("C-h" . #'company-posframe-quickhelp-toggle)
+   ("C-n" . #'company-select-next)
+   ("C-p" . #'company-select-previous))
   :custom
   (company-posframe-quickhelp-delay 0.2)
   :config
@@ -1110,15 +1160,15 @@ language."
   (defun pk/tab-bar--separator (type current)
     "Return a `tab-bar' separator in a form of a propertized  \" ¦ \".
 
-When TYPE is 'first and not in `tab-bar-history-mode' or TYPE is
-'first-history the leading space will be omitted.  When type is LAST the
-trailing space will be omitted.
+When TYPE is \\='first and not in `tab-bar-history-mode' or TYPE
+is \\='first-history the leading space will be omitted.  When
+type is LAST the trailing space will be omitted.
 
-When CURRENT is 'this then trailing space and the ?¦ will have
-'tab-bar-tab face property.  When CURRENT is 'previous then
-leading space and the ?¦ will have 'tab-bar-tab face property.
+When CURRENT is \\='this then trailing space and the ?¦ will have
+\\='tab-bar-tab face property.  When CURRENT is \\='previous then
+leading space and the ?¦ will have \\='tab-bar-tab face property.
 All the reminder parts of the separator will have
-'tab-bar-tab-inactive face property."
+\\='tab-bar-tab-inactive face property."
     (concat
      (unless (or (eq type 'first-history)
                  (and (not tab-bar-history-mode)
@@ -1220,7 +1270,7 @@ All the reminder parts of the separator will have
                            (funcall separator 'last (if previous-current 'previous))
                          separator)
                       ignore))
-       (when (and tab-bar-new-button-show tab-bar-new-button)
+       (when (and (memq 'tab-bar-format-add-tab tab-bar-format) tab-bar-new-button)
          `((add-tab menu-item ,tab-bar-new-button tab-bar-new-tab
                     :help "New tab"))))))
 
@@ -1260,6 +1310,11 @@ All the reminder parts of the separator will have
   (transient-append-suffix 'magit-file-dispatch "g" '(1 "f" "copy link" git-link)))
 
 
+(use-package dom
+  :ensure nil
+  :autoload (dom-text
+             dom-by-tag))
+
 (defun pk/insert-link-dwim (make-link-string insert-link &optional arg)
   "Insert a link with a personal dwim preferences.
 
@@ -1320,6 +1375,8 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   (pk/insert-link-dwim 'pk/markdown--make-link-string 'markdown-insert-link))
 
 (use-package org
+  :autoload (org-combine-plists
+             org-in-regexp)
   :init
   (defun pk/orgtbl-to-gfm (table params)
     "Convert the Orgtbl mode TABLE to GitHub Flavored Markdown."
@@ -1338,7 +1395,7 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
                                 params))))
   :bind
   (:map org-mode-map
-        ([remap org-insert-link] . #'pk/org-insert-link-dwim)))
+   ([remap org-insert-link] . #'pk/org-insert-link-dwim)))
 
 (use-package markdown-mode
   :custom
@@ -1356,7 +1413,7 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   (markdown-xhtml-body-footer "</article>")
   :bind
   (:map markdown-mode-map
-        ([remap markdown-insert-link] . #'pk/markdown-insert-link-dwim)))
+   ([remap markdown-insert-link] . #'pk/markdown-insert-link-dwim)))
 
 
 (use-package mode-line-bell
@@ -1603,7 +1660,8 @@ as the advised function."
                 (match-string-no-properties 1)))))))
 
 (defun pk/sql--ob-fontify-set-product (&rest _)
-  "Set `sql-product' according to `:engine' extracted by `pk/sql--ob-fontify-init-engine'.
+  "Set `sql-product' according to `:engine'.
+As extracted by `pk/sql--ob-fontify-init-engine'.
 
 This is intended to be used as an advise for `org-font-lock-ensure'."
   (when (and org-src-fontify-natively
@@ -1674,10 +1732,11 @@ This is intended to be used as an advise for
       (set-buffer-modified-p nil))))
 
 
-;; Inspired by Bart and Piotr Kazanowski's:
+;; Inspired by Bart Spiers and Piotr Kazanowski's:
 ;; https://pkaznowski.gitlab.io/blog/post/sort-words-in-region/
 
 (defun pk/sort-words-in-region (beg end &optional reversed)
+                                        ; checkdoc-params: (beg end)
   "In active region sort comma separated strings in ascending order.
 
 With prefix arg REVERSED sort in descending order."
@@ -1795,11 +1854,14 @@ I.e., created with `scratch' or named scratch-"
   (cperl-set-style "CPerl"))
 
 (defcustom pk/dwim-shell-command-pip-no-binary nil
-  "List of packages to pass to --no-binary pip flag.")
+  "List of packages to pass to --no-binary pip flag."
+  :type '(repeat (choice symbol string))
+  :group 'pk/exordium)
 
 (use-package dwim-shell-command
   :ensure t
   :demand t
+  :autoload (dwim-shell-command-execute-script)
   :bind (([remap shell-command] . dwim-shell-command)
          :map dired-mode-map
          ([remap dired-do-async-shell-command] . dwim-shell-command)
@@ -1881,6 +1943,10 @@ I.e., created with `scratch' or named scratch-"
   :commands dwim-shell-commands-kill-process)
 
 
+(use-package shr
+  :ensure nil
+  :autoload (shr-render-buffer))
+
 (defvar pk/ipynb--convert-command
   "jupyter nbconvert --to html --log-level WARN --stdout --stdin")
 
@@ -1929,7 +1995,7 @@ I.e., created with `scratch' or named scratch-"
   (setq buffer-read-only t))
 
 (defun pk/ipynb-find-and-render-file (file-name)
-  "Find FILENAME and open is as html."
+  "Find FILE-NAME and open is as html."
   (interactive
    (list (read-file-name "Find ipynb file to render: " nil nil t)))
   (let ((base-name (file-name-nondirectory file-name)))
@@ -1963,7 +2029,7 @@ I.e., created with `scratch' or named scratch-"
       (pk/ipynb-render-mode))))
 
 (defun pk/ipynb-find-and-browse-file (file-name)
-  "Find FILENAME and open is as html."
+  "Find FILE-NAME and open is as html."
   (interactive
    (list (read-file-name "Find ipynb file to browse: " nil nil t)))
   (with-temp-buffer
@@ -2031,8 +2097,11 @@ I.e., created with `scratch' or named scratch-"
 ;;                 contact)))))))
 
 
-(use-package el-mock)
-
+;; packages development
+(use-package el-mock
+  :defer t)
+(use-package undercover
+  :defer t)
 
 (use-package casual
   :init
@@ -2040,7 +2109,9 @@ I.e., created with `scratch' or named scratch-"
     :ensure casual
     :after (org-agenda)
     :init
-    (declare-function org-agenda-clock-goto "org-agenda")
+    (use-package org-agenda
+      :ensure org
+      :autoload (org-agenda-clock-goto))
     :bind
     (:map org-agenda-mode-map
      ("C-o" . #'casual-agenda-tmenu)
@@ -2149,11 +2220,17 @@ I.e., created with `scratch' or named scratch-"
              "no `package-vc-install-from-checkout'")))
 
 (use-package difftastic
+  :init
+  (use-package transient
+    :ensure nil
+    :autoload (transient-get-suffix))
+  (use-package magit
+    :bind
+    (:map magit-blame-read-only-mode-map
+     ("D" . #'difftastic-magit-show)
+     ("S" . #'difftastic-magit-show)))
   :ensure nil ;; @todo - remove when porting to exordium
   :demand t
-  :bind (:map magit-blame-read-only-mode-map
-         ("D" . difftastic-magit-show)
-         ("S" . difftastic-magit-show))
   :config
   (eval-after-load 'magit-diff
     '(let ((last-suffix (transient-get-suffix 'magit-diff '(-1 -1))))
@@ -2167,10 +2244,12 @@ I.e., created with `scratch' or named scratch-"
 (use-package ultra-scroll-mac
   :ensure nil
   :if (eq window-system 'mac)
-  :init
-  (setq scroll-conservatively 101) ; important for jumbo images
+  :custom
+  (scroll-conservatively 101) ; important for jumbo images
+  (scroll-margin 0)
   :config
-  (ultra-scroll-mac-mode))
+  (when (fboundp 'ultra-scroll-mac-mode)
+    (ultra-scroll-mac-mode)))
 
 
 ;; (use-package jinx
@@ -2188,4 +2267,7 @@ I.e., created with `scratch' or named scratch-"
 ;;   (remove-hook 'text-mode-hook #'flyspell-mode)
 ;;   (flyspell-mode-off))
 
-;;
+
+(provide 'after-init)
+
+;;; after-init.el ends here

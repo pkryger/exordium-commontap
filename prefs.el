@@ -1,3 +1,15 @@
+;;; prefs.el --- commontap  -*- lexical-binding: t; -*-
+
+
+;;; Commentary:
+;;
+
+;;; Code:
+
+(eval-when-compile
+  (unless (featurep 'init-require)
+    (load (file-name-concat (locate-user-emacs-file "modules") "init-require"))))
+(exordium-require 'init-prefs)
 
 (setq exordium-preferred-frame-width  nil
       exordium-preferred-frame-height nil)
@@ -18,7 +30,8 @@ local machine. It is a list of pairs (font-name . font-size). If
 nil, we don't set any font. Note that you can get the list of
 available font names by evaluating (font-family-list)."
   ;; TODO::group 'exordium
-  :type  'sexp)
+  :type  'sexp
+  :group 'exordium)
 
 (setq exordium-preferred-variable-fonts
       '(("Fira Sans" . 125)))
@@ -45,8 +58,11 @@ available font names by evaluating (font-family-list)."
 (setq exordium-height-plus-2 1.15)
 (setq exordium-height-plus-3 1.225)
 (setq exordium-height-plus-4 1.3)
-(setq avy-all-windows 'all-frames)
 (setq exordium-no-org-babel-confirm t)
 (setq exordium-rtags-syntax-checker nil)
 (setq exordium-lsp-mode-enable nil)
 (setq exordium-treesit-modes-enable t)
+
+(provide 'prefs)
+
+;;; prefs.el ends here
