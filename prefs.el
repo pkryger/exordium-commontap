@@ -42,7 +42,7 @@ available font names by evaluating (font-family-list)."
 ;;                     :family font
 ;;                     :height size
 ;;                     :weight 'normal)
-
+(setq exordium-helm-completion-style 'orderless)
 (setq exordium-desktop t)
 (setq exordium-helm-everywhere t)
 (setq exordium-theme nil)

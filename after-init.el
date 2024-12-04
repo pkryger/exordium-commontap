@@ -513,9 +513,13 @@ See: https://github.com/PrincetonUniversity/blocklint"
         ("M-," . #'xref-go-back)))
 
 
-(use-package orderless
-  :custom
-  (completion-styles '(orderless)))
+;; @todo: remove when exordium has it
+;; (use-package orderless
+;;   :custom
+;;   (helm-completion-style 'emacs)
+;;   (completion-styles '(orderless basic))
+;;   (completion-category-overrides '((file (styles basic partial-completion)))))
+
 
 (use-package ispell
   ;;   :ensure-system-package aspell
