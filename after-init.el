@@ -5,6 +5,7 @@
 (eval-when-compile
   (unless (featurep 'init-require)
     (load (file-name-concat (locate-user-emacs-file "modules") "init-require"))))
+(exordium-require 'init-lib)
 (exordium-require 'init-prefs)
 (exordium-require 'init-environment)
 
@@ -2130,7 +2131,7 @@ I.e., created with `scratch' or named scratch-"
   (use-package org-agenda
     :ensure nil
     :defer t
-    :autoload (org-agenda-clock-goto)
+    :commands (org-agenda-clock-goto)
     :bind (:map org-agenda-mode-map
            ("C-o" . #'casual-agenda-tmenu)
            ("M-j" . #'org-agenda-clock-goto)
@@ -2169,12 +2170,21 @@ I.e., created with `scratch' or named scratch-"
     :bind (:map ibuffer-mode-map
            ("C-o" . #'casual-ibuffer-tmenu)
            ("F" . #'casual-ibuffer-filter-tmenu)
-           ("s".  #'casual-ibuffer-sortby-tmenu)))
+           ("s".  #'casual-ibuffer-sortby-tmenu)
+           ("{" . #'ibuffer-backwards-next-marked)
+           ("}" . #'ibuffer-forward-next-marked)
+           ("[" . #'ibuffer-backward-filter-group)
+           ("]" . #'ibuffer-forward-filter-group)
+           ("$" . #'ibuffer-toggle-filter-group)))
   (use-package info
     :ensure nil
     :defer t
     :bind (:map Info-mode-map
-           ("C-o" . #'casual-info-tmenu)))
+           ("C-o" . #'casual-info-tmenu)
+           ("M-[" . #'Info-history-back)
+           ("M-]" . #'Info-history-forward)
+           ("/" . #'Info-search)
+           ("B" . #'bookmark-set)))
   (use-package isearch
     :ensure nil
     :defer t
