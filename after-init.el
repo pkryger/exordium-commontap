@@ -2109,53 +2109,80 @@ I.e., created with `scratch' or named scratch-"
   :defer t)
 
 (use-package casual
+  :defer t
   :bind ("C-o" . #'casual-editkit-main-tmenu)
   :init
-  (use-package casual-dired :ensure casual
+  (use-package casual-dired
+    :ensure nil
+    :defer t
     :commands (casual-dired-sort-by-tmenu
                casual-dired-search-replace-tmenu))
-  (use-package casual-ibuffer :ensure casual
+  (use-package casual-ibuffer
+    :ensure nil
+    :defer t
     :commands (casual-ibuffer-filter-tmenu
                casual-ibuffer-sortby-tmenu))
-  (use-package casual-isearch :ensure casual
+  (use-package casual-isearch
+    :ensure nil
+    :defer t
     :commands (casual-isearch-tmenu))
 
-  (use-package org-agenda :ensure org
+  (use-package org-agenda
+    :ensure nil
+    :defer t
     :autoload (org-agenda-clock-goto)
     :bind (:map org-agenda-mode-map
            ("C-o" . #'casual-agenda-tmenu)
            ("M-j" . #'org-agenda-clock-goto)
            ("J" . #'bookmark-jump)))
-  (use-package bookmark :ensure nil
+  (use-package bookmark
+    :ensure nil
+    :defer t
     :bind (:map bookmark-bmenu-mode-map
            ("C-o" .  #'casual-bookmarks-tmenu)
            ("J" . #'bookmark-jump)))
-  (use-package calc :ensure nil
+  (use-package calc
+    :ensure nil
+    :defer t
     :bind (:map calc-mode-map
            ("C-o" . #'casual-calc-tmenu)))
-  (use-package calc-ext :ensure nil
+  (use-package calc-ext
+    :ensure nil
+    :defer t
     :bind (:map calc-alg-map
            ("C-o" . #'casual-calc-tmenu)))
-  (use-package calendar :ensure nil
+  (use-package calendar
+    :ensure nil
+    :defer t
     :bind (:map calendar-mode-map
            ("C-o" . #'casual-calendar)))
-  (use-package dired :ensure nil
+  (use-package dired
+    :ensure nil
+    :defer t
     :bind (:map dired-mode-map
            ("C-o" . #'casual-dired-tmenu)
            ("s" . #'casual-dired-sort-by-tmenu)
            ("/" . #'casual-dired-search-replace-tmenu)))
-  (use-package ibuffer :ensure nil
+  (use-package ibuffer
+    :ensure nil
+    :defer t
     :bind (:map ibuffer-mode-map
            ("C-o" . #'casual-ibuffer-tmenu)
            ("F" . #'casual-ibuffer-filter-tmenu)
            ("s".  #'casual-ibuffer-sortby-tmenu)))
-  (use-package info :ensure nil
+  (use-package info
+    :ensure nil
+    :defer t
     :bind (:map Info-mode-map
            ("C-o" . #'casual-info-tmenu)))
-  (use-package isearch :ensure nil
+  (use-package isearch
+    :ensure nil
+    :defer t
     :bind (:map isearch-mode-map
            ("C-o" . #'casual-isearch-tmenu)))
-  (use-package re-builder :ensure nil
+  (use-package re-builder
+    :ensure nil
+    :defer t
     :bind (:map reb-mode-map
            ("C-o". casual-re-builder-tmenu)
            :map reb-lisp-mode-map
