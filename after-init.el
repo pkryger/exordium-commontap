@@ -2238,23 +2238,24 @@ I.e., created with `scratch' or named scratch-"
 (use-package difftastic
   :init
   (use-package transient
-    :ensure nil
+    :defer t
     :autoload (transient-get-suffix))
   (use-package magit
+    :defer t
     :bind
     (:map magit-blame-read-only-mode-map
      ("D" . #'difftastic-magit-show)
      ("S" . #'difftastic-magit-show)))
-  :ensure nil ;; @todo - remove when porting to exordium
-  :demand t
-  :config
   (eval-after-load 'magit-diff
     '(let ((last-suffix (transient-get-suffix 'magit-diff '(-1 -1))))
        (transient-append-suffix 'magit-diff '(-1 -1)
          [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
           ("S" "Difftastic show" difftastic-magit-show)])
        (when (equal (transient-get-suffix 'magit-diff '(-1 -1)) last-suffix)
-         (transient-remove-suffix 'magit-diff '(-1 -1))))))
+         (transient-remove-suffix 'magit-diff '(-1 -1)))))
+  :defer t
+  :ensure nil ;; @todo - remove when porting to exordium
+)
 
 
 (use-package ultra-scroll-mac
