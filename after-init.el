@@ -623,7 +623,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 (use-package yaml-mode
   :defer t
-  :mode "\\.ya?ml\\.template\\'")
+  :mode (rx ".y" (zero-or-one "a") "ml.template" string-end))
 
 (use-package rust-mode
   :defer t)
@@ -1853,7 +1853,7 @@ I.e., created with `scratch' or named scratch-"
 
 (use-package cperl-mode
   :ensure nil
-  :mode "\\.p[lm]\\'"
+  :mode (rx ".p" (or "l" "m") string-end)
   :interpreter "perl"
   :commands (cperl-set-style)
   :config
