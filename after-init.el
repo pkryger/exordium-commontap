@@ -2237,19 +2237,6 @@ I.e., created with `scratch' or named scratch-"
              "no `package-vc-install-from-checkout'")))
 
 
-;; No :vc
-;; (add-to-list 'exordium-use-package-vc-load-paths '(diftastic . "/Users/pkryger/gh/pkryger/difftastic.el")) exists -> `package-vc-install-from-checkout'
-;; (add-to-list 'exordium-use-package-vc-load-paths '(diftastic . "/Users/pkryger/gh/pkryger/difftastic.el")) doesn't exist -> own `package-vc-install'
-;; :exordium-vc-load-path "/Users/pkryger/gh/pkryger/difftastic.el" exists -> `package-vc-install-from-checkout'
-;; :exordium-vc-load-path "/Users/pkryger/gh/pkryger/difftastic.el" doesn't exist ->  own `package-vc-install'
-
-;; :vc
-;; (add-to-list 'exordium-use-package-vc-load-paths '(diftastic . "/Users/pkryger/gh/pkryger/difftastic.el")) exists -> `package-vc-install-from-checkout'
-;; (add-to-list 'exordium-use-package-vc-load-paths '(diftastic . "/Users/pkryger/gh/pkryger/difftastic.el")) doesn't exist ->  `package-vc-install'
-;; :exordium-vc-load-path "/Users/pkryger/gh/pkryger/difftastic.el" exists -> `package-vc-install-from-checkout'
-;; :exordium-vc-load-path "/Users/pkryger/gh/pkryger/difftastic.el" doesn't exist -> `package-vc-install'
-
-
 (defcustom exordium-use-package-vc-load-paths
   '((difftastic . "/Users/pkryger/gh/pkryger/difftastic.el"))
   "TODO:."
@@ -2273,22 +2260,34 @@ I.e., created with `scratch' or named scratch-"
   (use-package-only-one (symbol-name keyword) args
     #'use-package-normalize-paths))
 
-(defun exordium--vc-load-path-install (name dir)
-  "Force VC installation of package NAME from a checkout in DIR."
-  (when-let* ((desc (cadr (assq name package-alist)))
-              ((not (equal (file-truename dir)
-                           (file-truename (package-desc-dir desc))))))
-    (message
-     "%s overriding package %s installed from archive %s with checkout in %s"
-     "TODO: :exordium-vc-load-path" name (package-desc-archive desc) dir)
-    (package-delete name 'force))
-  (package-vc-install-from-checkout dir name))
-
 (defun exordium--vc-load-path-checkout-p (dir)
   "Return non nil when DIR is good enough for checkout."
   (and (stringp dir)
        (not (equal "" dir))
        (file-directory-p dir)))
+
+(defun exordium--vc-load-path-package-delete (name keyword dir)
+                                        ; checkdoc-params: (keyword)
+  "Delete package NAME if it has been previously installed from VC or ELPA.
+Avoid deletion when the package has been installed from VC into DIR."
+  (if-let* ((desc (cadr (assq name package-alist)))
+            ((eq 'vc (package-desc-kind desc)))
+            ((not (equal (file-truename dir)
+                         (file-truename (package-desc-dir desc))))))
+      ;; Package has been previously installed from :vc, but checkout
+      ;; appeared on a subsequent eval.
+      (progn
+        (message "%s overriding VC package %s in %s with checkout in %s"
+                 keyword name (package-desc-dir desc) dir)
+        (package-delete desc 'force))
+
+    ;; Package has been previously installed from ELPA, but checkout
+    ;; appeared on a subsequent eval.
+    (when-let* ((desc (cadr (assq name package-alist)))
+                ((not (package-desc-kind desc))))
+       (message "%s overriding ELPA package %s with checkout in %s"
+                keyword name dir))
+       (package-delete desc 'force)))
 
 (defun use-package-handler/:exordium-vc-load-path (name keyword arg rest state)
                                         ; checkdoc-params: (keyword rest state)
@@ -2306,37 +2305,10 @@ with the directory."
        ;; :load-path has been done, let's do as it does.
        `((eval-and-compile (add-to-list 'load-path ,dir)))
 
-       ;; TODO: this needs to be a function, so it is compile-able
-       (if-let* ((pkg-dir (expand-file-name (symbol-name name)
-                                            package-user-dir))
-                 ((file-exists-p pkg-dir))
-                 ((not (equal (file-truename pkg-dir)
-                              (file-truename dir))))
-                 (desc (cadr (assq name package-alist)))
-                 ((eq 'vc (package-desc-kind desc)))
-                 ((equal (file-truename (file-name-as-directory pkg-dir))
-                         (file-truename (package-desc-dir desc)))))
-           ;; Package has been previously installed from :vc, but checkout
-           ;; appeared on a subsequent eval.
-           (use-package-concat
-             `((message "%s overriding VC package %s in %s with checkout in %s"
-                        ,keyword ,name ,pkg-dir ,dir))
-
-             (if (bound-and-true-p byte-compile-current-file)
-                 (funcall #'package-delete desc 'force)
-               `((package-delete (cadr (assq ',name package-alist))
-                                 'force))))
-         ;; Package has been previously installed from ELPA, but checkout
-         ;; appeared on a subsequent eval.
-         (when-let* ((desc (cadr (assq name package-alist)))
-                     ((not (package-desc-kind desc))))
-           (use-package-concat
-            `((message "%s overriding ELPA package %s with checkout in %s"
-                       ,keyword ,name ,dir))
-            (if (bound-and-true-p byte-compile-current-file)
-                (funcall #'package-delete desc 'force)
-              `((package-delete (cadr (assq ',name package-alist))
-                                'force))))))
+       ;;
+       (if (bound-and-true-p byte-compile-current-file)
+           (funcall #'exordium--vc-load-path-package-delete name keyword dir)
+         `((exordium--vc-load-path-package-delete ',name ,keyword ,dir)))
 
        ;; TODO: built-ins are `package-installed-p' too, so :vc won't install them
        (unless (plist-member rest :vc)
