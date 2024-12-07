@@ -272,15 +272,16 @@
   (interactive)
   (let ((base-64 (base64-encode-string text :no-line-break)))
     (send-string-to-terminal (concat "\e]1337;Copy=:" base-64 "\a"))))
-(defconst pk/interprogram-cut-function interprogram-cut-function
-  "Save the default value of `interprogram-cut-function'.
-This will be used in be used in `pk/dispatch-cut-function'")
-(defun pk/dispatch-cut-function (text)
+
+(defun pk/dispatch-cut-function (orig-fun text)
+                                        ; checkdoc-params: (orig-fun)
   "Dispatch the TEXT to the appropriate `interprogram-cut-function'."
   (if (display-graphic-p)
-      (funcall pk/interprogram-cut-function text)
+      (funcall orig-fun text)
     (pk/iterm-cut-base64 text)))
-(setq interprogram-cut-function #'pk/dispatch-cut-function)
+
+(advice-add interprogram-cut-function :around #'pk/dispatch-cut-function)
+
 
 ;; https://ylluminarious.github.io/2019/05/23/how-to-fix-the-emacs-mac-port-for-multi-tty-access/
 (use-package mac-pseudo-daemon
