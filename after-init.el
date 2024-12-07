@@ -2261,7 +2261,8 @@ I.e., created with `scratch' or named scratch-"
 (use-package use-package-core
   :ensure nil
   :defer t
-  :autoload (use-package-only-one
+  :autoload (use-package-vc-install
+             use-package-only-one
              use-package-normalize-paths
              use-package-process-keywords))
 
@@ -2283,9 +2284,14 @@ I.e., created with `scratch' or named scratch-"
     (package-delete name 'force))
   (package-vc-install-from-checkout dir name))
 
+(defun exordium--vc-load-path-checkout-p (dir)
+  "Return non nil when DIR is good enough for checkout."
+  (and (stringp dir)
+       (not (equal "" dir))
+       (file-directory-p dir)))
 
-(defun use-package-handler/:exordium-vc-load-path (name _keyword arg rest state)
-                                        ; checkdoc-params: (rest state)
+(defun use-package-handler/:exordium-vc-load-path (name keyword arg rest state)
+                                        ; checkdoc-params: (keyword rest state)
   "VC Install package NAME from an existing checkout directory.
 Direcotory is (car ARG).  Package VC installation is done only if
 the directory exists.
@@ -2295,26 +2301,49 @@ that the directory can be prepended to :load-path's arguments to
 force :vc to eventually call `package-vc-install-from-checkout'
 with the directory."
   (if-let* ((dir (car arg))
-            ((file-directory-p dir)))
+            ((exordium--vc-load-path-checkout-p dir)))
       (use-package-concat
        ;; :load-path has been done, let's do as it does.
        `((eval-and-compile (add-to-list 'load-path ,dir)))
 
+       (when-let* ((pkg-dir (expand-file-name (symbol-name name)
+                                              package-user-dir))
+                   ((file-exists-p pkg-dir))
+                   ((not (equal (file-truename pkg-dir)
+                                (file-truename dir)))))
+         ;; Handle a case package has been originally installed from :vc,
+         ;; but checkout appeared on a subsequent eval.  Do as
+         ;; `package-vc-install-from-checkout' would, but don't ask any
+         ;; questions. Just leave a trace.
+         (message "%s overriding package %s in %s with checkout in %s"
+                  keyword name pkg-dir dir)
+         (use-package-concat
+          (if (bound-and-true-p byte-compile-current-file)
+              (funcall #'package--delete-directory pkg-dir)     ; compile time
+            `((package--delete-directory ,pkg-dir)))            ; runtime
+
+          ;; The `package--delete-directory' doesn't mark package as
+          ;; uninstalled, yet `use-package-vc-install' doesn't install when
+          ;; package has already been installed, so we need to ensure
+          ;; installation here.
+          (if (bound-and-true-p byte-compile-current-file)
+              (when (package-installed-p name)
+                (funcall #'package-vc-install-from-checkout     ; compile time
+                         dir (symbol-name name)))
+            `((when (package-installed-p ',name)
+                (package-vc-install-from-checkout               ; runtime
+                 ,dir ,(symbol-name name)))))))
+
        (unless (plist-member rest :vc)
-         ;; TODO: what about a case when package has been originally installed
-         ;; from :vc, but checkout appeared on a subsequent eval
-         ;; perhaps insert `package-delete' when necessary and just call
-         ;; (use-package-vc-install (list name) dir) if no :vc
          (if (bound-and-true-p byte-compile-current-file)
-             (funcall #'exordium--vc-load-path-install name dir)           ; compile time
-           `((exordium--vc-load-path-install ',name ,dir))))   ; runtime
+             (funcall #'use-package-vc-install (list name) dir) ; compile time
+           `((use-package-vc-install ',(list name) ,dir))))     ; runtime
 
        (use-package-process-keywords name rest
          (if (member dir (plist-get state :load-path))
              state
            (use-package-plist-cons state :load-path dir))))
     (use-package-process-keywords name rest state)))
-
 
 (eval-after-load 'use-package-core
   '(unless (memq :exordium-vc-load-path use-package-keywords)
@@ -2327,15 +2356,22 @@ with the directory."
 ;; (eval-after-load 'use-package-core
 ;;   '(add-to-list 'use-package-keywords :exordium-vc-load-path))
 
-(macroexpand
- (quote
-  (use-package difftastic
-    :exordium-vc-load-path "/Users/pkryger/gh/pkryger/difftastic.el"
-    :vc t
-    :load-path "/foo/bar")))
+(quote
+ (macroexpand
+  (quote
+   (use-package difftastic
+     :exordium-vc-load-path "/Users/pkryger/gh/pkryger/difftastic.el"
+     :vc t
+     :load-path "/foo/bar"))))
+
+(quote
+ (macroexpand
+  (quote
+   (use-package delight
+     :exordium-vc-load-path "/Users/pkryger/gh/delight"))))
 
 (defvar exordium--vc-load-path-orig-ensure-func
-  (nth 2 (assq ':ensure use-package-defaults)))
+  (nth 2 (assq :ensure use-package-defaults)))
 
 (defun exordium--vc-load-path-default-gate (func)
   "Create a wrapper around FUNC to gate setting of default value.
@@ -2347,13 +2383,17 @@ directory for a package NAME."
     (and (not (when-let* ((dir (or
                                 (alist-get name
                                            exordium-use-package-vc-load-paths)
-                                (plist-get args :exordium-vc-load-path)))
-                          ((stringp dir)))
-                (file-directory-p dir)))
+                                (plist-get args :exordium-vc-load-path))))
+                (exordium--vc-load-path-checkout-p dir)))
          ;; Do as `use-package-process-keywords' does.
          (if (and func (functionp func))
              (funcall func name args)
            (eval func)))))
+
+(eval-after-load 'use-package-core
+  '(setf (nth 2 (assq :ensure use-package-defaults))
+         (exordium--vc-load-path-default-gate
+          exordium--vc-load-path-orig-ensure-func)))
 
 (let ((use-package-always-ensure t)
       (exordium-use-package-vc-load-paths '((difftastic . "/Users/pkryger/gh/pkryger/difftastic.el"))))
@@ -2407,9 +2447,8 @@ directory for a package NAME."
          (list (alist-get name exordium-use-package-vc-load-paths))))
       (lambda (name args)
         (and (when-let* ((dir (alist-get name
-                                         exordium-use-package-vc-load-paths))
-                         ((stringp dir)))
-               (file-directory-p dir))
+                                         exordium-use-package-vc-load-paths)))
+               (exordium--vc-load-path-checkout-p dir))
              (not (plist-member args :exordium-vc-load-path)))))))
 
 (use-package difftastic
