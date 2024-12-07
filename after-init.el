@@ -2271,12 +2271,14 @@ I.e., created with `scratch' or named scratch-"
   (use-package-only-one (symbol-name keyword) args
     #'use-package-normalize-paths))
 
-
 (defun exordium--vc-load-path-install (name dir)
   "Force VC installation of package NAME from a checkout in DIR."
   (when-let* ((desc (cadr (assq name package-alist)))
               ((not (equal (file-truename dir)
                            (file-truename (package-desc-dir desc))))))
+    (message
+     "%s overriding package %s installed from archive %s with checkout in %s"
+     "TODO: :exordium-vc-load-path" name (package-desc-archive desc) dir)
     (package-delete name 'force))
   (package-vc-install-from-checkout dir name))
 
@@ -2298,6 +2300,10 @@ with the directory."
        `((eval-and-compile (add-to-list 'load-path ,dir)))
 
        (unless (plist-member rest :vc)
+         ;; TODO: what about a case when package has been originally installed
+         ;; from :vc, but checkout appeared on a subsequent eval
+         ;; perhaps insert `package-delete' when necessary and just call
+         ;; (use-package-vc-install (list name) dir) if no :vc
          (if (bound-and-true-p byte-compile-current-file)
              (funcall #'exordium--vc-load-path-install name dir)           ; compile time
            `((exordium--vc-load-path-install ',name ,dir))))   ; runtime
@@ -2309,20 +2315,84 @@ with the directory."
     (use-package-process-keywords name rest state)))
 
 
-(macroexpand '
- (use-package difftastic
-   :exordium-vc-load-path "/Users/pkryger/gh/pkryger/difftastic.el"
-   :vc t
-   :load-path "/foo/bar"))
-
 (eval-after-load 'use-package-core
   '(push :exordium-vc-load-path
          (nthcdr
           (1+ (cl-position :load-path use-package-keywords))
           use-package-keywords)))
 
+;; TODO: unlikely as we want to be affecting :load-path
 ;; (eval-after-load 'use-package-core
 ;;   '(add-to-list 'use-package-keywords :exordium-vc-load-path))
+
+(macroexpand
+ (quote
+  (use-package difftastic
+    :exordium-vc-load-path "/Users/pkryger/gh/pkryger/difftastic.el"
+    :vc t
+    :load-path "/foo/bar")))
+
+(defvar exordium--vc-load-path-orig-ensure-func
+  (nth 2 (assq ':ensure use-package-defaults)))
+
+(defun exordium--vc-load-path-default-gate (func)
+  "Create a wrapper around FUNC to gate setting of default value.
+Wrapper is designed to be used around default gate function for
+keyword :ensure in `use-pakcage-defaults'.  It prevents setting
+up the defult for keyword :ensure when there's an existing
+directory for a package NAME."
+  (lambda (name args)
+    (and (not (when-let* ((dir (or
+                                (alist-get name
+                                           exordium-use-package-vc-load-paths)
+                                (plist-get args :exordium-vc-load-path)))
+                          ((stringp dir)))
+                (file-directory-p dir)))
+         ;; Do as `use-package-process-keywords' does.
+         (if (and func (functionp func))
+             (funcall func name args)
+           (eval func)))))
+
+(let ((use-package-always-ensure t)
+      (exordium-use-package-vc-load-paths '((difftastic . "/Users/pkryger/gh/pkryger/difftastic.el"))))
+  (not
+   (funcall (exordium--vc-load-path-default-gate
+             exordium--vc-load-path-orig-ensure-func)
+            'difftastic nil)))
+
+(let ((use-package-always-ensure t)
+      (exordium-use-package-vc-load-paths '((difftastic . "/not-an-existing-path"))))
+  (funcall (exordium--vc-load-path-default-gate
+            exordium--vc-load-path-orig-ensure-func)
+           'difftastic nil))
+
+(let ((use-package-always-ensure t)
+      (exordium-use-package-vc-load-paths '((difftastic . t))))
+  (funcall (exordium--vc-load-path-default-gate
+            exordium--vc-load-path-orig-ensure-func)
+           'difftastic nil))
+
+(let ((use-package-always-ensure t)
+      (exordium-use-package-vc-load-paths nil))
+  (not
+   (funcall (exordium--vc-load-path-default-gate
+             exordium--vc-load-path-orig-ensure-func)
+            'difftastic '(:exordium-vc-load-path
+                          "/Users/pkryger/gh/pkryger/difftastic.el"))))
+
+(let ((use-package-always-ensure t)
+      (exordium-use-package-vc-load-paths nil))
+   (funcall (exordium--vc-load-path-default-gate
+                       exordium--vc-load-path-orig-ensure-func)
+                      'difftastic '(:exordium-vc-load-path
+                                    "/not-an-existing-path")))
+
+(let ((use-package-always-ensure t)
+      (exordium-use-package-vc-load-paths nil))
+  (funcall (exordium--vc-load-path-default-gate
+            exordium--vc-load-path-orig-ensure-func)
+           'difftastic '(:exordium-vc-load-path
+                         t)))
 
 ;; (eval-after-load 'use-package-core
 ;;   '(add-to-list
@@ -2332,7 +2402,7 @@ with the directory."
 ;;         (use-package-normalize/:exordium-vc-load-path
 ;;          name
 ;;          :exordium-vc-load-path
-;;          (list (alist-get name exordium-use-package-vc-load-path))))
+;          (list (alist-get name exordium-use-package-vc-load-paths))))
 ;;       (lambda (name args)
 ;;         (and (assq name exordium-use-package-vc-load-paths)
 ;;              (not (plist-member args :exordium-vc-load-path)))))))
