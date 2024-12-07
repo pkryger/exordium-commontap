@@ -5,7 +5,6 @@
 (eval-when-compile
   (unless (featurep 'init-require)
     (load (file-name-concat (locate-user-emacs-file "modules") "init-require"))))
-(exordium-require 'init-lib)
 (exordium-require 'init-prefs)
 (exordium-require 'init-environment)
 
@@ -272,16 +271,15 @@
   (interactive)
   (let ((base-64 (base64-encode-string text :no-line-break)))
     (send-string-to-terminal (concat "\e]1337;Copy=:" base-64 "\a"))))
-
-(defun pk/dispatch-cut-function (orig-fun text)
-                                        ; checkdoc-params: (orig-fun)
+(defconst pk/interprogram-cut-function interprogram-cut-function
+  "Save the default value of `interprogram-cut-function'.
+This will be used in be used in `pk/dispatch-cut-function'")
+(defun pk/dispatch-cut-function (text)
   "Dispatch the TEXT to the appropriate `interprogram-cut-function'."
   (if (display-graphic-p)
-      (funcall orig-fun text)
+      (funcall pk/interprogram-cut-function text)
     (pk/iterm-cut-base64 text)))
-
-(advice-add interprogram-cut-function :around #'pk/dispatch-cut-function)
-
+(setq interprogram-cut-function #'pk/dispatch-cut-function)
 
 ;; https://ylluminarious.github.io/2019/05/23/how-to-fix-the-emacs-mac-port-for-multi-tty-access/
 (use-package mac-pseudo-daemon
@@ -316,18 +314,17 @@
   (interactive)
   (kill-new pk/shrug-string))
 
-;; @todo remove when exordium has it
-;; (use-package helm
-;;   :diminish
-;;   :custom
-;;   (helm-split-window-other-side-when-one-window 'right)
-;;   (helm-M-x-show-short-doc t)
-;;   :bind
-;;   (("C-x b" . #'helm-buffers-list)
-;;    :map ctl-x-map
-;;         ("b" . #'helm-buffers-list)
-;;    :map helm-command-map
-;;         ("g" . #'helm-google-suggest)))
+(use-package helm
+  :diminish
+  :custom
+  (helm-split-window-other-side-when-one-window 'right)
+  (helm-M-x-show-short-doc t)
+  :bind
+  (("C-x b" . #'helm-buffers-list)
+   :map ctl-x-map
+        ("b" . #'helm-buffers-list)
+   :map helm-command-map
+        ("g" . #'helm-google-suggest)))
 
 
 ;; @todo : remove when exordium has it
@@ -351,10 +348,6 @@
              flycheck-rx-to-string
              flycheck-buffer-saved-p
              flycheck-checker-get)
-  :init
-  (use-package project
-    :ensure nil
-    :autoload (project-root))
   :config
   (flycheck-define-checker pk/python-blocklint
     "Blocklint: blocks usage of non-inclusive wording.
@@ -515,13 +508,9 @@ See: https://github.com/PrincetonUniversity/blocklint"
         ("M-," . #'xref-go-back)))
 
 
-;; @todo: remove when exordium has it
-;; (use-package orderless
-;;   :custom
-;;   (helm-completion-style 'emacs)
-;;   (completion-styles '(orderless basic))
-;;   (completion-category-overrides '((file (styles basic partial-completion)))))
-
+(use-package orderless
+  :custom
+  (completion-styles '(orderless)))
 
 (use-package ispell
   ;;   :ensure-system-package aspell
@@ -562,9 +551,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 
 (use-package jenkinsfile-mode
-  :init
-  (use-package flycheck
-    :autoload (flycheck-add-mode))
+  :after (flycheck)
   :defer t
   :config
   (flycheck-add-mode 'groovy 'jenkinsfile-mode))
@@ -624,7 +611,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 (use-package yaml-mode
   :defer t
-  :mode (rx ".y" (zero-or-one "a") "ml.template" string-end))
+  :mode "\\.ya?ml\\.template\\'")
 
 (use-package rust-mode
   :defer t)
@@ -750,9 +737,6 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 (use-package python
   :ensure nil
   :init
-  (use-package treesit
-    :ensure nil
-    :autoload (treesit-node-text))
   (defun pk/python-mode--set-fill-column()
     (when-let* ((project-root (project-root (project-current)))
                 ;; do not override directory local variable
@@ -834,23 +818,14 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 
 (use-package swiper
   :init
-  (use-package ivy
-    :autoload (ivy-previous-history-element
-               ivy-previous-line
-               ivy-exit-with-action)
-    :init
-    (defun pk/swiper-C-r (&optional arg)
-      "Move cursor vertically up ARG candidates.
+  (defun pk/swiper-C-r (&optional arg)
+    "Move cursor vertically up ARG candidates.
 If the input is empty, select the previous history element instead."
-      (interactive "p")
-      (if (string= ivy-text "")
-          (ivy-previous-history-element 1)
-        (ivy-previous-line arg))))
-
+    (interactive "p")
+    (if (string= ivy-text "")
+        (ivy-previous-history-element 1)
+      (ivy-previous-line arg)))
   (use-package iedit
-    :autoload (iedit-lib-cleanup
-               iedit-start
-               iedit-done)
     :init
     (defun pk/swiper-iedit ()
       (interactive)
@@ -871,31 +846,23 @@ If the input is empty, select the previous history element instead."
                    ((equal result 'not-same-length)
                     (message "Matches are not the same length.")
                     (iedit-done)))))))))
-
   :bind
   (("C-s" . swiper-isearch)
    ("C-r" . swiper-isearch-backward)
    :map swiper-map
-   ("C-r" . pk/swiper-C-r)
-   ("C-c ;" . pk/swiper-iedit)))
+        ("C-r" . pk/swiper-C-r)
+        ("C-c ;" . pk/swiper-iedit)))
 
 
 ;; Disable some ido hooks for helm mode
 (when exordium-helm-everywhere
-  (when (fboundp 'call-interactively@ido-cr+-record-current-command)
-    (advice-remove 'call-interactively #'call-interactively@ido-cr+-record-current-command))
-  (when (fboundp 'ido-minibuffer-setup)
-    (remove-hook 'minibuffer-setup-hook #'ido-minibuffer-setup)))
+  (advice-remove 'call-interactively #'call-interactively@ido-cr+-record-current-command)
+  (remove-hook 'minibuffer-setup-hook #'ido-minibuffer-setup))
 
-(use-package ob-python
-  :ensure nil
-  :custom
-  (org-babel-python-command "python3"))
-
-(use-package org
-  :ensure nil
-  :custom
-  (org-src-tab-acts-natively t))
+;; Use python3 for org
+(setq org-babel-python-command "python3")
+;; Make tabs work nativly in org mode's src blocks
+(setq org-src-tab-acts-natively t)
 
 ;; (use-package magit-todos
 ;;   :ensure-system-package (rg . ripgrep)
@@ -971,8 +938,8 @@ If the input is empty, select the previous history element instead."
 (use-package url
   :defer t
   :ensure nil
-  :functions (pk/url-netrc-auth)
   :init
+  :functions (pk/url-netrc-auth)
   (defun pk/url-netrc-auth (url &optional _prompt _overwrite _realm _args)
     "Get the token stored in `netrc' for the given URL."
     (let* ((href (if (stringp url)
@@ -1024,26 +991,26 @@ If the input is empty, select the previous history element instead."
 
 
 (require 'map)
-(defcustom pk/mac-auto-operator-composition-strings
-  '(;; c++
-    "!=" "%" "%=" "&" "&&" "&&=" "&=" "*" "**" "***" "*/" "*=" "++" "+="
-    "--" "-=" "->" ".*" "..." "/" "/*" "/**" "//" "///" "/=" "::" "<" "<<"
-    "<<<" "<=" "<=>" "=" "==" ">" ">=" ">>" ">>>" "?:" "\\\\"
-    "\\\\\\" "^=" "|" "|=" "||" "||=" "~" "~=" "[]"
-    ;; programming in non-c++ and nice stuff
-    "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
-    "<-" "-->" "->>" ";;" "\\n" "www" ".."
-    ;; org-mode ballots -> they are unicode chars, not glyph
-    ;; "[ ]" "[X]" "[-]"
-    ;; fira sans
-    "ffi" "fi" "fl"
-    )
-  "Sequence of strings used in automatic operator composition.
-Customised for FiraCode font: https://github.com/tonsky/FiraCode"
-  :type '(repeat string)
-  :group 'pk/exordium)
 (when (fboundp 'mac-auto-operator-composition-shape-gstring)
-  (defvar pk/mac-auto-operator-composition-mode)
+  (defcustom pk/mac-auto-operator-composition-strings
+    '(;; c++
+      "!=" "%" "%=" "&" "&&" "&&=" "&=" "*" "**" "***" "*/" "*=" "++" "+="
+      "--" "-=" "->" ".*" "..." "/" "/*" "/**" "//" "///" "/=" "::" "<" "<<"
+      "<<<" "<=" "<=>" "=" "==" ">" ">=" ">>" ">>>" "?:" "\\\\"
+      "\\\\\\" "^=" "|" "|=" "||" "||=" "~" "~=" "[]"
+      ;; programming in non-c++ and nice stuff
+      "__" "@" "@@" "!!" "===" "!==" "=>" "=~" ":=" "[:]"  "/>" "</>" "</" "<>"
+      "<-" "-->" "->>" ";;" "\\n" "www" ".."
+      ;; org-mode ballots -> they are unicode chars, not glyph
+      ;; "[ ]" "[X]" "[-]"
+      ;; fira sans
+      "ffi" "fi" "fl"
+      )
+    "Sequence of strings used in automatic operator composition.
+Customised for FiraCode font: https://github.com/tonsky/FiraCode"
+    :type '(repeat string)
+    :group 'pk/exordium)
+
   ;; ligatures, based on `mac-auto-operator-composition-mode'
   (define-minor-mode pk/mac-auto-operator-composition-mode
     "Toggle Mac Auto Operator Composition mode.
@@ -1103,8 +1070,7 @@ language."
                  (set-char-table-range composition-function-table c
                                        (nreverse new-rules))))))
        composition-function-table)
-      (clrhash mac-auto-operator-composition-cache))))
-(when (fboundp 'pk/mac-auto-operator-composition-mode)
+      (clrhash mac-auto-operator-composition-cache)))
   (pk/mac-auto-operator-composition-mode))
 
 ;; Org mode are not a real ligatures - use prettify symbols for it
@@ -1135,16 +1101,13 @@ language."
 ;; `exordium-use-variable-pitch' and `exordium-complete-mode' set to `:company'
 (use-package company-posframe
   :after (posframe)
-  :autoload (company-posframe-quickhelp-toggle
-             company-select-next
-             company-select-previous)
   :when exordium-osx
   :diminish
   :bind
   (:map company-posframe-active-map
-   ("C-h" . #'company-posframe-quickhelp-toggle)
-   ("C-n" . #'company-select-next)
-   ("C-p" . #'company-select-previous))
+        ("C-h" . #'company-posframe-quickhelp-toggle)
+        ("C-n" . #'company-select-next)
+        ("C-p" . #'company-select-previous))
   :custom
   (company-posframe-quickhelp-delay 0.2)
   :config
@@ -1277,7 +1240,7 @@ All the reminder parts of the separator will have
                            (funcall separator 'last (if previous-current 'previous))
                          separator)
                       ignore))
-       (when (and (memq 'tab-bar-format-add-tab tab-bar-format) tab-bar-new-button)
+       (when (and tab-bar-new-button-show tab-bar-new-button)
          `((add-tab menu-item ,tab-bar-new-button tab-bar-new-tab
                     :help "New tab"))))))
 
@@ -1317,11 +1280,6 @@ All the reminder parts of the separator will have
   (transient-append-suffix 'magit-file-dispatch "g" '(1 "f" "copy link" git-link)))
 
 
-(use-package dom
-  :ensure nil
-  :autoload (dom-text
-             dom-by-tag))
-
 (defun pk/insert-link-dwim (make-link-string insert-link &optional arg)
   "Insert a link with a personal dwim preferences.
 
@@ -1382,8 +1340,6 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   (pk/insert-link-dwim 'pk/markdown--make-link-string 'markdown-insert-link))
 
 (use-package org
-  :autoload (org-combine-plists
-             org-in-regexp)
   :init
   (defun pk/orgtbl-to-gfm (table params)
     "Convert the Orgtbl mode TABLE to GitHub Flavored Markdown."
@@ -1402,7 +1358,7 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
                                 params))))
   :bind
   (:map org-mode-map
-   ([remap org-insert-link] . #'pk/org-insert-link-dwim)))
+        ([remap org-insert-link] . #'pk/org-insert-link-dwim)))
 
 (use-package markdown-mode
   :custom
@@ -1420,7 +1376,7 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   (markdown-xhtml-body-footer "</article>")
   :bind
   (:map markdown-mode-map
-   ([remap markdown-insert-link] . #'pk/markdown-insert-link-dwim)))
+        ([remap markdown-insert-link] . #'pk/markdown-insert-link-dwim)))
 
 
 (use-package mode-line-bell
@@ -1854,7 +1810,7 @@ I.e., created with `scratch' or named scratch-"
 
 (use-package cperl-mode
   :ensure nil
-  :mode (rx ".p" (or "l" "m") string-end)
+  :mode "\\.p[lm]\\'"
   :interpreter "perl"
   :commands (cperl-set-style)
   :config
@@ -1868,7 +1824,6 @@ I.e., created with `scratch' or named scratch-"
 (use-package dwim-shell-command
   :ensure t
   :demand t
-  :autoload (dwim-shell-command-execute-script)
   :bind (([remap shell-command] . dwim-shell-command)
          :map dired-mode-map
          ([remap dired-do-async-shell-command] . dwim-shell-command)
@@ -1950,10 +1905,6 @@ I.e., created with `scratch' or named scratch-"
   :commands dwim-shell-commands-kill-process)
 
 
-(use-package shr
-  :ensure nil
-  :autoload (shr-render-buffer))
-
 (defvar pk/ipynb--convert-command
   "jupyter nbconvert --to html --log-level WARN --stdout --stdin")
 
@@ -2104,101 +2055,85 @@ I.e., created with `scratch' or named scratch-"
 ;;                 contact)))))))
 
 
-;; packages development
 (use-package el-mock
   :defer t)
-(use-package undercover
-  :defer t)
+
 
 (use-package casual
-  :defer t
-  :bind ("C-o" . #'casual-editkit-main-tmenu)
   :init
+  (use-package casual-agenda
+    :ensure casual
+    :after (org-agenda)
+    :bind
+    (:map org-agenda-mode-map
+     ("C-o" . #'casual-agenda-tmenu)
+     ("M-j" . #'org-agenda-clock-goto)
+     ("J" . #'bookmark-jump)))
+  (use-package casual-bookmarks
+    :ensure casual
+    :after (bookmark)
+    :bind
+    (:map bookmark-bmenu-mode-map
+     ("C-o" .  #'casual-bookmarks-tmenu)
+     ("J" . #'bookmark-jump)))
+  (use-package casual-calc
+    :ensure casual
+    :after (calc)
+    :bind
+    (:map calc-mode-map
+     ("C-o" . #'casual-calc-tmenu)
+     :map calc-alg-map
+     ("C-o" . #'casual-calc-tmenu)))
+  (use-package casual-calendar
+    :ensure casual
+    :after (calendar)
+    :bind
+    (:map calendar-mode-map
+     ("C-o" . #'casual-calendar)))
   (use-package casual-dired
-    :ensure nil
-    :defer t
+    :ensure casual
+    :after (dired)
     :commands (casual-dired-sort-by-tmenu
-               casual-dired-search-replace-tmenu))
+               casual-dired-search-replace-tmenu)
+    :bind
+    (:map dired-mode-map
+     ("C-o" . #'casual-dired-tmenu)
+     ("s" . #'casual-dired-sort-by-tmenu)
+     ("/" . #'casual-dired-search-replace-tmenu)))
+  (use-package casual-editkit
+    :ensure casual
+    :bind ("C-o" . #'casual-editkit-main-tmenu))
   (use-package casual-ibuffer
-    :ensure nil
-    :defer t
+    :ensure casual
+    :after (ibuffer)
     :commands (casual-ibuffer-filter-tmenu
-               casual-ibuffer-sortby-tmenu))
+               casual-ibuffer-sortby-tmenu)
+    :bind
+    (:map ibuffer-mode-map
+     ("C-o" . #'casual-ibuffer-tmenu)
+     ("F" . #'casual-ibuffer-filter-tmenu)
+     ("s".  #'casual-ibuffer-sortby-tmenu)))
+  (use-package casual-info
+    :ensure casual
+    :after (info)
+    :bind
+    (:map Info-mode-map
+     ("C-o" . #'casual-info-tmenu)))
   (use-package casual-isearch
-    :ensure nil
-    :defer t
-    :commands (casual-isearch-tmenu))
-
-  (use-package org-agenda
-    :ensure nil
-    :defer t
-    :commands (org-agenda-clock-goto)
-    :bind (:map org-agenda-mode-map
-           ("C-o" . #'casual-agenda-tmenu)
-           ("M-j" . #'org-agenda-clock-goto)
-           ("J" . #'bookmark-jump)))
-  (use-package bookmark
-    :ensure nil
-    :defer t
-    :bind (:map bookmark-bmenu-mode-map
-           ("C-o" .  #'casual-bookmarks-tmenu)
-           ("J" . #'bookmark-jump)))
-  (use-package calc
-    :ensure nil
-    :defer t
-    :bind (:map calc-mode-map
-           ("C-o" . #'casual-calc-tmenu)))
-  (use-package calc-ext
-    :ensure nil
-    :defer t
-    :bind (:map calc-alg-map
-           ("C-o" . #'casual-calc-tmenu)))
-  (use-package calendar
-    :ensure nil
-    :defer t
-    :bind (:map calendar-mode-map
-           ("C-o" . #'casual-calendar)))
-  (use-package dired
-    :ensure nil
-    :defer t
-    :bind (:map dired-mode-map
-           ("C-o" . #'casual-dired-tmenu)
-           ("s" . #'casual-dired-sort-by-tmenu)
-           ("/" . #'casual-dired-search-replace-tmenu)))
-  (use-package ibuffer
-    :ensure nil
-    :defer t
-    :bind (:map ibuffer-mode-map
-           ("C-o" . #'casual-ibuffer-tmenu)
-           ("F" . #'casual-ibuffer-filter-tmenu)
-           ("s".  #'casual-ibuffer-sortby-tmenu)
-           ("{" . #'ibuffer-backwards-next-marked)
-           ("}" . #'ibuffer-forward-next-marked)
-           ("[" . #'ibuffer-backward-filter-group)
-           ("]" . #'ibuffer-forward-filter-group)
-           ("$" . #'ibuffer-toggle-filter-group)))
-  (use-package info
-    :ensure nil
-    :defer t
-    :bind (:map Info-mode-map
-           ("C-o" . #'casual-info-tmenu)
-           ("M-[" . #'Info-history-back)
-           ("M-]" . #'Info-history-forward)
-           ("/" . #'Info-search)
-           ("B" . #'bookmark-set)))
-  (use-package isearch
-    :ensure nil
-    :defer t
-    :bind (:map isearch-mode-map
-           ("C-o" . #'casual-isearch-tmenu)))
-  (use-package re-builder
-    :ensure nil
-    :defer t
-    :bind (:map reb-mode-map
-           ("C-o". casual-re-builder-tmenu)
-           :map reb-lisp-mode-map
-           ("C-o" . casual-re-builder-tmenu))))
-
+    :ensure casual
+    :after (isearch)
+    :commands (casual-isearch-tmenu)
+    :bind
+    (:map isearch-mode-map
+     ("C-o" . #'casual-isearch-tmenu)))
+  (use-package casual-re-builder
+    :ensure casual
+    :after (re-builder)
+    :bind
+    (:map reb-mode-map
+     ("C-o". casual-re-builder-tmenu)
+     :map reb-lisp-mode-map
+     ("C-o" . casual-re-builder-tmenu))))
 
 (if-let* (((fboundp 'package-vc-install-from-checkout))
           (workspace (or (getenv "GITHUB_WORKSPACE")
@@ -2236,31 +2171,29 @@ I.e., created with `scratch' or named scratch-"
                "no workspace"
              "no `package-vc-install-from-checkout'")))
 
-
 (use-package difftastic
-  :defer t
-  :init
-  (use-package magit
-    :defer t
-    :bind
-    (:map magit-blame-read-only-mode-map
-     ("D" . #'difftastic-magit-show)
-     ("S" . #'difftastic-magit-show)))
+  :ensure nil ;; @todo - remove when porting to exordium
+  :demand t
+  :bind (:map magit-blame-read-only-mode-map
+         ("D" . difftastic-magit-show)
+         ("S" . difftastic-magit-show))
+  :config
   (eval-after-load 'magit-diff
-    '(transient-append-suffix 'magit-diff '(-1 -1)
-       [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
-        ("S" "Difftastic show" difftastic-magit-show)])))
+    '(let ((last-suffix (transient-get-suffix 'magit-diff '(-1 -1))))
+       (transient-append-suffix 'magit-diff '(-1 -1)
+         [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
+          ("S" "Difftastic show" difftastic-magit-show)])
+       (when (equal (transient-get-suffix 'magit-diff '(-1 -1)) last-suffix)
+         (transient-remove-suffix 'magit-diff '(-1 -1))))))
 
 
 (use-package ultra-scroll-mac
   :ensure nil
   :if (eq window-system 'mac)
-  :custom
-  (scroll-conservatively 101) ; important for jumbo images
-  (scroll-margin 0)
+  :init
+  (setq scroll-conservatively 101) ; important for jumbo images
   :config
-  (when (fboundp 'ultra-scroll-mac-mode)
-    (ultra-scroll-mac-mode)))
+  (ultra-scroll-mac-mode))
 
 
 ;; (use-package jinx
