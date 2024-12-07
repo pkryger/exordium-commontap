@@ -2235,6 +2235,108 @@ I.e., created with `scratch' or named scratch-"
                "no workspace"
              "no `package-vc-install-from-checkout'")))
 
+
+;; No :vc
+;; (add-to-list 'exordium-use-package-vc-load-paths '(diftastic . "/Users/pkryger/gh/pkryger/difftastic.el")) exists -> `package-vc-install-from-checkout'
+;; (add-to-list 'exordium-use-package-vc-load-paths '(diftastic . "/Users/pkryger/gh/pkryger/difftastic.el")) doesn't exist -> own `package-vc-install'
+;; :exordium-vc-load-path "/Users/pkryger/gh/pkryger/difftastic.el" exists -> `package-vc-install-from-checkout'
+;; :exordium-vc-load-path "/Users/pkryger/gh/pkryger/difftastic.el" doesn't exist ->  own `package-vc-install'
+
+;; :vc
+;; (add-to-list 'exordium-use-package-vc-load-paths '(diftastic . "/Users/pkryger/gh/pkryger/difftastic.el")) exists -> `package-vc-install-from-checkout'
+;; (add-to-list 'exordium-use-package-vc-load-paths '(diftastic . "/Users/pkryger/gh/pkryger/difftastic.el")) doesn't exist ->  `package-vc-install'
+;; :exordium-vc-load-path "/Users/pkryger/gh/pkryger/difftastic.el" exists -> `package-vc-install-from-checkout'
+;; :exordium-vc-load-path "/Users/pkryger/gh/pkryger/difftastic.el" doesn't exist -> `package-vc-install'
+
+
+(defcustom exordium-use-package-vc-load-paths
+  '((difftastic . "/Users/pkryger/gh/pkryger/difftastic.el"))
+  "TODO:."
+  :type '(alist :key-type (symbol :tag "Package")
+                :value-type (choice (filepath :tag "Checkout location")
+                                    (plist :tag "use-package :vc args")))
+  :group 'exordium)
+
+(use-package use-package-core
+  :ensure nil
+  :defer t
+  :autoload (use-package-only-one
+             use-package-normalize-paths
+             use-package-process-keywords))
+
+(defun use-package-normalize/:exordium-vc-load-path (_name keyword args)
+                                        ; checkdoc-params: (keyword args)
+  "Normalize possible arguments to the :exordium-vc."
+  ;; TODO: handle empty string? (and in defaults)
+  (use-package-only-one (symbol-name keyword) args
+    #'use-package-normalize-paths))
+
+
+(defun exordium--vc-load-path-install (name dir)
+  "Force VC installation of package NAME from a checkout in DIR."
+  (when-let* ((desc (cadr (assq name package-alist)))
+              ((not (equal (file-truename dir)
+                           (file-truename (package-desc-dir desc))))))
+    (package-delete name 'force))
+  (package-vc-install-from-checkout dir name))
+
+
+(defun use-package-handler/:exordium-vc-load-path (name _keyword arg rest state)
+                                        ; checkdoc-params: (rest state)
+  "VC Install package NAME from an existing checkout directory.
+Direcotory is (car ARG).  Package VC installation is done only if
+the directory exists.
+
+Processing is done after :load-path, such
+that the directory can be prepended to :load-path's arguments to
+force :vc to eventually call `package-vc-install-from-checkout'
+with the directory."
+  (if-let* ((dir (car arg))
+            ((file-directory-p dir)))
+      (use-package-concat
+       ;; :load-path has been done, let's do as it does.
+       `((eval-and-compile (add-to-list 'load-path ,dir)))
+
+       (unless (plist-member rest :vc)
+         (if (bound-and-true-p byte-compile-current-file)
+             (funcall #'exordium--vc-load-path-install name dir)           ; compile time
+           `((exordium--vc-load-path-install ',name ,dir))))   ; runtime
+
+       (use-package-process-keywords name rest
+         (if (member dir (plist-get state :load-path))
+             state
+           (use-package-plist-cons state :load-path dir))))
+    (use-package-process-keywords name rest state)))
+
+
+(macroexpand '
+ (use-package difftastic
+   :exordium-vc-load-path "/Users/pkryger/gh/pkryger/difftastic.el"
+   :vc t
+   :load-path "/foo/bar"))
+
+(eval-after-load 'use-package-core
+  '(push :exordium-vc-load-path
+         (nthcdr
+          (1+ (cl-position :load-path use-package-keywords))
+          use-package-keywords)))
+
+;; (eval-after-load 'use-package-core
+;;   '(add-to-list 'use-package-keywords :exordium-vc-load-path))
+
+;; (eval-after-load 'use-package-core
+;;   '(add-to-list
+;;     'use-package-defaults
+;;     '(:exordium-vc-load-path
+;;       (lambda (name _args)
+;;         (use-package-normalize/:exordium-vc-load-path
+;;          name
+;;          :exordium-vc-load-path
+;;          (list (alist-get name exordium-use-package-vc-load-path))))
+;;       (lambda (name args)
+;;         (and (assq name exordium-use-package-vc-load-paths)
+;;              (not (plist-member args :exordium-vc-load-path)))))))
+
 (use-package difftastic
   :ensure nil ;; @todo - remove when porting to exordium
   :defer t
