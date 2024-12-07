@@ -2317,10 +2317,11 @@ with the directory."
 
 
 (eval-after-load 'use-package-core
-  '(push :exordium-vc-load-path
-         (nthcdr
-          (1+ (cl-position :load-path use-package-keywords))
-          use-package-keywords)))
+  '(unless (memq :exordium-vc-load-path use-package-keywords)
+     (push :exordium-vc-load-path
+           (nthcdr
+            (1+ (cl-position :load-path use-package-keywords))
+            use-package-keywords))))
 
 ;; TODO: unlikely as we want to be affecting :load-path
 ;; (eval-after-load 'use-package-core
@@ -2395,18 +2396,21 @@ directory for a package NAME."
            'difftastic '(:exordium-vc-load-path
                          t)))
 
-;; (eval-after-load 'use-package-core
-;;   '(add-to-list
-;;     'use-package-defaults
-;;     '(:exordium-vc-load-path
-;;       (lambda (name _args)
-;;         (use-package-normalize/:exordium-vc-load-path
-;;          name
-;;          :exordium-vc-load-path
-;          (list (alist-get name exordium-use-package-vc-load-paths))))
-;;       (lambda (name args)
-;;         (and (assq name exordium-use-package-vc-load-paths)
-;;              (not (plist-member args :exordium-vc-load-path)))))))
+(defvar pk/orig-use-package-defaults use-package-defaults)
+
+(eval-after-load 'use-package-core
+  '(setf (alist-get :exordium-vc-load-path use-package-defaults)
+    '((lambda (name _args)
+        (use-package-normalize/:exordium-vc-load-path
+         name
+         :exordium-vc-load-path
+         (list (alist-get name exordium-use-package-vc-load-paths))))
+      (lambda (name args)
+        (and (when-let* ((dir (alist-get name
+                                         exordium-use-package-vc-load-paths))
+                         ((stringp dir)))
+               (file-directory-p dir))
+             (not (plist-member args :exordium-vc-load-path)))))))
 
 (use-package difftastic
   :ensure nil ;; @todo - remove when porting to exordium
