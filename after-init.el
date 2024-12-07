@@ -2306,6 +2306,7 @@ with the directory."
        ;; :load-path has been done, let's do as it does.
        `((eval-and-compile (add-to-list 'load-path ,dir)))
 
+       ;; TODO: this needs to be a function, so it is compile-able
        (if-let* ((pkg-dir (expand-file-name (symbol-name name)
                                             package-user-dir))
                  ((file-exists-p pkg-dir))
@@ -2317,9 +2318,9 @@ with the directory."
                          (file-truename (package-desc-dir desc)))))
            ;; Package has been previously installed from :vc, but checkout
            ;; appeared on a subsequent eval.
-           (progn
-             (message "%s overriding VC package %s in %s with checkout in %s"
-                      keyword name pkg-dir dir)
+           (use-package-concat
+             `((message "%s overriding VC package %s in %s with checkout in %s"
+                        ,keyword ,name ,pkg-dir ,dir))
 
              (if (bound-and-true-p byte-compile-current-file)
                  (funcall #'package-delete desc 'force)
@@ -2327,17 +2328,17 @@ with the directory."
                                  'force))))
          ;; Package has been previously installed from ELPA, but checkout
          ;; appeared on a subsequent eval.
-         (when (assq name package-alist)
-           (message "%s overriding ELPA package %s with checkout in %s"
-                    keyword name dir)
-           (if (bound-and-true-p byte-compile-current-file)
-               (funcall #'package-delete desc 'force)
-             `((package-delete (cadr (assq ',name package-alist))
-                               'force)))))
+         (when-let* ((desc (cadr (assq name package-alist)))
+                     ((not (package-desc-kind desc))))
+           (use-package-concat
+            `((message "%s overriding ELPA package %s with checkout in %s"
+                       ,keyword ,name ,dir))
+            (if (bound-and-true-p byte-compile-current-file)
+                (funcall #'package-delete desc 'force)
+              `((package-delete (cadr (assq ',name package-alist))
+                                'force))))))
 
-
-       ;; TODO: built-ins are `package-installed-p' too
-
+       ;; TODO: built-ins are `package-installed-p' too, so :vc won't install them
        (unless (plist-member rest :vc)
          (if (bound-and-true-p byte-compile-current-file)
              (funcall #'use-package-vc-install (list name) dir) ; compile time
@@ -2355,6 +2356,7 @@ with the directory."
            (nthcdr
             (1+ (cl-position :load-path use-package-keywords))
             use-package-keywords))))
+
 
 ;; TODO: unlikely as we want to be affecting :load-path
 ;; (eval-after-load 'use-package-core
