@@ -2306,33 +2306,37 @@ with the directory."
        ;; :load-path has been done, let's do as it does.
        `((eval-and-compile (add-to-list 'load-path ,dir)))
 
-       (when-let* ((pkg-dir (expand-file-name (symbol-name name)
-                                              package-user-dir))
-                   ((file-exists-p pkg-dir))
-                   ((not (equal (file-truename pkg-dir)
-                                (file-truename dir)))))
-         ;; Handle a case package has been originally installed from :vc,
-         ;; but checkout appeared on a subsequent eval.  Do as
-         ;; `package-vc-install-from-checkout' would, but don't ask any
-         ;; questions. Just leave a trace.
-         (message "%s overriding package %s in %s with checkout in %s"
-                  keyword name pkg-dir dir)
-         (use-package-concat
-          (if (bound-and-true-p byte-compile-current-file)
-              (funcall #'package--delete-directory pkg-dir)     ; compile time
-            `((package--delete-directory ,pkg-dir)))            ; runtime
+       (if-let* ((pkg-dir (expand-file-name (symbol-name name)
+                                            package-user-dir))
+                 ((file-exists-p pkg-dir))
+                 ((not (equal (file-truename pkg-dir)
+                              (file-truename dir))))
+                 (desc (cadr (assq name package-alist)))
+                 ((eq 'vc (package-desc-kind desc)))
+                 ((equal (file-truename (file-name-as-directory pkg-dir))
+                         (file-truename (package-desc-dir desc)))))
+           ;; Package has been previously installed from :vc, but checkout
+           ;; appeared on a subsequent eval.
+           (progn
+             (message "%s overriding VC package %s in %s with checkout in %s"
+                      keyword name pkg-dir dir)
 
-          ;; The `package--delete-directory' doesn't mark package as
-          ;; uninstalled, yet `use-package-vc-install' doesn't install when
-          ;; package has already been installed, so we need to ensure
-          ;; installation here.
-          (if (bound-and-true-p byte-compile-current-file)
-              (when (package-installed-p name)
-                (funcall #'package-vc-install-from-checkout     ; compile time
-                         dir (symbol-name name)))
-            `((when (package-installed-p ',name)
-                (package-vc-install-from-checkout               ; runtime
-                 ,dir ,(symbol-name name)))))))
+             (if (bound-and-true-p byte-compile-current-file)
+                 (funcall #'package-delete desc 'force)
+               `((package-delete (cadr (assq ',name package-alist))
+                                 'force))))
+         ;; Package has been previously installed from ELPA, but checkout
+         ;; appeared on a subsequent eval.
+         (when (assq name package-alist)
+           (message "%s overriding ELPA package %s with checkout in %s"
+                    keyword name dir)
+           (if (bound-and-true-p byte-compile-current-file)
+               (funcall #'package-delete desc 'force)
+             `((package-delete (cadr (assq ',name package-alist))
+                               'force)))))
+
+
+       ;; TODO: built-ins are `package-installed-p' too
 
        (unless (plist-member rest :vc)
          (if (bound-and-true-p byte-compile-current-file)
@@ -2364,11 +2368,13 @@ with the directory."
      :vc t
      :load-path "/foo/bar"))))
 
+(package-desc-archive (cadr (assq 'delight package-alist)))
+
 (quote
  (macroexpand
   (quote
    (use-package delight
-     :exordium-vc-load-path "/Users/pkryger/gh/delight"))))
+     :exordium-vc-load-path "/Users/pkryger/gh/savannah/delight"))))
 
 (defvar exordium--vc-load-path-orig-ensure-func
   (nth 2 (assq :ensure use-package-defaults)))
@@ -2383,7 +2389,7 @@ directory for a package NAME."
     (and (not (when-let* ((dir (or
                                 (alist-get name
                                            exordium-use-package-vc-load-paths)
-                                (plist-get args :exordium-vc-load-path))))
+                                (car (plist-get args :exordium-vc-load-path)))))
                 (exordium--vc-load-path-checkout-p dir)))
          ;; Do as `use-package-process-keywords' does.
          (if (and func (functionp func))
