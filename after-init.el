@@ -2227,10 +2227,12 @@ I.e., created with `scratch' or named scratch-"
                            (lambda (dir)
                              (string= dir (package-desc-dir pkg-desc)))
                            load-path)))
-        ;; `package-vc-install-from-checkout' complains when the symlink exists
-        (when (file-exists-p pkg-dir)
-          (delete-file pkg-dir))
-        (package-vc-install-from-checkout dir name)))
+          (unless (equal (file-truename pkg-dir)
+                         (file-truename dir))
+            ;; `package-vc-install-from-checkout' complains when the symlink exists
+            (when (file-exists-p pkg-dir)
+              (delete-file pkg-dir))
+            (package-vc-install-from-checkout dir name))))
   (message "Skipping installation of packages from repositories: %s"
            (if (fboundp 'package-vc-install-from-checkout)
                "no workspace"
