@@ -145,53 +145,58 @@ checkout for a package NAME."
              (funcall func name args)
            (eval func)))))
 
+(defun exordium--tree-memq-p (elt tree)
+  "Return non-nil if ELT is an element of TREE.
+Comparison is done with `eq'."
+  (if (consp tree)
+      (pcase-let ((`(,left . ,right) tree))
+        (if (eq left elt) tree
+          (or (exordium--tree-memq-p elt left)
+              (exordium--tree-memq-p elt right))))
+    (when (eq tree elt))))
+
+;; Keep :ensure's default value gate up to date
 (eval-after-load 'use-package-core
-  '(setf (nth 2 (assq :ensure use-package-defaults))
-         (exordium--vc-checkout-default-gate
-          exordium--vc-checkout-orig-ensure-func)))
+  '(when-let* ((current (nth 2 (assq :ensure use-package-defaults)))
+               ((not (exordium--tree-memq-p 'exordium--vc-checkout-default-gate
+                                            current))))
+     (setf (nth 2 (assq :ensure use-package-defaults))
+           (exordium--vc-checkout-default-gate
+            current))))
 
 (let ((use-package-always-ensure t)
       (exordium-vc-checkout-alist '((difftastic . "/Users/pkryger/gh/pkryger/difftastic.el"))))
   (not
-   (funcall (exordium--vc-checkout-default-gate
-             exordium--vc-checkout-orig-ensure-func)
+   (funcall (nth 2 (assq :ensure use-package-defaults))
             'difftastic nil)))
 
 (let ((use-package-always-ensure t)
       (exordium-vc-checkout-alist '((difftastic . "/not-an-existing-path"))))
-  (funcall (exordium--vc-checkout-default-gate
-            exordium--vc-checkout-orig-ensure-func)
+  (funcall (nth 2 (assq :ensure use-package-defaults))
            'difftastic nil))
 
 (let ((use-package-always-ensure t)
       (exordium-vc-checkout-alist '((difftastic . t))))
-  (funcall (exordium--vc-checkout-default-gate
-            exordium--vc-checkout-orig-ensure-func)
+  (funcall (nth 2 (assq :ensure use-package-defaults))
            'difftastic nil))
 
 (let ((use-package-always-ensure t)
       (exordium-vc-checkout-alist nil))
   (not
-   (funcall (exordium--vc-checkout-default-gate
-             exordium--vc-checkout-orig-ensure-func)
+   (funcall (nth 2 (assq :ensure use-package-defaults))
             'difftastic '(:exordium-vc-checkout
-                          "/Users/pkryger/gh/pkryger/difftastic.el"))))
+                          ("/Users/pkryger/gh/pkryger/difftastic.el")))))
 
 (let ((use-package-always-ensure t)
       (exordium-vc-checkout-alist nil))
-   (funcall (exordium--vc-checkout-default-gate
-                       exordium--vc-checkout-orig-ensure-func)
-                      'difftastic '(:exordium-vc-checkout
-                                    "/not-an-existing-path")))
-
-(let ((use-package-always-ensure t)
-      (exordium-vc-checkout-alist nil))
-  (funcall (exordium--vc-checkout-default-gate
-            exordium--vc-checkout-orig-ensure-func)
+  (funcall (nth 2 (assq :ensure use-package-defaults))
            'difftastic '(:exordium-vc-checkout
-                         t)))
+                         ("/not-an-existing-path"))))
 
-(defvar pk/orig-use-package-defaults use-package-defaults)
+(let ((use-package-always-ensure t)
+      (exordium-vc-checkout-alist nil))
+  (funcall (nth 2 (assq :ensure use-package-defaults))
+           'difftastic '(:exordium-vc-checkout (t))))
 
 (eval-after-load 'use-package-core
   '(setf (alist-get :exordium-vc-checkout use-package-defaults)
@@ -204,9 +209,7 @@ checkout for a package NAME."
         (and (when-let* ((dir (alist-get name
                                          exordium-vc-checkout-alist))
                          ((exordium--vc-checkout-valid-p dir)))
-             (not (plist-member args :exordium-vc-checkout)))))))
-
-
+             (not (plist-member args :exordium-vc-checkout))))))))
 
 (provide 'init-vc-checkout)
 
