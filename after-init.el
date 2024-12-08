@@ -293,10 +293,28 @@
 (setq confirm-kill-emacs 'y-or-n-p)
 (setq-default display-line-numbers-widen t)
 
-;; See `split-window-sensibly' doc...
-;; this setup basically forces a vertical split, but only up to 2 windows in a frame
-(setq split-height-threshold nil)
-(setq split-width-threshold 180)
+
+
+(use-package window
+  :ensure nil
+  :custom
+  ;; Typical full screen window on built in macBook Air M2 13" is 179
+  ;; columns. This includes line numbers and fringes.  Yet windows as small as
+  ;; 160 seems to be quite all right fitting horizontal split.  On the other
+  ;; hand, typical full screen window height on external 4k screen connected to
+  ;; the same laptop is 88. See `split-window-sensibly' doc.  This setup
+  ;; basically forces a horizontal split, but only up to 2 windows in a frame.
+  ;; Values used are compared against:
+  ;;
+  ;; (window-width (selected-window))
+  ;; (window-height (selected-window))
+  ;;
+  ;; For testing use:
+  ;;
+  ;; (split-window-sensibly)
+  (split-height-threshold 90)
+  (split-width-threshold 160))
+
 
 ;; ITERM2 MOUSE SUPPORT from https://www.emacswiki.org/emacs/iTerm2
 (unless window-system
@@ -829,7 +847,6 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 (diminish 'auto-revert-mode)
 (diminish 'undo-tree-mode)
 (diminish 'git-gutter-mode)
-(diminish 'company-mode)
 
 
 (use-package swiper
