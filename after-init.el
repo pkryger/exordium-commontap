@@ -293,10 +293,23 @@
 (setq confirm-kill-emacs 'y-or-n-p)
 (setq-default display-line-numbers-widen t)
 
-;; See `split-window-sensibly' doc...
-;; this setup basically forces a vertical split, but only up to 2 windows in a frame
-(setq split-height-threshold nil)
-(setq split-width-threshold 180)
+
+
+(use-package window
+  :ensure nil
+  :custom
+  ;; Typical full screen frame on built in macBook Air M2 13" is 179
+  ;; columns. This includes line numbers and fringes.  Yet windows as small as
+  ;; 160 seems to be quite all right fitting horizontal split.  See
+  ;; `split-window-sensibly' doc.  This setup basically forces a horizontal
+  ;; split, but only up to 2 windows in a frame.  Values used are compared
+  ;; against:
+  ;;
+  ;; (window-width (selected-window))
+  ;; (window-height (selected-window))
+  (split-height-threshold 80)
+  (split-width-threshold 160))
+
 
 ;; ITERM2 MOUSE SUPPORT from https://www.emacswiki.org/emacs/iTerm2
 (unless window-system
