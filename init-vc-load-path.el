@@ -41,24 +41,27 @@
                                         ; checkdoc-params: (keyword)
   "Delete package NAME if it has been previously installed from VC or ELPA.
 Avoid deletion when the package has been installed from VC into DIR."
-  (if-let* ((desc (cadr (assq name package-alist)))
-            ((eq 'vc (package-desc-kind desc)))
-            ((not (equal (file-truename dir)
-                         (file-truename (package-desc-dir desc))))))
-      ;; Package has been previously installed from :vc, but checkout
-      ;; appeared on a subsequent eval.
-      (progn
-        (message "%s overriding VC package %s in %s with checkout in %s"
-                 keyword name (package-desc-dir desc) dir)
-        (package-delete desc 'force))
-
-    ;; Package has been previously installed from ELPA, but checkout
-    ;; appeared on a subsequent eval.
-    (when-let* ((desc (cadr (assq name package-alist)))
-                ((not (package-desc-kind desc))))
-       (message "%s overriding ELPA package %s with checkout in %s"
-                keyword name dir))
-       (package-delete desc 'force)))
+  (when-let* ((desc (cadr (assq name package-alist))))
+    (pcase (package-desc-kind desc)
+           ((and 'vc
+                 (guard (not
+                         (equal (file-truename (file-name-as-directory dir))
+                                (file-truename (package-desc-dir desc))))))
+            ;; Package has been previously installed from :vc, but checkout
+            ;; appeared on a subsequent eval.  This is to avoid deleting
+            ;; package when it has been already VC installed from a desired
+            ;; checkout.
+            (message "%s overriding VC package %s in %s with checkout in %s"
+                     keyword name (package-desc-dir desc) dir)
+            (package-delete desc 'force))
+           ((and (pred (not (lambda (kind)
+                              (eq kind 'vc))))
+                 kind)
+            ;; Package has been previously installed from ELPA (or otherwise),
+            ;; but checkout appeared on a subsequent eval.
+            (message "%s overriding %s package %s with checkout in %s"
+                     keyword (or kind "ELPA") name dir)
+            (package-delete desc 'force)))))
 
 (defun use-package-handler/:exordium-vc-load-path (name keyword arg rest state)
                                         ; checkdoc-params: (keyword rest state)
