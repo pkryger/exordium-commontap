@@ -1303,9 +1303,18 @@ All the reminder parts of the separator will have
 
 
 (use-package so-long
+  :init
+  (defun pk/so-long-skip-bidi-inhibit-bpa-override ()
+    "Don't override `bidi-inhibit-bpa' by `so-long'."
+    (setq-local so-long-variable-overrides
+                (remove '(bidi-inhibit-bpa . t) so-long-variable-overrides)))
+  (use-package nxml-mode
+    :ensure nil
+    :defer t
+    :hook
+    (nxml-mode . #'pk/so-long-skip-bidi-inhibit-bpa-override))
   :config
   (setq-default bidi-paragraph-direction 'left-to-right)
-  (setq bidi-inhibit-bpa t)
   (global-so-long-mode))
 
 
