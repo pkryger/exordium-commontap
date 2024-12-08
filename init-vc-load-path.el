@@ -6,7 +6,7 @@
 ;;; Code:
 (require 'package)
 (require 'use-package)
-
+(require 'vc)
 
 (defcustom exordium-use-package-vc-load-paths
   '((difftastic . "/Users/pkryger/gh/pkryger/difftastic.el"))
@@ -31,11 +31,12 @@
   (use-package-only-one (symbol-name keyword) args
     #'use-package-normalize-paths))
 
-(defun exordium--vc-load-path-checkout-p (dir)
+(defun exordium--vc-load-path-valid-p (dir)
   "Return non nil when DIR is good enough for checkout."
   (and (stringp dir)
        (not (equal "" dir))
-       (file-directory-p dir)))
+       (file-directory-p dir)
+       (vc-responsible-backend dir)))
 
 (defun exordium--vc-load-path-package-delete (name keyword dir)
                                         ; checkdoc-params: (keyword)
@@ -74,7 +75,7 @@ that the directory can be prepended to :load-path's arguments to
 force :vc to eventually call `package-vc-install-from-checkout'
 with the directory."
   (if-let* ((dir (car arg))
-            ((exordium--vc-load-path-checkout-p dir)))
+            ((exordium--vc-load-path-valid-p dir)))
       (use-package-concat
        ;; :load-path has been done, let's do as it does.
        `((eval-and-compile (add-to-list 'load-path ,dir)))
@@ -139,7 +140,7 @@ directory for a package NAME."
                                 (alist-get name
                                            exordium-use-package-vc-load-paths)
                                 (car (plist-get args :exordium-vc-load-path)))))
-                (exordium--vc-load-path-checkout-p dir)))
+                (exordium--vc-load-path-valid-p dir)))
          ;; Do as `use-package-process-keywords' does.
          (if (and func (functionp func))
              (funcall func name args)
@@ -202,8 +203,8 @@ directory for a package NAME."
          (list (alist-get name exordium-use-package-vc-load-paths))))
       (lambda (name args)
         (and (when-let* ((dir (alist-get name
-                                         exordium-use-package-vc-load-paths)))
-               (exordium--vc-load-path-checkout-p dir))
+                                         exordium-use-package-vc-load-paths))
+                         ((exordium--vc-load-path-valid-p dir)))
              (not (plist-member args :exordium-vc-load-path)))))))
 
 
