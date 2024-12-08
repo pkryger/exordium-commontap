@@ -67,26 +67,27 @@ Avoid deletion when the package has been installed from VC into DIR."
 (defun use-package-handler/:exordium-vc-checkout (name keyword arg rest state)
                                         ; checkdoc-params: (keyword rest state)
   "VC Install package NAME from an existing checkout directory.
-Direcotory is (car ARG).  Package VC installation is done only if
-the directory exists.
+Package VC installation is done only if the checkout exists
+in DIR being (car ARG).
 
-Processing is done after :load-path, such
-that the directory can be prepended to :load-path's arguments to
-force :vc to eventually call `package-vc-install-from-checkout'
-with the directory."
+Processing is done after :load-path, such that the DIR can be
+prepended to :load-path's arguments to force :vc handler to eventually
+call `package-vc-install-from-checkout' with the DIR."
   (if-let* ((dir (car arg))
             ((exordium--vc-checkout-valid-p dir)))
       (use-package-concat
        ;; :load-path has been done, let's do as it does.
        `((eval-and-compile (add-to-list 'load-path ,dir)))
 
-       ;;
        (if (bound-and-true-p byte-compile-current-file)
            (funcall #'exordium--vc-checkout-package-delete name keyword dir)
          `((exordium--vc-checkout-package-delete ',name ,keyword ,dir)))
 
-       ;; TODO: built-ins are `package-installed-p' too, so :vc won't install them
+       ;; TODO: built-ins are `package-installed-p' too, so :vc won't install
+       ;; them
+
        (unless (plist-member rest :vc)
+         ;; Simulate :vc handler if there none expected
          (if (bound-and-true-p byte-compile-current-file)
              (funcall #'use-package-vc-install (list name) dir) ; compile time
            `((use-package-vc-install ',(list name) ,dir))))     ; runtime
@@ -126,16 +127,14 @@ with the directory."
    (use-package delight
      :exordium-vc-checkout "/Users/pkryger/gh/savannah/delight"))))
 
-(defvar exordium--vc-checkout-orig-ensure-func
-  (nth 2 (assq :ensure use-package-defaults)))
-
 (defun exordium--vc-checkout-default-gate (func)
-  "Create a wrapper around FUNC to gate setting of default value.
+  "Create a wrapper around FUNC to gate setting of a default value.
 Wrapper is designed to be used around default gate function for
 keyword :ensure in `use-pakcage-defaults'.  It prevents setting
-up the defult for keyword :ensure when there's an existing
-directory for a package NAME."
+up the defult for the keyword :ensure when there's an existing
+checkout for a package NAME."
   (lambda (name args)
+    'exordium--vc-checkout-default-gate ; marker
     (and (not (when-let* ((dir (or
                                 (alist-get name
                                            exordium-vc-checkout-alist)
