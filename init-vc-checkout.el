@@ -110,22 +110,18 @@ call `package-vc-install-from-checkout' with the DIR."
 ;; (eval-after-load 'use-package-core
 ;;   '(add-to-list 'use-package-keywords :exordium-vc-checkout))
 
-(quote
- (macroexpand
-  (quote
-   (use-package difftastic
-     :exordium-vc-checkout "/Users/pkryger/gh/pkryger/difftastic.el"
-     :vc t
-     :load-path "/foo/bar"))))
-
-(quote
- (package-desc-archive (cadr (assq 'delight package-alist))))
-
-(quote
- (macroexpand
-  (quote
-   (use-package delight
-     :exordium-vc-checkout "/Users/pkryger/gh/savannah/delight"))))
+(eval-after-load 'use-package-core
+  '(setf (alist-get :exordium-vc-checkout use-package-defaults)
+    '((lambda (name _args)
+        (use-package-normalize/:exordium-vc-checkout
+         name
+         :exordium-vc-checkout
+         (list (alist-get name exordium-vc-checkout-alist))))
+      (lambda (name args)
+        (and (when-let* ((dir (alist-get name
+                                         exordium-vc-checkout-alist))
+                         ((exordium--vc-checkout-valid-p dir)))
+             (not (plist-member args :exordium-vc-checkout))))))))
 
 (defun exordium--vc-checkout-default-gate (func)
   "Create a wrapper around FUNC to gate setting of a default value.
@@ -163,6 +159,29 @@ Comparison is done with `eq'."
      (setf (nth 2 (assq :ensure use-package-defaults))
            (exordium--vc-checkout-default-gate
             current))))
+
+;; Tests
+
+(quote
+ (macroexpand
+  (quote
+   (use-package difftastic
+     :exordium-vc-checkout "/Users/pkryger/gh/pkryger/difftastic.el"
+     :vc t
+     :load-path "/foo/bar"))))
+
+(quote
+ (package-desc-archive (cadr (assq 'delight package-alist))))
+
+(quote
+ (macroexpand
+  (quote
+   (use-package delight
+     :exordium-vc-checkout "/Users/pkryger/gh/savannah/delight"))))
+
+
+(exordium--tree-memq-p 'exordium--vc-checkout-default-gate
+                       (nth 2 (assq :ensure use-package-defaults)))
 
 (let ((use-package-always-ensure t)
       (exordium-vc-checkout-alist '((difftastic . "/Users/pkryger/gh/pkryger/difftastic.el"))))
@@ -197,19 +216,7 @@ Comparison is done with `eq'."
       (exordium-vc-checkout-alist nil))
   (funcall (nth 2 (assq :ensure use-package-defaults))
            'difftastic '(:exordium-vc-checkout (t))))
-
-(eval-after-load 'use-package-core
-  '(setf (alist-get :exordium-vc-checkout use-package-defaults)
-    '((lambda (name _args)
-        (use-package-normalize/:exordium-vc-checkout
-         name
-         :exordium-vc-checkout
-         (list (alist-get name exordium-vc-checkout-alist))))
-      (lambda (name args)
-        (and (when-let* ((dir (alist-get name
-                                         exordium-vc-checkout-alist))
-                         ((exordium--vc-checkout-valid-p dir)))
-             (not (plist-member args :exordium-vc-checkout))))))))
+
 
 (provide 'init-vc-checkout)
 
