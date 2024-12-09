@@ -117,6 +117,13 @@
                       `(lambda (&rest _)
                          (list 'ansi-color-bold (list ':foreground ,red))))
 
+          (customize-set-variable 'highlight-symbol-colors `(,bg-yellow-intense
+                                                             ,bg-magenta-intense
+                                                             ,bg-cyan-intense
+                                                             ,bg-green-intense
+                                                             ,bg-red-intense
+                                                             ,bg-blue-intense))
+
           (custom-theme-set-faces
            'user
            `(fixed-pitch ((t (,@c :family ,(face-attribute 'default :family) :height ,(face-attribute 'default :height)))))
