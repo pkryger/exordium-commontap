@@ -2275,7 +2275,6 @@ I.e., created with `scratch' or named scratch-"
   :defer t
   :init
   (use-package transient
-    :defer t
     :autoload (transient-get-suffix
                transient-parse-suffix))
   (use-package magit
