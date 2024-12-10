@@ -33,7 +33,7 @@ jobs:
           # repository: 'emacs-exordium/exordium'
           repository: 'pkryger/exordium'
           path: '.emacs.d'
-          ref: exordium-require
+          ref: master
       - uses: actions/checkout@v4
         with:
           path: '.emacs.d/taps/commontap'
