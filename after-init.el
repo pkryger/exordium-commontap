@@ -2281,7 +2281,7 @@ I.e., created with `scratch' or named scratch-"
     :defer t
     :bind
     (:map magit-blame-read-only-mode-map
-     ("D" . #'difftastic-magit-show)
+     ("D" . #'difftastic-magit-diff)
      ("S" . #'difftastic-magit-show)))
   (with-eval-after-load 'magit-diff
     (when-let* ((suffix [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
