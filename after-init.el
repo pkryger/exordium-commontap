@@ -2147,21 +2147,6 @@ I.e., created with `scratch' or named scratch-"
   :defer t
   :bind ("C-o" . #'casual-editkit-main-tmenu)
   :init
-  (use-package casual-dired
-    :ensure nil
-    :defer t
-    :commands (casual-dired-sort-by-tmenu
-               casual-dired-search-replace-tmenu))
-  (use-package casual-ibuffer
-    :ensure nil
-    :defer t
-    :commands (casual-ibuffer-filter-tmenu
-               casual-ibuffer-sortby-tmenu))
-  (use-package casual-isearch
-    :ensure nil
-    :defer t
-    :commands (casual-isearch-tmenu))
-
   (use-package org-agenda
     :ensure nil
     :defer t
