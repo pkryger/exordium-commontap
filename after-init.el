@@ -2271,26 +2271,25 @@ I.e., created with `scratch' or named scratch-"
                "no workspace"
              "no `package-vc-install-from-checkout'")))
 
-
 (use-package difftastic
   :defer t
   :init
   (use-package transient
     :defer t
-    :autoload (transient-get-suffix))
+    :autoload (transient-get-suffix
+               transient-parse-suffix))
   (use-package magit
     :defer t
     :bind
     (:map magit-blame-read-only-mode-map
      ("D" . #'difftastic-magit-show)
      ("S" . #'difftastic-magit-show)))
-  (eval-after-load 'magit-diff
-    '(let ((last-suffix (transient-get-suffix 'magit-diff '(-1 -1))))
-       (transient-append-suffix 'magit-diff '(-1 -1)
-         [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
-          ("S" "Difftastic show" difftastic-magit-show)])
-       (when (equal (transient-get-suffix 'magit-diff '(-1 -1)) last-suffix)
-         (transient-remove-suffix 'magit-diff '(-1 -1))))))
+  (with-eval-after-load 'magit-diff
+    (when-let* ((suffix [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
+                         ("S" "Difftastic show" difftastic-magit-show)])
+                ((not (equal (transient-parse-suffix 'magit-diff suffix)
+                             (transient-get-suffix 'magit-diff '(-1 -1))))))
+      (transient-append-suffix 'magit-diff '(-1 -1) suffix))))
 
 
 (use-package ultra-scroll-mac
