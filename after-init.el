@@ -2275,6 +2275,9 @@ I.e., created with `scratch' or named scratch-"
 (use-package difftastic
   :defer t
   :init
+  (use-package transient
+    :defer t
+    :autoload (transient-get-suffix))
   (use-package magit
     :defer t
     :bind
@@ -2282,9 +2285,12 @@ I.e., created with `scratch' or named scratch-"
      ("D" . #'difftastic-magit-show)
      ("S" . #'difftastic-magit-show)))
   (eval-after-load 'magit-diff
-    '(transient-append-suffix 'magit-diff '(-1 -1)
-       [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
-        ("S" "Difftastic show" difftastic-magit-show)])))
+    '(let ((last-suffix (transient-get-suffix 'magit-diff '(-1 -1))))
+       (transient-append-suffix 'magit-diff '(-1 -1)
+         [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
+          ("S" "Difftastic show" difftastic-magit-show)])
+       (when (equal (transient-get-suffix 'magit-diff '(-1 -1)) last-suffix)
+         (transient-remove-suffix 'magit-diff '(-1 -1))))))
 
 
 (use-package ultra-scroll-mac
