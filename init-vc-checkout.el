@@ -8,22 +8,25 @@
 (require 'use-package)
 (require 'vc)
 
-(defcustom exordium-vc-checkout-alist
-  '((difftastic . "/Users/pkryger/gh/pkryger/difftastic.el"))
+(defcustom exordium-vc-checkout-alist nil
   "An alist of packages to install from VC checkout.
 Each element is of a form (PACKAGE DIR), where PACKAGE is the
 package name (symbol) and DIR is a directory containing a VC
-checkout with the package."
+checkout with the package.  When DIR is relative it will be
+expanded within `user-emacs-direcory'."
   :type '(alist :key-type (symbol :tag "Package")
                 :value-type (filepath :tag "Directory with checkout"))
   :group 'exordium)
 
-(defcustom exordium-always-vc-checkout t
+(defcustom exordium-always-vc-checkout nil
   "Treat every package as though it had specified using `:exordium-vc-checkout'.
 Note that this will cause already installed packages to be
-overwritten with the checked out version, should they have an entry in
-`exordium-vc-checkout-alist' and the directory with the checkout
-exists when the corresponding `use-package' is evaluated."
+overwritten with the checked out version, should they have an
+entry in `exordium-vc-checkout-alist' and the directory with the
+checkout exists when the corresponding `use-package' is
+evaluated.  For example this can happen when Emacs is restarted
+or when `use-package' form is evaluated with `eval-buffer',
+`eval-last-sexp' etc."
   :type 'boolean
   :group 'exordium)
 
