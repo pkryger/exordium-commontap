@@ -376,11 +376,32 @@
              flycheck-rx-to-string
              flycheck-buffer-saved-p
              flycheck-checker-get)
+  :functions (pk/loaddefs-generate--filter-flycheck)
   :init
   (use-package project
     :ensure nil
     :autoload (project-root))
+
+  (defun pk/loaddefs-generate--filter-flycheck (args)
+    "Append flycheck_ files to ignored files in 2nd arg in ARGS.
+When such temporary flycheck_ files are present they can be
+scrubbed for autoloads clobbering real declarations.  This only
+happens in `project' directories, such that it shouldn't kick in
+packages are reinstalled from MELPA."
+    (when-let* ((default-directory (nth 0 args))
+                (project-root (project-root (project-current))))
+      (setf (nth 2 args)
+            (append (nth 2 args)
+                    (directory-files
+                     project-root t
+                     (rx string-start "flycheck_"
+                         (one-or-more (or alnum punct)) ".el" string-end)))))
+    args)
+
   :config
+  (advice-add 'loaddefs-generate
+              :filter-args #'pk/loaddefs-generate--filter-flycheck)
+
   (flycheck-define-checker pk/python-blocklint
     "Blocklint: blocks usage of non-inclusive wording.
 See: https://github.com/PrincetonUniversity/blocklint"
