@@ -620,9 +620,18 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 (use-package projectile
   :autoload (projectile-project-name
-             projectile-register-project-type)
-  :functions (pk/projectile--emacs-package-build)
+             projectile-register-project-type
+             projectile-verify-file
+             projectile-verify-file-wildcard)
+  :functions (pk/projectile--emacs-package-build
+              pk/projectile--emacs-package-project-p)
   :init
+  (defun pk/projectile--emacs-package-project-p (&optional dir)
+    (or (projectile-verify-file "Cask" dir)
+        (projectile-verify-file "init.el" dir) ;; Exordium!
+        (projectile-verify-file "lisp" dir)
+        (and (projectile-verify-file "src" dir)
+             (projectile-verify-file-wildcard "src/*.el" dir))))
   (defun pk/projectile--emacs-package-build ()
     (when-let* ((project-name (projectile-project-name))
                 (pkg-desc (cadr
@@ -636,11 +645,12 @@ See: https://github.com/PrincetonUniversity/blocklint"
                                project-name))
                             package-alist))))
       (package-vc-rebuild pkg-desc)))
-  (defun pk/projectile--emacs-packate-test ()
+  (defun pk/projectile--emacs-package-test ()
     (call-interactively #'ert))
   :config
   (projectile-register-project-type
-   'pk/emacs-package nil
+   'pk/emacs-package
+   #'pk/projectile--emacs-package-project-p
    :install #'pk/projectile--emacs-package-build
    :test "make compile lint test"
    :test-dir "test/"
