@@ -28,7 +28,7 @@ exists when the corresponding `use-package' is evaluated."
   :group 'exordium)
 
 (use-package use-package-core
-  :exordium-force-elpa gnu
+  :ensure nil
   :defer t
   :autoload (use-package-process-keywords))
 
@@ -43,12 +43,13 @@ exists when the corresponding `use-package' is evaluated."
       (pcase arg
         ('nil nil) ; don't install when `:exordium-vc-checkout' is nil
         ('t (list name))
-        ((pred stringp)
+        ((and (pred stringp)
+              (guard (< 0 (length arg))))
          (let ((path (if (file-name-absolute-p arg)
                          arg
                        (expand-file-name arg user-emacs-directory))))
            (list name path)))
-        (_ (use-package-error (format "Unrecognized argument to %s.\
+        (_ (use-package-error (format "Unrecognized argument to %s. \
 The keyword wants no arguments or an argument of nil, t, \
 or a directory with a checkout."
                                       (symbol-name keyword)))))))
@@ -63,7 +64,7 @@ or a directory with a checkout."
   (and (stringp dir)
        (not (equal "" dir))
        (file-directory-p dir)
-       (vc-responsible-backend dir)))
+       (vc-responsible-backend dir t)))
 
 (defun exordium--vc-checkout-package-delete (desc)
   "Forcibly delete package DESC and remove it from `load-path'."
@@ -82,32 +83,35 @@ or ELPA, except for the case when the package has already been VC
 installed from DIR."
   (when-let* ((dir (or dir (alist-get name exordium-vc-checkout-alist)))
               ((exordium--vc-checkout-valid-p dir)))
-    (when-let* ((desc (cadr (assq name package-alist)))
-                (pkg-dir (package-desc-dir desc)))
-      (pcase (package-desc-kind desc)
-        ((and 'vc
-              (guard (not
-                      (equal (file-truename (file-name-as-directory dir))
-                             (file-truename (file-name-as-directory
-                                             (package-desc-dir desc)))))))
-         ;; Package has been previously installed from :vc, but checkout
-         ;; appeared on a subsequent eval.  This is to avoid deleting package
-         ;; when it has been already VC installed from the specified checkout
-         ;; in DIR.
-         (message ":exordium-vc-checkout overriding VC package %s in \
+    (let (installed)
+     (when-let* ((desc (cadr (assq name package-alist)))
+                 (pkg-dir (package-desc-dir desc)))
+       (pcase (package-desc-kind desc)
+         ((and
+           'vc
+           (guard (not
+                   (setq installed
+                         (equal (file-truename (file-name-as-directory dir))
+                                (file-truename (file-name-as-directory
+                                                (package-desc-dir desc))))))))
+          ;; Package has been previously installed from :vc, but checkout
+          ;; appeared on a subsequent eval.  This is to avoid deleting package
+          ;; when it has been already VC installed from the specified checkout
+          ;; in DIR.
+          (message ":exordium-vc-checkout overriding VC package %s in \
 %s with checkout in %s"
-                  name (package-desc-dir desc) dir)
-         (exordium--vc-checkout-package-delete desc))
-        ((and kind
-              (guard (not (eq kind 'vc))))
-         ;; Package has been previously installed from ELPA (or otherwise), but
-         ;; checkout appeared on a subsequent eval.
-         (message ":exordium-vc-checkout overriding %s package %s \
+                   name (package-desc-dir desc) dir)
+          (exordium--vc-checkout-package-delete desc))
+         ((and kind
+               (guard (not (eq kind 'vc))))
+          ;; Package has been previously installed from ELPA (or otherwise), but
+          ;; checkout appeared on a subsequent eval.
+          (message ":exordium-vc-checkout overriding %s package %s \
 with checkout in %s"
-                  (or kind "ELPA") name dir)
-         (exordium--vc-checkout-package-delete desc))))
-
-    (package-vc-install-from-checkout dir (symbol-name name))))
+                   (or kind "ELPA") name dir)
+          (exordium--vc-checkout-package-delete desc))))
+     (unless installed
+       (package-vc-install-from-checkout dir (symbol-name name))))))
 
 (defun use-package-handler/:exordium-vc-checkout (name _keyword arg rest state)
   "Generate code to install package NAME from a VC checkout, or do so directly.
@@ -136,8 +140,8 @@ Also see the Info node `(use-package) Creating an extension'."
   (let ((body (use-package-process-keywords name rest state)))
     (when arg ; `:exordium-vc-checkout' is non-nil
       (if (bound-and-true-p byte-compile-current-file)
-          (apply #'use-package-vc-install arg)                   ; compile time
-        (push `(use-package-vc-install ',(car arg) ,(cadr arg))
+          (apply #'exordium--vc-checkout-install arg)            ; compile time
+        (push `(exordium--vc-checkout-install ',(car arg) ,(cadr arg))
               body)))                                            ; runtime
     body))
 
@@ -148,31 +152,9 @@ Also see the Info node `(use-package) Creating an extension'."
                (list name))
              (lambda (name args)
                (and exordium-always-vc-checkout
-                    (not (when-let* ((arg (plist-member
-                                           args :exordium-vc-checkout)))
-                           (plist-get args :exordium-vc-checkout)))))))
+                    (not (plist-get args :exordium-vc-checkout))))))
      (add-to-list 'use-package-keywords :exordium-vc-checkout)))
 
-
-;; Tests
-(quote
- (use-package difftastic))
-
-(quote
- (use-package difftastic
-   :exordium-vc-checkout "/Users/pkryger/gh/pkryger/difftastic.el"))
-
-(quote
- (use-package difftastic
-   :exordium-vc-checkout))
-
-(quote
- (use-package difftastic
-   :exordium-vc-checkout t))
-
-(quote
- (use-package difftastic
-   :exordium-vc-checkout nil))
 
 
 (provide 'init-vc-checkout)
