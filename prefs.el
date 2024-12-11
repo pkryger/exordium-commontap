@@ -11,6 +11,22 @@
     (load (file-name-concat (locate-user-emacs-file "modules") "init-require"))))
 (exordium-require 'init-prefs)
 
+(setq exordium-always-vc-checkout t)
+(let ((workspace (or (getenv "GITHUB_WORKSPACE")
+                     (getenv "HOME"))))
+  (setq exordium-vc-checkout-alist
+        `(;; ("jinx"
+          ;;  . ,(file-name-concat workspace "gh" "minad" "jinx"))
+          ("difftastic"
+           . ,(file-name-concat workspace "gh" "pkryger" "difftastic.el"))
+          ("basic-stats"
+           . ,(file-name-concat workspace "gh" "pkryger" "basic-stats"))
+          ("emacs-toml"
+           . ,(file-name-concat workspace "gh" "gongo" "emacs-toml"))
+          ("ultra-scroll-mac"
+           . ,(file-name-concat workspace "gh" "jdtsmith" "ultra-scroll-mac")))))
+
+
 (setq exordium-preferred-frame-width  nil
       exordium-preferred-frame-height nil)
 (setq exordium-preferred-fonts
