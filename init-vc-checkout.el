@@ -2,6 +2,109 @@
 
 ;;; Commentary:
 ;;
+;; Description
+;; ===========
+;;
+;; This module provides implementation for `:exodrium-vc-checkout' keyword for
+;; `use-package'.
+;;
+;; When `:exordium-vc-checkout' keyword is specified, containing `use-package'
+;; form will first try to install the package from an existing checkout
+;; directory.  Such a directory can be either specified as an argument to the
+;; `:exordium-vc-checkout' keyword or can be inferred from
+;; `exordium-vc-checkout-alist' (which see).  For example:
+;;
+;; (use-package a-package
+;;   :exordium-vc-checkout "/a/path")
+;;
+;; will attempt to install `a-package' from existing checkout located in
+;; "/a/path", where as:
+;;
+;; (use-package a-package
+;;   :exordium-vc-checkout)
+;;
+;; will search for directory in `exordium-vc-checkout-alist' and, should it
+;; exist the `a-package' will be installed form there.
+;;
+;; Alternatively, when `exordium-always-vc-checkout' is non nil all
+;; `use-package' declarations behave as if they had `:exordium-vc-checkout'
+;; keyword specified.  That is for each package a checkout directory will be
+;; inferred from `exordium-vc-checkout-alist'.  For example:
+;;
+;; (setq exordium-always-vc-checkout t)
+;; (setq exordium-vc-checkout-alist '((a-package . "/a/path")))
+;; (use-package a-package)
+;;
+;; will search for directory in `exordium-vc-checkout-alist' and, should it
+;; exist the `a-package' will be installed form there.
+;;
+;; When `exordium-always-vc-checkout' is non nil and `use-package' form has
+;; specified `:exordium-vc-checkout nil' the latter takes precedence.  That is
+;; no installation from checkout directory will be attempted.
+;;
+;; Package is only ever installed from a directory if it seems be valid
+;; checkout directory: it exists and is recognisable by
+;; `vc-responsible-backend' (which see).
+;;
+;; Motivation And Main Use Case
+;; ============================
+;;
+;; At first glance the form following form:
+;;
+;; (use-package a-package
+;;   :vc-checkout "/a/path")
+;;
+;; seems to be very similar with regards to side effects to the:
+;;
+;; (use-package a-package
+;;   :vc t
+;;   :load-path "/a/path")
+;;
+;; Indeed, both forms behave very similar.  Both will install `a-package' from
+;; "/a/path" should it exists.  However, the `:exordium-vc-checkout' will also
+;; uninstall `a-package' should it be previously installed (for example from
+;; ELPA).  Such a behaviour is intentional and is main motivation for this
+;; module.
+;;
+;; It allows Exordium to install packages as usual, while allowing users to
+;; shadow a certain subset of them to be automatically, without a need to
+;; update Exordium's code.  And as a bonus, when checkouts don't exist, for
+;; example when Exordium and taps have been freshly cloned on a new computer,
+;; packages will be installed from default locations as specified in Exordium.
+;; Or when the tap is shared between multiple computers, each of them can use
+;; different version of `a-package'.
+;;
+;; It is useful for developing external packages used by Exordium, as it
+;; provides full control over the checkouts, while avoiding manual packages
+;; (re)installations and manual `package-install-from-vc-checkout'
+;; specifications.
+;;
+;; Consider the following setup:
+;;
+;; in taps/my-tap/prefs.el:
+;;
+;; (setq exordium-always-vc-checkout t)
+;; (setq exordium-vc-checkout-alist '((flycheck "~/src/flycheck")))
+;;
+;; in modules/init-flycheck.el:
+;;
+;; (use-package flycheck
+;;   ;; Exordium's secret sauce...)
+;;
+;; When Emacs is started for a first time `flycheck' is installed from MELPA.
+;; However, when at some point user decides they want to continue their work on
+;; some `flycheck' feature, all they need to do is to clone `flycheck'
+;; repository to "~/src/flycheck" and eval the relevant `use-package' form, say
+;; by putting a point in it and pressing `C-M-x'.  Alternatively, Emacs can be
+;; restarted to the same effect.
+;;
+;; N.B. All the caveats of reinstalling previously installed packages still
+;; apply here.
+;;
+;; N.B.B. Calls to `exordium--vc-checkout-install' are generated during
+;; macroexpansion and value of `exordium-always-vc-checkout' gates their
+;; inclusion.  Pay attention to these when byte compiling your code.
+
 
 ;;; Code:
 (require 'package)
