@@ -2249,6 +2249,7 @@ I.e., created with `scratch' or named scratch-"
            ("C-o" . casual-re-builder-tmenu))))
 
 
+(defvar exordium-vc-checkout-alist)
 (unless (featurep 'init-vc-checkout)
   (if (fboundp 'package-vc-install-from-checkout)
       (dolist (spec exordium-vc-checkout-alist)
