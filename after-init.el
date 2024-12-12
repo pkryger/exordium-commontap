@@ -553,12 +553,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
 (use-package dumb-jump
   :defer t
   :config
-  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
-  :bind
-  (:map c-mode-base-map
-        ;; Override exordium's greedy rtags
-        ("M-." . #'xref-find-definitions)
-        ("M-," . #'xref-go-back)))
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 
 
 ;; @todo: remove when exordium has it
