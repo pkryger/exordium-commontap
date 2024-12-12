@@ -40,8 +40,8 @@ Recursion is in order: FORM, (car FORM), (cdr FORM)."
   (exordium-vc-checkout-t-recursive-find-if
    (lambda (f)
      (and (eq 'exordium--vc-checkout-install (car f))
-          (eq package (eval (cadr f)))
-          (equal dir (caddr f))))
+          (or (eq package 'any) (eq package (eval (cadr f))))
+          (or (eq dir 'any) (equal dir (caddr f)))))
    form))
 
 
@@ -49,7 +49,7 @@ Recursion is in order: FORM, (car FORM), (cdr FORM)."
   (let ((exordium-always-vc-checkout nil)
         (form '(use-package dummy-package)))
     (should-not
-     (exordium--vc-checkout-install-exists 'dummy-package nil
+     (exordium--vc-checkout-install-exists 'any 'any
                                            (macroexpand form)))))
 
 (ert-deftest exordium-vc-checkout-always-macroexpansion-no-keyword ()
@@ -80,7 +80,7 @@ Recursion is in order: FORM, (car FORM), (cdr FORM)."
         (form '(use-package dummy-package
                  :exordium-vc-checkout nil)))
     (should-not
-     (exordium--vc-checkout-install-exists 'dummy-package nil
+     (exordium--vc-checkout-install-exists 'any 'any
                                            (macroexpand form)))))
 
 (ert-deftest exordium-vc-checkout-always-macroexpansion-nil ()
@@ -88,7 +88,7 @@ Recursion is in order: FORM, (car FORM), (cdr FORM)."
         (form '(use-package dummy-package
                  :exordium-vc-checkout nil)))
     (should-not
-     (exordium--vc-checkout-install-exists 'dummy-package nil
+     (exordium--vc-checkout-install-exists 'any 'any
                                            (macroexpand form)))))
 
 (ert-deftest exordium-vc-checkout-not-always-macroexpansion-t ()
