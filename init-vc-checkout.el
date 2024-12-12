@@ -139,7 +139,7 @@ or when `use-package' form is evaluated with `eval-buffer',
   :autoload (use-package-process-keywords))
 
 
-(defun use-package-normalize/:exordium-vc-checkout (name keyword args)
+(defun exordium--vc-checkout-use-package-normalize (name keyword args)
                                         ; checkdoc-params: (name keyword args)
   "Normalize possible arguments to the :exordium-vc-checkout."
   (cond
@@ -219,7 +219,7 @@ with checkout in %s"
      (unless installed
        (package-vc-install-from-checkout dir (symbol-name name))))))
 
-(defun use-package-handler/:exordium-vc-checkout (name _keyword arg rest state)
+(defun exordium--vc-checkout-use-package-handler (name _keyword arg rest state)
   "Generate code to install package NAME from a VC checkout, or do so directly.
 When the `use-package' declaration is part of a byte-compiled
 file, install the package during compilation; otherwise, add it
@@ -250,6 +250,12 @@ Also see the Info node `(use-package) Creating an extension'."
         (push `(exordium--vc-checkout-install ',(car arg) ,(cadr arg))
               body)))                                            ; runtime
     body))
+
+(defalias 'use-package-normalize/:exordium-vc-checkout
+  #'exordium--vc-checkout-use-package-normalize)
+
+(defalias 'use-package-handler/:exordium-vc-checkout
+  #'exordium--vc-checkout-use-package-handler)
 
 (eval-after-load 'use-package-core
   '(progn
