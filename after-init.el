@@ -1905,7 +1905,6 @@ I.e., created with `scratch' or named scratch-"
 
 
 (use-package flycheck-package
-  :defer t
   :config
   (eval-after-load 'flycheck
     '(flycheck-package-setup)))
