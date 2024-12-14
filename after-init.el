@@ -334,7 +334,11 @@
 (defun pk/shrug ()
   "Insert ¯\\_(ツ)_/¯ at point."
   (interactive)
-  (insert pk/shrug-string))
+  (insert (if (derived-mode-p 'markdown-mode)
+              (replace-regexp-in-string (rx (group (or "\\" "_")))
+                                        (rx "\\" (backref 1))
+                                        pk/shrug-string)
+            pk/shrug-string)))
 
 (defun pk/shrug-as-kill ()
   "Add ¯\\_(ツ)_/¯ to kill buffer."
