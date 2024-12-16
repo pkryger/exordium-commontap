@@ -2278,21 +2278,28 @@ I.e., created with `scratch' or named scratch-"
 (use-package difftastic
   :defer t
   :init
-  (use-package transient
+  (use-package transient               ; to silence compiler warnings
     :autoload (transient-get-suffix
                transient-parse-suffix))
-  (use-package magit
-    :defer t
-    :bind
-    (:map magit-blame-read-only-mode-map
-     ("D" . #'difftastic-magit-diff)
-     ("S" . #'difftastic-magit-show)))
-  (with-eval-after-load 'magit-diff
-    (when-let* ((suffix [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
-                         ("S" "Difftastic show" difftastic-magit-show)])
-                ((not (equal (transient-parse-suffix 'magit-diff suffix)
-                             (transient-get-suffix 'magit-diff '(-1 -1))))))
-      (transient-append-suffix 'magit-diff '(-1 -1) suffix))))
+
+  (let ((suffix [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
+                 ("S" "Difftastic show" difftastic-magit-show)]))
+    (use-package magit-blame
+      :defer t :ensure magit
+      :bind
+      (:map magit-blame-read-only-mode-map
+            ("D" . #'difftastic-magit-diff)
+            ("S" . #'difftastic-magit-show))
+      :config
+      (unless (equal (transient-parse-suffix 'magit-blame suffix)
+                     (transient-get-suffix 'magit-blame '(-1)))
+        (transient-append-suffix 'magit-blame '(-1) suffix)))
+    (use-package magit-diff
+      :defer t :ensure magit
+      :config
+      (unless (equal (transient-parse-suffix 'magit-diff suffix)
+                     (transient-get-suffix 'magit-diff '(-1 -1)))
+        (transient-append-suffix 'magit-diff '(-1 -1) suffix)))))
 
 
 
