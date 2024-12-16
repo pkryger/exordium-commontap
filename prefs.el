@@ -16,16 +16,17 @@
 (let ((workspace (or (getenv "GITHUB_WORKSPACE")
                      (getenv "HOME"))))
   (setq exordium-vc-checkout-alist
-        `(;; ("jinx"
+        `(;; (jinx
           ;;  . ,(file-name-concat workspace "gh" "minad" "jinx"))
-          ("difftastic"
+          (difftastic
            . ,(file-name-concat workspace "gh" "pkryger" "difftastic.el"))
-          ("basic-stats"
+          (basic-stats
            . ,(file-name-concat workspace "gh" "pkryger" "basic-stats"))
-          ("emacs-toml"
+          (emacs-toml
            . ,(file-name-concat workspace "gh" "gongo" "emacs-toml"))
-          ("ultra-scroll-mac"
-           . ,(file-name-concat workspace "gh" "jdtsmith" "ultra-scroll-mac")))))
+          ;; ('ultra-scroll-mac
+          ;;  . ,(file-name-concat workspace "gh" "jdtsmith" "ultra-scroll-mac"))
+          )))
 
 
 (setq exordium-preferred-frame-width  nil

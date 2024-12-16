@@ -2253,7 +2253,7 @@ I.e., created with `scratch' or named scratch-"
       (dolist (spec exordium-vc-checkout-alist)
         (when-let* ((dir (cdr spec))
                     ((file-exists-p dir))
-                    (name (car spec))
+                    (name (symbol-name (car spec)))
                     (pkg-dir (expand-file-name name package-user-dir)))
           (message "Using checked out %s package at %s" name dir)
           (when-let* ((pkg-desc (cadr (assq (intern name) package-alist)))
