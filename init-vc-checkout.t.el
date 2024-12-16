@@ -123,6 +123,111 @@ Recursion is in order: FORM, (car FORM), (cdr FORM)."
      (exordium--vc-checkout-install-exists 'dummy-package "/a/path"
                                            (macroexpand form)))))
 
+(ert-deftest exordium-vc-checkout-not-always-macroexpansion-no-args-ensure-t ()
+  (let ((exordium-always-vc-checkout nil)
+        (form '(use-package dummy-package
+                 :ensure t
+                 :exordium-vc-checkout)))
+    (should
+     (exordium--vc-checkout-install-exists 'dummy-package nil
+                                           (macroexpand form)))))
+
+(ert-deftest exordium-vc-checkout-not-always-macroexpansion-dir-ensure-t ()
+  (let ((exordium-always-vc-checkout nil)
+        (form '(use-package dummy-package
+                 :ensure t
+                 :exordium-vc-checkout "/a/path")))
+    (should
+     (exordium--vc-checkout-install-exists 'dummy-package "/a/path"
+                                           (macroexpand form)))))
+
+(ert-deftest exordium-vc-checkout-always-macroexpansion-no-keyword-ensure-t ()
+  (let ((exordium-always-vc-checkout t)
+        (form '(use-package dummy-package
+                 :ensure t)))
+    (should
+     (exordium--vc-checkout-install-exists 'dummy-package nil
+                                           (macroexpand form)))))
+
+(ert-deftest exordium-vc-checkout-not-always-macroexpansion-no-args-always-ensure ()
+  (let ((exordium-always-vc-checkout nil)
+        (use-package-always-ensure t)
+        (form '(use-package dummy-package
+                 :exordium-vc-checkout)))
+    (should
+     (exordium--vc-checkout-install-exists 'dummy-package nil
+                                           (macroexpand form)))))
+
+(ert-deftest exordium-vc-checkout-not-always-macroexpansion-dir-always-ensure ()
+  (let ((exordium-always-vc-checkout nil)
+        (use-package-always-ensure t)
+        (form '(use-package dummy-package
+                 :exordium-vc-checkout "/a/path")))
+    (should
+     (exordium--vc-checkout-install-exists 'dummy-package "/a/path"
+                                           (macroexpand form)))))
+
+(ert-deftest exordium-vc-checkout-always-macroexpansion-no-keyword-always-ensure ()
+  (let ((exordium-always-vc-checkout t)
+        (use-package-always-ensure t)
+        (form '(use-package dummy-package)))
+    (should
+     (exordium--vc-checkout-install-exists 'dummy-package nil
+                                           (macroexpand form)))))
+
+
+(ert-deftest exordium-vc-checkout-not-always-macroexpansion-no-args-ensure-other ()
+  (let ((exordium-always-vc-checkout nil)
+        (form '(use-package dummy-package
+                 :ensure other-package
+                 :exordium-vc-checkout)))
+    (should
+     (exordium--vc-checkout-install-exists 'other-package nil
+                                           (macroexpand form)))))
+
+(ert-deftest exordium-vc-checkout-not-always-macroexpansion-dir-ensure-other ()
+  (let ((exordium-always-vc-checkout nil)
+        (form '(use-package dummy-package
+                 :ensure other-package
+                 :exordium-vc-checkout "/a/path")))
+    (should
+     (exordium--vc-checkout-install-exists 'other-package "/a/path"
+                                           (macroexpand form)))))
+
+(ert-deftest exordium-vc-checkout-always-macroexpansion-no-keyword-ensure-other ()
+  (let ((exordium-always-vc-checkout t)
+        (form '(use-package dummy-package
+                 :ensure (other-package :pin gnu))))
+    (should
+     (exordium--vc-checkout-install-exists 'other-package nil
+                                           (macroexpand form)))))
+
+
+(ert-deftest exordium-vc-checkout-not-always-macroexpansion-no-args-ensure-other-pin ()
+  (let ((exordium-always-vc-checkout nil)
+        (form '(use-package dummy-package
+                 :ensure (other-package :pin gnu)
+                 :exordium-vc-checkout)))
+    (should
+     (exordium--vc-checkout-install-exists 'other-package nil
+                                           (macroexpand form)))))
+
+(ert-deftest exordium-vc-checkout-not-always-macroexpansion-dir-ensure-other-pin ()
+  (let ((exordium-always-vc-checkout nil)
+        (form '(use-package dummy-package
+                 :ensure (other-package :pin gnu)
+                 :exordium-vc-checkout "/a/path")))
+    (should
+     (exordium--vc-checkout-install-exists 'other-package "/a/path"
+                                           (macroexpand form)))))
+
+(ert-deftest exordium-vc-checkout-always-macroexpansion-no-keyword-ensure-other-pin ()
+  (let ((exordium-always-vc-checkout t)
+        (form '(use-package dummy-package
+                 :ensure (other-package :pin gnu))))
+    (should
+     (exordium--vc-checkout-install-exists 'other-package nil
+                                           (macroexpand form)))))
 
 (ert-deftest exordium--vc-checkout-valid-p-basic ()
   (should-not (exordium--vc-checkout-valid-p nil))

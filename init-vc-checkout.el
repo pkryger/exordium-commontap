@@ -46,6 +46,16 @@
 ;; checkout directory: it exists and is recognisable by
 ;; `vc-responsible-backend' (which see).
 ;;
+;; When `:ensure' keyword is present and it names `other-package', then the
+;; `other-package' will be used as a package name by `:exordium-vc-checkout'.
+;; For example:
+;;
+;; (use-package a-pacakge
+;;   :ensure other-package
+;;   :exordium-vc-checkout)
+;;
+;; will search for `other-package' in `exordium-vc-checkout-alist'.
+;;
 ;; Motivation And Main Use Case
 ;; ============================
 ;;
@@ -245,10 +255,21 @@ accumulated.
 Also see the Info node `(use-package) Creating an extension'."
   (let ((body (use-package-process-keywords name rest state)))
     (when arg ; `:exordium-vc-checkout' is non-nil
-      (if (bound-and-true-p byte-compile-current-file)
-          (apply #'exordium--vc-checkout-install arg)            ; compile time
-        (push `(exordium--vc-checkout-install ',(car arg) ,(cadr arg))
-              body)))                                            ; runtime
+      ;; If there's `:ensure' keyword, use it as a name, except for when either
+      ;; it is t or it comes from `use-package-always-ensure'.
+      (let ((arg (pcase (car (plist-get rest :ensure))
+                       ('t arg)
+                       ((and (pred consp)
+                             name-pin)
+                        (list (car name-pin) (cadr arg)))
+                       ((and (pred symbolp)
+                             name)
+                        (list name (cadr arg)))
+                       (_ arg))))
+        (if (bound-and-true-p byte-compile-current-file)
+            (apply #'exordium--vc-checkout-install arg)          ; compile time
+          (push `(exordium--vc-checkout-install ',(car arg) ,(cadr arg))
+                body))))                                         ; runtime
     body))
 
 (defalias 'use-package-normalize/:exordium-vc-checkout
