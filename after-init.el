@@ -606,22 +606,28 @@ See: https://github.com/PrincetonUniversity/blocklint"
 (set-time-zone-rule "/usr/share/zoneinfo/Europe/London")
 
 
-(use-package jenkinsfile-mode
-  :init
-  (use-package flycheck
-    :autoload (flycheck-add-mode))
-  :defer t
-  :config
-  (flycheck-add-mode 'groovy 'jenkinsfile-mode))
 
 (use-package groovy-mode
-  :after (yasnippet projectile)
   :init
   (defun pk/groovy-mode--create-test-files ()
     (setq-local projectile-create-missing-test-files t))
   :hook
   ((groovy-mode . yas-minor-mode)
    (groovy-mode . pk/groovy-mode--create-test-files)))
+
+(use-package jenkinsfile-mode
+  :after (groovy-mode)
+  :init
+  (use-package flycheck
+    :autoload (flycheck-add-mode))
+  :defer t
+  :config
+  (flycheck-add-mode 'groovy 'jenkinsfile-mode)
+  (setq auto-mode-alist
+        (cl-remove-if (lambda (entry)
+                        (and (string-match-p "Jenkinsfile" (car entry))
+                             (eq 'groovy-mode (cdr entry))))
+                      auto-mode-alist)))
 
 (use-package yasnippet
   :defines (yas-snippet-dirs)
