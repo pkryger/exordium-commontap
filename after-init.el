@@ -1908,10 +1908,10 @@ I.e., created with `scratch' or named scratch-"
   (persistent-scratch-setup-default))
 
 
-(use-package flycheck-package
-  :config
-  (eval-after-load 'flycheck
-    '(flycheck-package-setup)))
+;; (use-package flycheck-package
+;;   :config
+;;   (eval-after-load 'flycheck
+;;     '(flycheck-package-setup)))
 
 
 (use-package cperl-mode
