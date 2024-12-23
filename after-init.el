@@ -24,27 +24,6 @@
   :init
   (require 'modus-themes nil t)
   ;; Add all your customizations prior to loading the themes
-  (setq modus-themes-italic-constructs t
-        modus-themes-completions '((matches . (extrabold background intense))
-                                   (selection . (semibold accented intense))
-                                   (popup . (semibold accented)))
-        modus-themes-headings (let* ((low-level-properties '(variable-pitch rainbow regular))
-                                     (high-level-properties `(,@low-level-properties overline)))
-                                `((1 . (,@high-level-properties 1.27))
-                                  (2 . (,@high-level-properties 1.21))
-                                  (3 . (,@high-level-properties 1.15))
-                                  (4 . (,@high-level-properties 1.1))
-                                  (t . (,@low-level-properties))))
-        modus-themes-mixed-fonts t
-        modus-themes-variable-pitch-ui t
-        modus-themes-common-palette-overrides
-        `((border-mode-line-active unspecified)
-          (border-mode-line-inactive unspecified)
-          (bg-mode-line-active bg-blue-subtle)
-          (fg-mode-line-active fg-main)
-          (fg-region unspecified)
-          ,@modus-themes-preset-overrides-faint))
-
   (defun pk/modus-themes--custom-faces ()
     ;; The following is an expanded macro `modus-themes-with-colors',
     ;; but need it so that it will evaluate when function is executed
@@ -65,46 +44,49 @@
           (ignore c ,@colors)
           ;; -- end of macro preface --
 
-          (setq org-src-block-faces
-                `(("clojure" modus-themes-nuanced-magenta)
-                  ("clojurescript" modus-themes-nuanced-magenta)
-                  ("elisp" modus-themes-nuanced-magenta)
-                  ("emacs-lisp" modus-themes-nuanced-magenta)
-                  ("lisp" modus-themes-nuanced-magenta)
-                  ("scheme" modus-themes-nuanced-magenta)
+          (setopt org-src-block-faces
+                  `(("clojure" modus-themes-nuanced-magenta)
+                    ("clojurescript" modus-themes-nuanced-magenta)
+                    ("elisp" modus-themes-nuanced-magenta)
+                    ("emacs-lisp" modus-themes-nuanced-magenta)
+                    ("lisp" modus-themes-nuanced-magenta)
+                    ("scheme" modus-themes-nuanced-magenta)
 
-                  ("c" modus-themes-nuanced-blue)
-                  ("c++" modus-themes-nuanced-blue)
-                  ("fortran" modus-themes-nuanced-blue)
-                  ("java" modus-themes-nuanced-blue)
+                    ("c" modus-themes-nuanced-blue)
+                    ("c++" modus-themes-nuanced-blue)
+                    ("fortran" modus-themes-nuanced-blue)
+                    ("java" modus-themes-nuanced-blue)
 
-                  ("awk" modus-themes-nuanced-yellow)
-                  ("ipython" modus-themes-nuanced-yellow)
-                  ("js" modus-themes-nuanced-yellow)
-                  ("perl" modus-themes-nuanced-yellow)
-                  ("python" modus-themes-nuanced-yellow)
-                  ("r" modus-themes-nuanced-yellow)
-                  ("ruby" modus-themes-nuanced-yellow)
-                  ("sed" modus-themes-nuanced-yellow)
-                  ("sh" modus-themes-nuanced-yellow)
-                  ("shell" modus-themes-nuanced-yellow)
+                    ("awk" modus-themes-nuanced-yellow)
+                    ("bash" modus-themes-nuanced-yellow)
+                    ("ipython" modus-themes-nuanced-yellow)
+                    ("js" modus-themes-nuanced-yellow)
+                    ("perl" modus-themes-nuanced-yellow)
+                    ("python" modus-themes-nuanced-yellow)
+                    ("r" modus-themes-nuanced-yellow)
+                    ("ruby" modus-themes-nuanced-yellow)
+                    ("sed" modus-themes-nuanced-yellow)
+                    ("sh" modus-themes-nuanced-yellow)
+                    ("shell" modus-themes-nuanced-yellow)
+                    ("zsh" modus-themes-nuanced-yellow)
 
-                  ("dot" modus-themes-nuanced-green)
-                  ("html" modus-themes-nuanced-green)
-                  ("latex" modus-themes-nuanced-green)
-                  ("org" modus-themes-nuanced-green)
-                  ("plantuml" modus-themes-nuanced-green)
-                  ("xml" modus-themes-nuanced-green)
+                    ("dot" modus-themes-nuanced-green)
+                    ("html" modus-themes-nuanced-green)
+                    ("latex" modus-themes-nuanced-green)
+                    ("org" modus-themes-nuanced-green)
+                    ("plantuml" modus-themes-nuanced-green)
+                    ("xml" modus-themes-nuanced-green)
 
-                  ("css" modus-themes-nuanced-red)
-                  ("scss" modus-themes-nuanced-red)
-                  ("sql" modus-themes-nuanced-red)
+                    ("css" modus-themes-nuanced-red)
+                    ("scss" modus-themes-nuanced-red)
+                    ("sql" modus-themes-nuanced-red)
 
-                  ("conf" modus-themes-nuanced-cyan)
-                  ("docker" modus-themes-nuanced-cyan)
-                  ("json" modus-themes-nuanced-cyan)
-                  ("makefile" modus-themes-nuanced-cyan)
-                  ("yaml" modus-themes-nuanced-cyan)))
+                    ("conf" modus-themes-nuanced-cyan)
+                    ("docker" modus-themes-nuanced-cyan)
+                    ("json" modus-themes-nuanced-cyan)
+                    ("makefile" modus-themes-nuanced-cyan)
+                    ("yaml" modus-themes-nuanced-cyan)))
+
           ;; helm-rg uses ansi colours from rg output to highlight matches,
           ;; unfortunateally this doesn't allow for custom overrides so
           ;; use advice to hack around
@@ -116,12 +98,12 @@
                       `(lambda (&rest _)
                          (list 'ansi-color-bold (list ':foreground ,red))))
 
-          (customize-set-variable 'highlight-symbol-colors `(,bg-yellow-intense
-                                                             ,bg-magenta-intense
-                                                             ,bg-cyan-intense
-                                                             ,bg-green-intense
-                                                             ,bg-red-intense
-                                                             ,bg-blue-intense))
+          (setopt highlight-symbol-colors `(,bg-yellow-intense
+                                            ,bg-magenta-intense
+                                            ,bg-cyan-intense
+                                            ,bg-green-intense
+                                            ,bg-red-intense
+                                            ,bg-blue-intense))
 
           (custom-theme-set-faces
            'user
@@ -205,39 +187,52 @@
            `(helm-M-x-key ((t (,@c :inherit modus-themes-key-binding))))
            `(helm-M-x-short-doc ((t (,@c :inherit completions-annotations)))))))))
 
-  (defun pk/modus-themes--on-appearance-change ()
-    "Switch theme according to current system setting."
-    (when-let* ((appearance (plist-get (mac-application-state) :appearance))
-                (desired-theme (let ((case-fold-search t))
-                                 (if (string-match-p "dark" appearance)
-                                     (cadr modus-themes-to-toggle)
-                                   (car modus-themes-to-toggle))))
-                ((not (eq desired-theme (car custom-enabled-themes)))))
-      (message "Loading theme: %s" desired-theme)
-      (modus-themes-select desired-theme)))
-
+  :custom
+  (modus-themes-italic-constructs t)
+  (modus-themes-mixed-fonts t)
+  (modus-themes-variable-pitch-ui t)
+  (modus-themes-completions '((matches . (extrabold background intense))
+                              (selection . (semibold accented intense))
+                              (popup . (semibold accented))))
+  (modus-themes-headings (let* ((low-level-properties '(variable-pitch rainbow regular))
+                                (high-level-properties `(,@low-level-properties overline)))
+                           `((1 . (,@high-level-properties ,exordium-height-plus-4))
+                             (2 . (,@high-level-properties ,exordium-height-plus-3))
+                             (3 . (,@high-level-properties ,exordium-height-plus-2))
+                             (4 . (,@high-level-properties ,exordium-height-plus-1))
+                             (agenda-date . (,exordium-height-plus-1))
+                             (agenda-structure . (,exordium-height-plus-2))
+                             (t . (,@low-level-properties)))))
   :config
-  (when (boundp 'mac-effective-appearance-change-hook)
-    (add-hook 'mac-effective-appearance-change-hook
-              #'pk/modus-themes--on-appearance-change))
+  (setopt modus-themes-common-palette-overrides
+          `((border-mode-line-active unspecified)
+            (border-mode-line-inactive unspecified)
+            (bg-mode-line-active bg-blue-subtle)
+            (fg-mode-line-active fg-main)
+            (fg-region unspecified)
+            ,@modus-themes-preset-overrides-faint))
 
-  (when-let* (((fboundp 'mac-application-state))
-              (appearance (plist-get (mac-application-state) :appearance))
-              (desired-theme (let ((case-fold-search t))
-                               (if (string-match-p "dark" appearance)
-                                   (cadr modus-themes-to-toggle)
-                                 (car modus-themes-to-toggle)))))
-    (message "Loading theme: %s" desired-theme)
-    (modus-themes-select desired-theme))
-
-  (pk/modus-themes--custom-faces)
-
-  :hook
-  (modus-themes-after-load-theme . pk/modus-themes--custom-faces)
-
+  (setopt custom-safe-themes
+          (append custom-safe-themes
+                  (cl-remove-if (lambda (theme)
+                                  (member theme custom-safe-themes))
+                                (mapcar #'symbol-name
+                                        modus-themes-items))))
   :bind
   ("<f5>" . modus-themes-toggle))
 
+(use-package auto-dark
+  :demand t
+  :custom
+  (auto-dark-themes '((modus-vivendi) (modus-operandi)))
+  (auto-dark-detection-method (when (getenv "ci_tests")
+                                'none))
+  :hook
+  (auto-dark-dark-mode . pk/modus-themes--custom-faces)
+  (auto-dark-light-mode . pk/modus-themes--custom-faces)
+  :config
+  (auto-dark-mode)
+  (pk/modus-themes--custom-faces))
 
 
 ;; emacs mac ports customisations, per
