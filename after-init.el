@@ -20,8 +20,7 @@
 (use-package modus-themes
   :unless (bound-and-true-p exordium-theme)
   :functions (pk/modus-themes--on-appearance-change)
-  :autoload (modus-themes-load-theme
-             modus-themes--current-theme-palette)
+  :autoload (modus-themes--current-theme-palette)
   :init
   (require 'modus-themes nil t)
   ;; Add all your customizations prior to loading the themes
@@ -215,7 +214,7 @@
                                    (car modus-themes-to-toggle))))
                 ((not (eq desired-theme (car custom-enabled-themes)))))
       (message "Loading theme: %s" desired-theme)
-      (modus-themes-load-theme desired-theme)))
+      (modus-themes-select desired-theme)))
 
   :config
   (when (boundp 'mac-effective-appearance-change-hook)
@@ -229,7 +228,7 @@
                                    (cadr modus-themes-to-toggle)
                                  (car modus-themes-to-toggle)))))
     (message "Loading theme: %s" desired-theme)
-    (modus-themes-load-theme desired-theme))
+    (modus-themes-select desired-theme))
 
   (pk/modus-themes--custom-faces)
 
