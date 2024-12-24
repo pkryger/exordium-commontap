@@ -2186,79 +2186,79 @@ I.e., created with `scratch' or named scratch-"
 (use-package undercover
   :defer t)
 
-(use-package casual
-  :defer t
-  :bind ("C-o" . #'casual-editkit-main-tmenu)
-  :init
-  (use-package org-agenda
-    :ensure nil
-    :defer t
-    :commands (org-agenda-clock-goto)
-    :bind (:map org-agenda-mode-map
-           ("C-o" . #'casual-agenda-tmenu)
-           ("M-j" . #'org-agenda-clock-goto)
-           ("J" . #'bookmark-jump)))
-  (use-package bookmark
-    :ensure nil
-    :defer t
-    :bind (:map bookmark-bmenu-mode-map
-           ("C-o" .  #'casual-bookmarks-tmenu)
-           ("J" . #'bookmark-jump)))
-  (use-package calc
-    :ensure nil
-    :defer t
-    :bind (:map calc-mode-map
-           ("C-o" . #'casual-calc-tmenu)))
-  (use-package calc-ext
-    :ensure nil
-    :defer t
-    :bind (:map calc-alg-map
-           ("C-o" . #'casual-calc-tmenu)))
-  (use-package calendar
-    :ensure nil
-    :defer t
-    :bind (:map calendar-mode-map
-           ("C-o" . #'casual-calendar)))
-  (use-package dired
-    :ensure nil
-    :defer t
-    :bind (:map dired-mode-map
-           ("C-o" . #'casual-dired-tmenu)
-           ("s" . #'casual-dired-sort-by-tmenu)
-           ("/" . #'casual-dired-search-replace-tmenu)))
-  (use-package ibuffer
-    :ensure nil
-    :defer t
-    :bind (:map ibuffer-mode-map
-           ("C-o" . #'casual-ibuffer-tmenu)
-           ("F" . #'casual-ibuffer-filter-tmenu)
-           ("s".  #'casual-ibuffer-sortby-tmenu)
-           ("{" . #'ibuffer-backwards-next-marked)
-           ("}" . #'ibuffer-forward-next-marked)
-           ("[" . #'ibuffer-backward-filter-group)
-           ("]" . #'ibuffer-forward-filter-group)
-           ("$" . #'ibuffer-toggle-filter-group)))
-  (use-package info
-    :ensure nil
-    :defer t
-    :bind (:map Info-mode-map
-           ("C-o" . #'casual-info-tmenu)
-           ("M-[" . #'Info-history-back)
-           ("M-]" . #'Info-history-forward)
-           ("/" . #'Info-search)
-           ("B" . #'bookmark-set)))
-  (use-package isearch
-    :ensure nil
-    :defer t
-    :bind (:map isearch-mode-map
-           ("C-o" . #'casual-isearch-tmenu)))
-  (use-package re-builder
-    :ensure nil
-    :defer t
-    :bind (:map reb-mode-map
-           ("C-o". casual-re-builder-tmenu)
-           :map reb-lisp-mode-map
-           ("C-o" . casual-re-builder-tmenu))))
+;; (use-package casual
+;;   :defer t
+;;   :bind ("C-o" . #'casual-editkit-main-tmenu)
+;;   :init
+;;   (use-package org-agenda
+;;     :ensure nil
+;;     :defer t
+;;     :commands (org-agenda-clock-goto)
+;;     :bind (:map org-agenda-mode-map
+;;            ("C-o" . #'casual-agenda-tmenu)
+;;            ("M-j" . #'org-agenda-clock-goto)
+;;            ("J" . #'bookmark-jump)))
+;;   (use-package bookmark
+;;     :ensure nil
+;;     :defer t
+;;     :bind (:map bookmark-bmenu-mode-map
+;;            ("C-o" .  #'casual-bookmarks-tmenu)
+;;            ("J" . #'bookmark-jump)))
+;;   (use-package calc
+;;     :ensure nil
+;;     :defer t
+;;     :bind (:map calc-mode-map
+;;            ("C-o" . #'casual-calc-tmenu)))
+;;   (use-package calc-ext
+;;     :ensure nil
+;;     :defer t
+;;     :bind (:map calc-alg-map
+;;            ("C-o" . #'casual-calc-tmenu)))
+;;   (use-package calendar
+;;     :ensure nil
+;;     :defer t
+;;     :bind (:map calendar-mode-map
+;;            ("C-o" . #'casual-calendar)))
+;;   (use-package dired
+;;     :ensure nil
+;;     :defer t
+;;     :bind (:map dired-mode-map
+;;            ("C-o" . #'casual-dired-tmenu)
+;;            ("s" . #'casual-dired-sort-by-tmenu)
+;;            ("/" . #'casual-dired-search-replace-tmenu)))
+;;   (use-package ibuffer
+;;     :ensure nil
+;;     :defer t
+;;     :bind (:map ibuffer-mode-map
+;;            ("C-o" . #'casual-ibuffer-tmenu)
+;;            ("F" . #'casual-ibuffer-filter-tmenu)
+;;            ("s".  #'casual-ibuffer-sortby-tmenu)
+;;            ("{" . #'ibuffer-backwards-next-marked)
+;;            ("}" . #'ibuffer-forward-next-marked)
+;;            ("[" . #'ibuffer-backward-filter-group)
+;;            ("]" . #'ibuffer-forward-filter-group)
+;;            ("$" . #'ibuffer-toggle-filter-group)))
+;;   (use-package info
+;;     :ensure nil
+;;     :defer t
+;;     :bind (:map Info-mode-map
+;;            ("C-o" . #'casual-info-tmenu)
+;;            ("M-[" . #'Info-history-back)
+;;            ("M-]" . #'Info-history-forward)
+;;            ("/" . #'Info-search)
+;;            ("B" . #'bookmark-set)))
+;;   (use-package isearch
+;;     :ensure nil
+;;     :defer t
+;;     :bind (:map isearch-mode-map
+;;            ("C-o" . #'casual-isearch-tmenu)))
+;;   (use-package re-builder
+;;     :ensure nil
+;;     :defer t
+;;     :bind (:map reb-mode-map
+;;            ("C-o". casual-re-builder-tmenu)
+;;            :map reb-lisp-mode-map
+;;            ("C-o" . casual-re-builder-tmenu))))
 
 
 (defvar exordium-vc-checkout-alist)
