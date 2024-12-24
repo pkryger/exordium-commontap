@@ -754,17 +754,21 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 ;;     (ace-window-posframe-mode)))
 
 
-(defconst pk/desktop-files-not-to-save
-  (rx-let ((path (+ (or alnum "." "/" "-" "_" "~"))))
-    (rx (or (seq string-start "/" (zero-or-more (not (any "/" ":"))) ":")
-            (seq "(ftp)" string-end)
-            (seq string-start path "/emacs/" path "/lisp/" path
-                 ".el.gz" string-end)
-            (seq string-start path "/.emacs.d/elpa"
-                 (zero-or-one "-" (one-or-more digit) "." (one-or-more alnum))
-                 "/" path
-                 ".el" string-end)))))
+(defun pk/read-only-mode-maybe ()
+  "Turn on `read-only-mode' if the current buffer visits Emacs or ELPA file."
+  (when-let* ((file (buffer-file-name))
+              ((string-match-p
+                (rx-to-string
+                 `(seq string-start
+                       (or ,(expand-file-name
+                             (file-name-parent-directory data-directory))
+                           ,(expand-file-name
+                             (file-name-as-directory package-user-dir)))))
+                file)))
+    (read-only-mode)))
+(add-hook 'find-file-hook #'pk/read-only-mode-maybe)
 
+
 (use-package desktop
   :ensure nil
   :config
@@ -784,7 +788,17 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (add-to-list 'desktop-modes-not-to-save 'forge-notifications-mode)
   (add-to-list 'desktop-modes-not-to-save 'difftastic-mode)
   :custom
-  (desktop-files-not-to-save pk/desktop-files-not-to-save)
+  (desktop-files-not-to-save
+   (rx-to-string `(or
+                   ;; original value of `desktop-files-not-to-save'
+                   (seq string-start "/" (zero-or-more (not (any "/" ":"))) ":")
+                   (seq "(ftp)" string-end)
+                   ;; skip also Emacs and ELPA
+                   (seq string-start
+                        (or ,(expand-file-name
+                              (file-name-parent-directory data-directory))
+                            ,(expand-file-name
+                              (file-name-as-directory package-user-dir)))))))
   (desktop-restore-eager 8)
   (desktop-load-locked-desktop (if (version< "29" emacs-version) 'check-pid 'ask)))
 
