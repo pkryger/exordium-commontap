@@ -1942,11 +1942,14 @@ I.e., created with `scratch' or named scratch-"
 
 (use-package cperl-mode
   :ensure nil
-  :mode (rx ".p" (or "l" "m") string-end)
+  :init
+  (add-to-list 'major-mode-remap-alist
+               '(perl-mode . cperl-mode))
   :interpreter "perl"
   :commands (cperl-set-style)
   :config
   (cperl-set-style "CPerl"))
+
 
 (defcustom pk/dwim-shell-command-pip-no-binary nil
   "List of packages to pass to --no-binary pip flag."
