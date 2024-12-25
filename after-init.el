@@ -19,12 +19,69 @@
 
 (use-package modus-themes
   :unless (bound-and-true-p exordium-theme)
-  :functions (pk/modus-themes--on-appearance-change)
+  :demand t
   :autoload (modus-themes--current-theme-palette)
   :init
-  (require 'modus-themes nil t)
+  (use-package custom
+    :ensure nil
+    :after (modus-themes)
+    :custom
+    (custom-safe-themes
+     (progn
+       (append custom-safe-themes
+               (cl-remove-if (lambda (theme)
+                               (member theme custom-safe-themes))
+                             (mapcar #'symbol-name
+                                     modus-themes-items))))))
+  (use-package org-src
+    :ensure org
+    :defer t
+    :custom
+    (org-src-block-faces '(("clojure" modus-themes-nuanced-magenta)
+                           ("clojurescript" modus-themes-nuanced-magenta)
+                           ("elisp" modus-themes-nuanced-magenta)
+                           ("emacs-lisp" modus-themes-nuanced-magenta)
+                           ("lisp" modus-themes-nuanced-magenta)
+                           ("scheme" modus-themes-nuanced-magenta)
+
+                           ("c" modus-themes-nuanced-blue)
+                           ("c++" modus-themes-nuanced-blue)
+                           ("fortran" modus-themes-nuanced-blue)
+                           ("java" modus-themes-nuanced-blue)
+
+                           ("awk" modus-themes-nuanced-yellow)
+                           ("bash" modus-themes-nuanced-yellow)
+                           ("ipython" modus-themes-nuanced-yellow)
+                           ("js" modus-themes-nuanced-yellow)
+                           ("perl" modus-themes-nuanced-yellow)
+                           ("python" modus-themes-nuanced-yellow)
+                           ("r" modus-themes-nuanced-yellow)
+                           ("ruby" modus-themes-nuanced-yellow)
+                           ("sed" modus-themes-nuanced-yellow)
+                           ("sh" modus-themes-nuanced-yellow)
+                           ("shell" modus-themes-nuanced-yellow)
+                           ("zsh" modus-themes-nuanced-yellow)
+
+                           ("dot" modus-themes-nuanced-green)
+                           ("html" modus-themes-nuanced-green)
+                           ("latex" modus-themes-nuanced-green)
+                           ("org" modus-themes-nuanced-green)
+                           ("plantuml" modus-themes-nuanced-green)
+                           ("xml" modus-themes-nuanced-green)
+
+                           ("css" modus-themes-nuanced-red)
+                           ("scss" modus-themes-nuanced-red)
+                           ("sql" modus-themes-nuanced-red)
+
+                           ("conf" modus-themes-nuanced-cyan)
+                           ("docker" modus-themes-nuanced-cyan)
+                           ("json" modus-themes-nuanced-cyan)
+                           ("makefile" modus-themes-nuanced-cyan)
+                           ("yaml" modus-themes-nuanced-cyan))))
+
   ;; Add all your customizations prior to loading the themes
   (defun pk/modus-themes--custom-faces ()
+    (require 'modus-themes nil t)
     ;; The following is an expanded macro `modus-themes-with-colors',
     ;; but need it so that it will evaluate when function is executed
     ;; -- begin of macro preface --
@@ -43,60 +100,9 @@
                          colors))
           (ignore c ,@colors)
           ;; -- end of macro preface --
-
-          (setopt org-src-block-faces
-                  `(("clojure" modus-themes-nuanced-magenta)
-                    ("clojurescript" modus-themes-nuanced-magenta)
-                    ("elisp" modus-themes-nuanced-magenta)
-                    ("emacs-lisp" modus-themes-nuanced-magenta)
-                    ("lisp" modus-themes-nuanced-magenta)
-                    ("scheme" modus-themes-nuanced-magenta)
-
-                    ("c" modus-themes-nuanced-blue)
-                    ("c++" modus-themes-nuanced-blue)
-                    ("fortran" modus-themes-nuanced-blue)
-                    ("java" modus-themes-nuanced-blue)
-
-                    ("awk" modus-themes-nuanced-yellow)
-                    ("bash" modus-themes-nuanced-yellow)
-                    ("ipython" modus-themes-nuanced-yellow)
-                    ("js" modus-themes-nuanced-yellow)
-                    ("perl" modus-themes-nuanced-yellow)
-                    ("python" modus-themes-nuanced-yellow)
-                    ("r" modus-themes-nuanced-yellow)
-                    ("ruby" modus-themes-nuanced-yellow)
-                    ("sed" modus-themes-nuanced-yellow)
-                    ("sh" modus-themes-nuanced-yellow)
-                    ("shell" modus-themes-nuanced-yellow)
-                    ("zsh" modus-themes-nuanced-yellow)
-
-                    ("dot" modus-themes-nuanced-green)
-                    ("html" modus-themes-nuanced-green)
-                    ("latex" modus-themes-nuanced-green)
-                    ("org" modus-themes-nuanced-green)
-                    ("plantuml" modus-themes-nuanced-green)
-                    ("xml" modus-themes-nuanced-green)
-
-                    ("css" modus-themes-nuanced-red)
-                    ("scss" modus-themes-nuanced-red)
-                    ("sql" modus-themes-nuanced-red)
-
-                    ("conf" modus-themes-nuanced-cyan)
-                    ("docker" modus-themes-nuanced-cyan)
-                    ("json" modus-themes-nuanced-cyan)
-                    ("makefile" modus-themes-nuanced-cyan)
-                    ("yaml" modus-themes-nuanced-cyan)))
-
-          ;; helm-rg uses ansi colours from rg output to highlight matches,
-          ;; unfortunateally this doesn't allow for custom overrides so
-          ;; use advice to hack around
-          ;; It seems that support for defcustom has been added in the past:
-          ;; https://github.com/cosmicexplorer/helm-rg/blob/1f01b2f/helm-rg.el#L931-L935
-          ;; but then subsequently deleted in
-          ;; https://github.com/cosmicexplorer/helm-rg/commit/2221701
-          (advice-add 'helm-rg--construct-match-text-properties :override
-                      `(lambda (&rest _)
-                         (list 'ansi-color-bold (list ':foreground ,red))))
+          (setq helm-rg--color-format-argument-alist
+                `((red :cmd-line "red"
+                       :text-property ,(face-attribute 'modus-themes-completion-match-0 :foreground))))
 
           (setopt highlight-symbol-colors `(,bg-yellow-intense
                                             ,bg-magenta-intense
@@ -124,7 +130,9 @@
                                                          ((not (eq color 'unspecified))))
                                                (list :color color)))))))
            `(highlight-symbol-face ((t (,@c :background ,bg-cyan-nuanced))))
-           `(aw-leading-char-face ((t (,@c :foreground ,red :bold t :height 1.5))))
+
+           `(aw-leading-char-face ((t (,@c :foreground ,red-intense :bold t :height 1.5))))
+
            ;; Redoing helm, inspired by last removed version in:
            ;; https://github.com/protesilaos/modus-themes/commit/1efaa7ef79682ec13493351d52ed1b339fb6ace2
            `(helm-selection ((t (,@c :inherit modus-themes-completion-selected))))
@@ -194,15 +202,15 @@
   (modus-themes-completions '((matches . (extrabold background intense))
                               (selection . (semibold accented intense))
                               (popup . (semibold accented))))
-  (modus-themes-headings (let* ((low-level-properties '(variable-pitch rainbow regular))
-                                (high-level-properties `(,@low-level-properties overline)))
-                           `((1 . (,@high-level-properties ,exordium-height-plus-4))
-                             (2 . (,@high-level-properties ,exordium-height-plus-3))
-                             (3 . (,@high-level-properties ,exordium-height-plus-2))
-                             (4 . (,@high-level-properties ,exordium-height-plus-1))
-                             (agenda-date . (,exordium-height-plus-1))
-                             (agenda-structure . (,exordium-height-plus-2))
-                             (t . (,@low-level-properties)))))
+  (modus-themes-headings `((agenda-date . (,exordium-height-plus-1))
+                           (agenda-structure . (variable-pitch ,exordium-height-plus-2))
+                           (0 . (,exordium-height-plus-4))
+                           (1 . (variable-pitch rainbow regular ,exordium-height-plus-4))
+                           (2 . (variable-pitch rainbow regular ,exordium-height-plus-3))
+                           (3 . (variable-pitch rainbow regular ,exordium-height-plus-2))
+                           (4 . (variable-pitch rainbow regular ,exordium-height-plus-1))
+                           (t . (variable-pitch rainbow regular))))
+
   :config
   (setopt modus-themes-common-palette-overrides
           `((border-mode-line-active unspecified)
@@ -210,14 +218,8 @@
             (bg-mode-line-active bg-blue-subtle)
             (fg-mode-line-active fg-main)
             (fg-region unspecified)
+            (overline-heading-1 fg-main)
             ,@modus-themes-preset-overrides-faint))
-
-  (setopt custom-safe-themes
-          (append custom-safe-themes
-                  (cl-remove-if (lambda (theme)
-                                  (member theme custom-safe-themes))
-                                (mapcar #'symbol-name
-                                        modus-themes-items))))
   :bind
   ("<f5>" . modus-themes-toggle))
 
