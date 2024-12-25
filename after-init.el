@@ -1822,36 +1822,10 @@ This is intended to be used as an advise for
   (advice-mapc (lambda (advice _props) (advice-remove symbol advice)) symbol))
 
 
-;; From Steve Yegge's emacs: https://sites.google.com/site/steveyegge2/my-dot-emacs-file
-(defun pk/rename-file-and-buffer (new-name)
-  "Rename both current buffer and file it's visiting to NEW-NAME."
-  (interactive "sNew name: ")
-  (let ((name (buffer-name))
-        (filename (buffer-file-name)))
-    (if (not filename)
-        (message "Buffer '%s' is not visiting a file!" name)
-      (if (get-buffer new-name)
-          (message "A buffer named '%s' already exists!" new-name)
-        (rename-file filename new-name 1)
-        (rename-buffer new-name)
-        (set-visited-file-name new-name)
-        (set-buffer-modified-p nil)))))
-
-(defun pk/move-buffer-file (dir)
-  "Move both current buffer and file it's visiting to DIR."
-  (interactive "DNew directory: ")
-  (let* ((name (buffer-name))
-         (filename (buffer-file-name))
-         (dir (if (string-match dir "\\(?:/\\|\\\\)$")
-                  (substring dir 0 -1)
-                dir))
-         (new-name (concat dir "/" name)))
-    (if (not filename)
-        (message "Buffer '%s' is not visiting a file!" name)
-      (copy-file filename new-name 1)
-      (delete-file filename)
-      (set-visited-file-name new-name)
-      (set-buffer-modified-p nil))))
+(define-obsolete-function-alias
+  'pk/rename-file-and-buffer #'rename-visited-file "29.1")
+(define-obsolete-function-alias
+ 'pk/move-buffer-file #'rename-visited-file "29.1")
 
 
 ;; Inspired by Bart Spiers and Piotr Kazanowski's:
