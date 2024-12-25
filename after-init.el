@@ -1783,8 +1783,44 @@ This is intended to be used as an advise for
   (json-mode . (lambda ()
                  (js2-minor-mode -1))))
 
-;; From Steve Yegge's emacs: https://sites.google.com/site/steveyegge2/my-dot-emacs-file
 
+(defun pk/advice-unadvice (symbol function)
+  "Remove FUNCTION advice form SYMBOL."
+  (interactive
+   ;; From Emacs-30 definition of `advice-remove'
+   (let* ((pred (lambda (sym) (advice--p (advice--symbol-function sym))))
+          (default (when-let* ((f (function-called-at-point))
+                               ((funcall pred f)))
+                     (symbol-name f)))
+          (prompt (format-prompt "Remove advice from function" default))
+          (symbol (intern (completing-read prompt obarray pred t nil nil default)))
+          advices)
+     (advice-mapc (lambda (f p)
+                    (let ((k (or (alist-get 'name p) f)))
+                      (push (cons
+                             (prin1-to-string k)
+                             k)
+                            advices)))
+                  symbol)
+     (list symbol (cdr (assoc-string
+                        (completing-read "Advice to remove: " advices nil t)
+                        advices)))))
+  (advice-remove symbol function))
+
+(defun pk/advice-unadvice-all (symbol)
+  "Remove all advices from SYMBOL."
+  ;; From Emacs-30 definition of `advice-remove'
+  (interactive
+   (let* ((pred (lambda (sym) (advice--p (advice--symbol-function sym))))
+          (default (when-let* ((f (function-called-at-point))
+                               ((funcall pred f)))
+                     (symbol-name f)))
+          (prompt (format-prompt "Remove advice from function" default)))
+     (list (intern (completing-read prompt obarray pred t nil nil default)))))
+  (advice-mapc (lambda (advice _props) (advice-remove symbol advice)) symbol))
+
+
+;; From Steve Yegge's emacs: https://sites.google.com/site/steveyegge2/my-dot-emacs-file
 (defun pk/rename-file-and-buffer (new-name)
   "Rename both current buffer and file it's visiting to NEW-NAME."
   (interactive "sNew name: ")
