@@ -318,6 +318,11 @@
   (split-height-threshold 90)
   (split-width-threshold 160))
 
+(use-package helm-core
+  :ensure nil
+  :custom
+  (helm-split-width-threshold split-width-threshold))
+
 
 ;; ITERM2 MOUSE SUPPORT from https://www.emacswiki.org/emacs/iTerm2
 (unless window-system
