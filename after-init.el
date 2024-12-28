@@ -1789,15 +1789,7 @@ This is intended to be used as an advise for
 ;;(advice-add 'org-html-fontify-code :after #'pk/sql--ob-fontify-reset-product)
 ;; END: a hacky way to get font-lock per engine in org-mode
 
-
-(use-package json-mode
-  ;; Disable js2-mode that exordium turns on for `javascrip-mode'
-  ;; to disable js-lint
-  :defer t
-  :hook
-  (json-mode . (lambda ()
-                 (js2-minor-mode -1))))
-
+
 
 (defun pk/advice-unadvice (symbol function)
   "Remove FUNCTION advice form SYMBOL."
