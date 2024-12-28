@@ -213,18 +213,21 @@
 
   :config
   (setopt modus-themes-common-palette-overrides
-          `((border-mode-line-active unspecified)
-            (border-mode-line-inactive unspecified)
+          `(;; (border-mode-line-active unspecified)
+            ;; (border-mode-line-inactive unspecified)
             (bg-mode-line-active bg-blue-subtle)
             (fg-mode-line-active fg-main)
             (fg-region unspecified)
             (overline-heading-1 fg-main)
             ,@modus-themes-preset-overrides-faint))
+  :hook
+  (modus-themes-after-load-theme . pk/modus-themes--custom-faces)
   :bind
   ("<f5>" . modus-themes-toggle))
 
 (use-package auto-dark
   :demand t
+  :diminish
   :custom
   (auto-dark-themes '((modus-vivendi) (modus-operandi)))
   (auto-dark-detection-method (when (getenv "ci_tests")
