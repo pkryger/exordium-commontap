@@ -311,9 +311,11 @@
   ;; columns. This includes line numbers and fringes.  Yet windows as small as
   ;; 160 seems to be quite all right fitting horizontal split.  On the other
   ;; hand, typical full screen window height on external 4k screen connected to
-  ;; the same laptop is 88. See `split-window-sensibly' doc.  This setup
-  ;; basically forces a horizontal split, but only up to 2 windows in a frame.
-  ;; Values used are compared against:
+  ;; the same laptop is 88 and 55 on the built in panel.  See
+  ;; `split-window-sensibly' doc.  With setting
+  ;; `split-window-preferred-direction' to `longest' this setup basically
+  ;; forces a horizontal split, but only up to 2 windows in a frame, followed
+  ;; by an vertical split.  Values used are compared against:
   ;;
   ;; (window-width (selected-window))
   ;; (window-height (selected-window))
@@ -321,7 +323,7 @@
   ;; For testing use:
   ;;
   ;; (split-window-sensibly)
-  (split-height-threshold 90)
+  (split-height-threshold 55)
   (split-width-threshold 160))
 
 (use-package helm-core
