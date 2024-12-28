@@ -193,7 +193,10 @@
            `(helm-rg-directory-cmd-face ((t (,@c :inherit helm-ff-directory))))
            `(helm-rg-directory-header-face ((t (,@c :inherit helm-ff-directory))))
            `(helm-M-x-key ((t (,@c :inherit modus-themes-key-binding))))
-           `(helm-M-x-short-doc ((t (,@c :inherit completions-annotations)))))))))
+           `(helm-M-x-short-doc ((t (,@c :inherit completions-annotations))))))))
+
+    (when (bound-and-true-p ace-window-posframe-mode)
+      (posframe-delete-all)))
 
   :custom
   (modus-themes-italic-constructs t)
