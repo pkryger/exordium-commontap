@@ -920,6 +920,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 (use-package swiper
   :init
   (use-package ivy
+    :defer t
     :autoload (ivy-previous-history-element
                ivy-previous-line
                ivy-exit-with-action)
@@ -932,7 +933,18 @@ If the input is empty, select the previous history element instead."
           (ivy-previous-history-element 1)
         (ivy-previous-line arg))))
 
+  (use-package helm-swoop
+    :defer t
+    :init
+    (defun pk/helm-swoop-from-swiper ()
+      (interactive)
+      (unless (string= ivy-text "")
+        (ivy-exit-with-action
+         (lambda (_)
+           (helm-swoop :query ivy-text))))))
+
   (use-package iedit
+    :defer t
     :autoload (iedit-lib-cleanup
                iedit-start
                iedit-done)
@@ -957,12 +969,17 @@ If the input is empty, select the previous history element instead."
                     (message "Matches are not the same length.")
                     (iedit-done)))))))))
 
+  :functions (pk/swiper-C-r
+              pk/swiper-iedit
+              pk/helm-swoop-from-swiper)
   :bind
-  (("C-s" . swiper-isearch)
-   ("C-r" . swiper-isearch-backward)
+  (("C-s" . #'swiper-isearch)
+   ("C-r" . #'swiper-isearch-backward)
    :map swiper-map
-   ("C-r" . pk/swiper-C-r)
-   ("C-c ;" . pk/swiper-iedit)))
+   ("C-r" . #'pk/swiper-C-r)
+   ("C-c ;" . #'pk/swiper-iedit)
+   ("C-S-s" . #'pk/helm-swoop-from-swiper)))
+
 
 
 ;; Disable some ido hooks for helm mode
