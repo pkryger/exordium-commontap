@@ -820,15 +820,17 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 
 (use-package savehist
   :ensure nil
+  :custom
+  (savehist-additional-variables '(command-history
+                                   extended-command-history
+                                   kill-ring
+                                   search-ring
+                                   regexp-search-ring
+                                   register-alist
+                                   swiper-history
+                                   compile-command
+                                   compile-history)) ;; TODO: add helm
   :config
-  (add-to-list 'savehist-additional-variables 'command-history)
-  (add-to-list 'savehist-additional-variables 'extended-command-history)
-  (add-to-list 'savehist-additional-variables 'kill-ring)
-  (add-to-list 'savehist-additional-variables 'search-ring)
-  (add-to-list 'savehist-additional-variables 'regexp-search-ring)
-  (add-to-list 'savehist-additional-variables 'register-alist)
-  (add-to-list 'savehist-additional-variables 'compile-command)
-  (add-to-list 'savehist-additional-variables 'compile-history)
   (savehist-mode))
 
 (use-package python
