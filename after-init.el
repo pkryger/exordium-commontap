@@ -821,15 +821,29 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 (use-package savehist
   :ensure nil
   :custom
-  (savehist-additional-variables '(command-history
+  (savehist-additional-variables '(Info-history
+                                   Info-search-history
+                                   bookmark-history
+                                   command-history
+                                   compile-command
+                                   compile-history
+                                   dired-regexp-history
+                                   dired-shell-command-history
                                    extended-command-history
+                                   face-name-history
+                                   file-name-history
+                                   ivy-history
                                    kill-ring
-                                   search-ring
+                                   log-edit-comment-ring
+                                   minibuffer-history
+                                   query-replace-history
+                                   read-expression-history
+                                   recentf-list
                                    regexp-search-ring
                                    register-alist
-                                   swiper-history
-                                   compile-command
-                                   compile-history)) ;; TODO: add helm
+                                   search-ring
+                                   shell-command-history
+                                   swiper-history))
   :config
   (savehist-mode))
 
