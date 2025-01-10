@@ -1248,25 +1248,31 @@ language."
   (ediff-window-setup-function #'ediff-setup-windows-plain))
 
 ;; TODO: move to exordium and likely hide behind the
-;; `exordium-use-variable-pitch' and `exordium-complete-mode' set to `:company'
+;; `exordium-complete-mode' set to `:company'
 (use-package company-posframe
-  :after (posframe)
-  :autoload (company-posframe-quickhelp-toggle
-             company-select-next
-             company-select-previous)
-  :when exordium-osx
+  :demand t
   :diminish
+  :init
+  (use-package company
+    :defer t
+    :commands (company-show-doc-buffer))
+  :commands (company-posframe-quickhelp-toggle
+             company-posframe-quickhelp-scroll-down
+             company-posframe-quickhelp-scroll-up)
   :bind
   (:map company-posframe-active-map
    ("C-h" . #'company-posframe-quickhelp-toggle)
-   ("C-n" . #'company-select-next)
-   ("C-p" . #'company-select-previous))
+   ("C-S-h" . #'company-show-doc-buffer)
+   ("C-M-v" . #'company-posframe-quickhelp-scroll-up)
+   ("C-M-S-v" . #'company-posframe-quickhelp-scroll-down))
   :custom
   (company-posframe-quickhelp-delay 0.2)
+  (company-posframe-quickhelp-x-offset 5)
   :config
   (company-posframe-mode 1)
   ;; TODO: move this to desktop configuration
   (add-to-list 'desktop-minor-mode-table '(company-posframe-mode nil)))
+
 
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
