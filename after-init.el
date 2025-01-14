@@ -832,6 +832,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
                                    extended-command-history
                                    face-name-history
                                    file-name-history
+                                   helm-M-x-input-history
                                    ivy-history
                                    kill-ring
                                    log-edit-comment-ring
