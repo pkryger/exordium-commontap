@@ -60,7 +60,12 @@ available font names by evaluating (font-family-list)."
 ;;                     :family font
 ;;                     :height size
 ;;                     :weight 'normal)
-(setq exordium-helm-completion-style 'orderless)
+
+
+;; orderless prevents using fast `helm-source-in-buffer' and the
+;; annotation/affixation search (&) doesn't work anyway
+(setq exordium-helm-completion-style 'helm)
+
 (setq exordium-split-window-preffered-direction 'longest)
 (setq exordium-desktop t)
 (setq exordium-helm-everywhere t)
