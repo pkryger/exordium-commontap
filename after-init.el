@@ -1972,7 +1972,8 @@ defaults to a comma."
 I.e., created with `scratch' or named scratch-"
     (let ((buffer-name (buffer-name)))
       (or (string= "*scratch*" buffer-name)
-          (string-prefix-p "scratch-" buffer-name))))
+          (and (string-prefix-p "scratch-" buffer-name)
+               (not (eq (point-min) (point-max)))))))
   :custom
   (persistent-scratch-scratch-buffer-p-function #'pk/persistent-scratch--scratch-buffer-p)
   :config
