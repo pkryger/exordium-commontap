@@ -1315,7 +1315,8 @@ All the reminder parts of the separator will have
                                'tab-bar-tab-inactive)))
      (apply #'propertize (if current
                              (list " " 'face 'tab-bar-tab)
-                           (list "⦙" 'face  'tab-bar-tab-inactive))) ; alternative: "¦"
+                                        ; alternative: "¦" or "⦙"
+                           (list "I" 'face  'tab-bar-tab-inactive)))
 
      (unless (eq type 'last)
        (propertize "   " 'face (if (eq current 'this)
