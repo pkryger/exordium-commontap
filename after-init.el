@@ -2353,12 +2353,6 @@ I.e., created with `scratch' or named scratch-"
                  "no workspace"
                "no `package-vc-install-from-checkout'"))))
 
-;; (use-package difftastic-bindings
-;;   :ensure difftastic
-;;   :config
-;;   (difftastic-bindings-mode))
-
-
 
 (use-package ultra-scroll
   :vc (:url "https://github.com/jdtsmith/ultra-scroll.git" :rev :newest)
