@@ -1586,9 +1586,6 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
           '(ruff-format ruff-isort))))
 
 
-
-
-
 (defun pk/advice-unadvice (symbol function)
   "Remove FUNCTION advice form SYMBOL."
   (interactive
