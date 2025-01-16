@@ -1,4 +1,4 @@
-name: CI Tests
+name: Exordium Common tap - CI Tests
 
 on:
   workflow_dispatch:
