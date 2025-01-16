@@ -1000,13 +1000,6 @@ If the input is empty, select the previous history element instead."
 
 
 
-;; Disable some ido hooks for helm mode
-(when exordium-helm-everywhere
-  (when (fboundp 'call-interactively@ido-cr+-record-current-command)
-    (advice-remove 'call-interactively #'call-interactively@ido-cr+-record-current-command))
-  (when (fboundp 'ido-minibuffer-setup)
-    (remove-hook 'minibuffer-setup-hook #'ido-minibuffer-setup)))
-
 (use-package ob-python
   :ensure nil
   :custom
