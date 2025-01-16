@@ -2085,34 +2085,6 @@ I.e., created with `scratch' or named scratch-"
 ;;            ("C-o" . casual-re-builder-tmenu))))
 
 
-(defvar exordium-vc-checkout-alist)
-(unless (featurep 'init-vc-checkout)
-  (if (fboundp 'package-vc-install-from-checkout)
-      (dolist (spec exordium-vc-checkout-alist)
-        (when-let* ((dir (cdr spec))
-                    ((file-exists-p dir))
-                    (name (symbol-name (car spec)))
-                    (pkg-dir (expand-file-name name package-user-dir)))
-          (message "Using checked out %s package at %s" name dir)
-          (when-let* ((pkg-desc (cadr (assq (intern name) package-alist)))
-                      ((not (eq 'vc (package-desc-kind pkg-desc)))))
-            (package-delete pkg-desc)
-            ;; after uninstall: remove from `load-path'
-            (setq load-path (seq-remove
-                             (lambda (dir)
-                               (string= dir (package-desc-dir pkg-desc)))
-                             load-path)))
-          (unless (equal (file-truename pkg-dir)
-                         (file-truename dir))
-            ;; `package-vc-install-from-checkout' complains when the symlink exists
-            (when (file-exists-p pkg-dir)
-              (delete-file pkg-dir))
-            (package-vc-install-from-checkout dir name))))
-    (message "Skipping installation of packages from repositories: %s"
-             (if (fboundp 'package-vc-install-from-checkout)
-                 "no workspace"
-               "no `package-vc-install-from-checkout'"))))
-
 
 (use-package ultra-scroll
   :vc (:url "https://github.com/jdtsmith/ultra-scroll.git" :rev :newest)
