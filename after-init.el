@@ -2360,15 +2360,14 @@ I.e., created with `scratch' or named scratch-"
 
 
 
-(use-package ultra-scroll-mac
-  :vc (:url "https://github.com/jdtsmith/ultra-scroll-mac.git" :rev :newest)
+(use-package ultra-scroll
+  :vc (:url "https://github.com/jdtsmith/ultra-scroll.git" :rev :newest)
   :if (featurep 'mac-win)
   :custom
   (scroll-conservatively 101) ; important for jumbo images
   (scroll-margin 0)
   :config
-  (when (fboundp 'ultra-scroll-mac-mode)
-    (ultra-scroll-mac-mode)))
+  (ultra-scroll-mode))
 
 
 ;; (use-package jinx
