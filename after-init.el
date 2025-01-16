@@ -550,13 +550,13 @@ See: https://github.com/PrincetonUniversity/blocklint"
    ("C-c e x E" . eglot-stderr-buffer)
    ("C-c e x e" . eglot-events-buffer)))
 
-  (use-package flycheck-eglot
-    :after (flycheck eglot)
-    :defer t
-    :custom
-    (flycheck-eglot-exclusive nil)
-    :config
-    (global-flycheck-eglot-mode 1))
+(use-package flycheck-eglot
+  :after (flycheck eglot)
+  :defer t
+  :custom
+  (flycheck-eglot-exclusive nil)
+  :config
+  (global-flycheck-eglot-mode 1))
 
 
 (use-package eldoc
