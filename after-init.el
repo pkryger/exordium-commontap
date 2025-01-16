@@ -357,36 +357,6 @@
   (interactive)
   (kill-new pk/shrug-string))
 
-;; `awk' doesn't work on macOS, see https://github.com/emacs-helm/helm/issues/2695
-
-(defun pk/helm-locate-lib-get-summary (file)
-  "Extract library description from FILE."
-  (with-temp-buffer
-    (insert-file-contents file nil 0 256)
-    (goto-char (point-min))
-    (let ((desc (when-let* (((re-search-forward (rx string-start
-                                                    (** 2 3 ";")
-                                                    (zero-or-more any)
-                                                    (** 2 3 "-")
-                                                    (one-or-more " ")
-                                                    (group (one-or-more any))
-                                                    (zero-or-one line-end))
-                                                (pos-eol) t))
-                            (beg (match-beginning 1)))
-                  (replace-regexp-in-region (rx (zero-or-more " ")
-                                                (one-or-more "-") "*-"
-                                                (zero-or-more any)
-                                                (zero-or-one line-end))
-                                            "" beg (match-end 1))
-                  (string-trim (buffer-substring beg (pos-eol))))))
-      (if (or (null desc) (string= "" desc))
-          "Not documented"
-        desc))))
-
-(with-eval-after-load 'helm-lib
-  (advice-add 'helm-locate-lib-get-summary
-              :override #'pk/helm-locate-lib-get-summary))
-
 ;; @todo remove when exordium has it
 ;; (use-package helm
 ;;   :diminish
