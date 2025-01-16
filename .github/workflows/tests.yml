@@ -37,14 +37,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: '.emacs.d/taps/commontap'
-      - uses: actions/checkout@v4
-        with:
-          repository: 'pkryger/difftastic.el'
-          path: 'gh/pkryger/difftastic.el'
-      - uses: actions/checkout@v4
-        with:
-          repository: 'pkryger/basic-stats'
-          path: 'gh/pkryger/basic-stats'
 
       - name: Link $GITHUB_WORKSPACE/.emacs.d to $HOME/.emacs.d
         run: ln -s "${GITHUB_WORKSPACE}/.emacs.d" "${HOME}/.emacs.d"
