@@ -1279,6 +1279,17 @@ language."
   (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium"))))
 
 
+(when-let*  ((font-and-size (car (cl-remove-if-not
+                                  (lambda (font-and-size)
+                                    (member (car font-and-size)
+                                            (font-family-list)))
+                                  (bound-and-true-p exordium-preferred-variable-fonts)))))
+  (set-face-attribute 'variable-pitch nil
+                      :family (car font-and-size)
+                      :height (cdr font-and-size)
+                      :weight 'normal))
+
+
 ;; Configure tabs
 (use-package tab-bar
   :ensure nil

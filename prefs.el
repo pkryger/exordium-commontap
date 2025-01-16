@@ -52,7 +52,7 @@ available font names by evaluating (font-family-list)."
   :group 'exordium)
 
 (setq exordium-preferred-variable-fonts
-      '(("Fira Sans" . 125)))
+      '(("Fira Sans" . 135)))
 
 ;; (custom-set-faces '(variable-pitch ((t (:family "Fira Sans" :height 135)))))
 
