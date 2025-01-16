@@ -1624,6 +1624,14 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
      (list (intern (completing-read prompt obarray pred t nil nil default)))))
   (advice-mapc (lambda (advice _props) (advice-remove symbol advice)) symbol))
 
+(when (and exordium-helm-everywhere
+           exordium-help-extensions)
+  (exordium-require 'init-help)
+  (add-to-list 'helm-completing-read-handlers-alist
+               (cons #'pk/advice-unadvice #'exordium--helm-helpful-completing-read))
+  (add-to-list 'helm-completing-read-handlers-alist
+               (cons #'pk/advice-unadvice-all #'exordium--helm-helpful-completing-read)))
+
 
 (define-obsolete-function-alias
   'pk/rename-file-and-buffer #'rename-visited-file "29.1")
