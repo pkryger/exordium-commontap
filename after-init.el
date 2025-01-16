@@ -1310,14 +1310,15 @@ All the reminder parts of the separator will have
      (unless (or (eq type 'first-history)
                  (and (not tab-bar-history-mode)
                       (eq type 'first)))
-       (propertize " " 'face (if (eq current 'previous)
+       (propertize "   " 'face (if (eq current 'previous)
                                  'tab-bar-tab
                                'tab-bar-tab-inactive)))
-     (propertize "⦙" 'face (if current ; alternative: "¦"
-                               'tab-bar-tab
-                             'tab-bar-tab-inactive))
+     (apply #'propertize (if current
+                             (list " " 'face 'tab-bar-tab)
+                           (list "⦙" 'face  'tab-bar-tab-inactive))) ; alternative: "¦"
+
      (unless (eq type 'last)
-       (propertize " " 'face (if (eq current 'this)
+       (propertize "   " 'face (if (eq current 'this)
                                  'tab-bar-tab
                                'tab-bar-tab-inactive)))))
   :custom
