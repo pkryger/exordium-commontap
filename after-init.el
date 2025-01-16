@@ -1087,7 +1087,7 @@ If the input is empty, select the previous history element instead."
    'org-babel-load-languages
    (append org-babel-load-languages
            '((R . t)))))
-
+
 (use-package url
   :defer t
   :ensure nil
@@ -1116,13 +1116,13 @@ If the input is empty, select the previous history element instead."
                                       'utf-8)))))
   :config
   (url-register-auth-scheme "netrc" #'pk/url-netrc-auth 1))
-
+
 (use-package restclient
   :defer t)
 (use-package restclient-helm
-  :defer t)
+  :after restclient)
 (use-package ob-restclient
-  :defer t
+  :after restclient
   :config
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -1130,10 +1130,10 @@ If the input is empty, select the previous history element instead."
            '((restclient . t)))))
 
 (use-package company-restclient
-  :defer t
+  :after restclient
   :config
   (add-to-list 'company-backends 'company-restclient))
-
+
 (use-package org-tree-slide
   :after org
   :defer t
