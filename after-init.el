@@ -1309,101 +1309,18 @@ All the reminder parts of the separator will have
        (propertize " " 'face (if (eq current 'this)
                                  'tab-bar-tab
                                'tab-bar-tab-inactive)))))
-
   :custom
   (tab-bar-separator #'pk/tab-bar--separator)
+  (tab-bar-close-button-show nil)
   (tab-bar-tab-hints t)
   (tab-bar-select-tab-modifiers '(hyper))
   (tab-bar-show t)
-
-  :config
-  (define-advice tab-bar-make-keymap-1 (:override (&rest _args) pk/tab-bar-make-keymap-1)
-    (let* ((separator (or tab-bar-separator (if window-system " " "|")))
-           (i 0)
-           (tabs (funcall tab-bar-tabs-function))
-           previous-current)
-      (append
-       '(keymap (mouse-1 . tab-bar-mouse-down-1))
-       (when tab-bar-history-mode
-         `((sep-history-back menu-item ,(if (functionp separator)
-                                            (funcall separator 'first-history nil)
-                                          separator)
-                             ignore)
-           (history-back
-            menu-item ,tab-bar-back-button tab-bar-history-back
-            :help "Click to go back in tab history")
-           (sep-history-forward menu-item ,(if (functionp separator)
-                                               (funcall separator 'mid-history nil)
-                                             separator)
-                                ignore)
-           (history-forward
-            menu-item ,tab-bar-forward-button tab-bar-history-forward
-            :help "Click to go forward in tab history")))
-       (mapcan
-        (lambda (tab)
-          (setq i (1+ i))
-          (append
-           `((,(intern (format "sep-%i" i)) menu-item
-              ,(if (functionp separator)
-                   (funcall separator
-                            (when (eq i 1) 'first)
-                            (cond
-                             ((eq (car tab) 'current-tab) 'this)
-                             (previous-current 'previous)))
-                 separator)
-              ignore))
-           (cond
-            ((eq (car tab) 'current-tab)
-             (setq previous-current t)
-             `((current-tab
-                menu-item
-                ,(propertize (concat (if tab-bar-tab-hints (format "%d " i) "")
-                                     (alist-get 'name tab)
-                                     (or (and tab-bar-close-button-show
-                                              (not (eq tab-bar-close-button-show
-                                                       'non-selected))
-                                              tab-bar-close-button) ""))
-                             'face 'tab-bar-tab)
-                ignore
-                :help "Current tab")))
-            (t
-             (setq previous-current nil)
-             `((,(intern (format "tab-%i" i))
-                menu-item
-                ,(propertize (concat (if tab-bar-tab-hints (format "%d " i) "")
-                                     (alist-get 'name tab)
-                                     (or (and tab-bar-close-button-show
-                                              (not (eq tab-bar-close-button-show
-                                                       'selected))
-                                              tab-bar-close-button) ""))
-                             'face 'tab-bar-tab-inactive)
-                ,(or
-                  (alist-get 'binding tab)
-                  `(lambda ()
-                     (interactive)
-                     (tab-bar-select-tab ,i)))
-                :help "Click to visit tab"))))
-           `((,(if (eq (car tab) 'current-tab) 'C-current-tab (intern (format "C-tab-%i" i)))
-              menu-item ""
-              ,(or
-                (alist-get 'close-binding tab)
-                `(lambda ()
-                   (interactive)
-                   (tab-bar-close-tab ,i)))))))
-        tabs)
-       `((sep-add-tab menu-item
-                      ,(if (functionp separator)
-                           (funcall separator 'last (if previous-current 'previous))
-                         separator)
-                      ignore))
-       (when (and (memq 'tab-bar-format-add-tab tab-bar-format) tab-bar-new-button)
-         `((add-tab menu-item ,tab-bar-new-button tab-bar-new-tab
-                    :help "New tab"))))))
-
   :bind
   (("M-<tab>" . tab-next)
    ("M-S-<tab>" . tab-previous)
-   ("H-t" . tab-new)))
+   ("H-t" . tab-new))
+  :config
+  (tab-bar-mode))
 
 
 
