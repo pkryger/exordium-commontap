@@ -133,6 +133,12 @@
 
            `(aw-leading-char-face ((t (,@c :foreground ,red-intense :bold t :height 1.5))))
 
+           ;; mashup of modus-themes with https://github.com/aaronjensen/emacs-modern-tab-bar
+           `(tab-bar-tab ((t (,@c :box (:line-width (20 . 4) :color ,bg-tab-current :style flat-button)
+                                  :background ,bg-tab-current))))
+           `(tab-bar-tab-inactive ((t (,@c :box (:line-width (20 . 4) :color ,bg-tab-bar :style flat-button)
+                                  :background ,bg-tab-bar))))
+
            ;; Redoing helm, inspired by last removed version in:
            ;; https://github.com/protesilaos/modus-themes/commit/1efaa7ef79682ec13493351d52ed1b339fb6ace2
            `(helm-selection ((t (,@c :inherit modus-themes-completion-selected))))
@@ -1290,42 +1296,51 @@ language."
                       :weight 'normal))
 
 
-;; Configure tabs
+;; Configure tabs, based on https://github.com/aaronjensen/emacs-modern-tab-bar
 (use-package tab-bar
   :ensure nil
+  :functions (pk/tab-bar--format-tab)
   :init
-  (defun pk/tab-bar--separator (type current)
-    "Return a `tab-bar' separator in a form of a propertized  \" ¦ \".
+  (defun pk/tab-bar--format-tab (orig-fn tab i)
+                                        ; checkdoc-params: (orig-fn i)
+    "Select appropriate `tab-bar-separator' for TAB."
+    (let* ((tabs (funcall tab-bar-tabs-function))
+           (previous-tab (when (> i 1)
+                           (nth (- i 2) tabs)))
+           (tab-bar-separator (cond ((eq 1 i)
+                                     (propertize " "
+                                                 'face 'tab-bar-tab-inactive
+                                                 'display '((space :width 4))))
+                                    ((or (eq (car tab) 'current-tab)
+                                         (eq (car previous-tab) 'current-tab))
+                                     (propertize " "
+                                                 'face 'tab-bar-tab-inactive))
+                                    (t
+                                     tab-bar-separator))))
+      (funcall orig-fn tab i)))
 
-When TYPE is \\='first and not in `tab-bar-history-mode' or TYPE
-is \\='first-history the leading space will be omitted.  When
-type is LAST the trailing space will be omitted.
-
-When CURRENT is \\='this then trailing space and the ?¦ will have
-\\='tab-bar-tab face property.  When CURRENT is \\='previous then
-leading space and the ?¦ will have \\='tab-bar-tab face property.
-All the reminder parts of the separator will have
-\\='tab-bar-tab-inactive face property."
+  (defun pk/tab-bar--tab-name-format (tab i)
+                                        ; checkdoc-params: (i)
+    "Add extra horizontal padding for TAB."
     (concat
-     (unless (or (eq type 'first-history)
-                 (and (not tab-bar-history-mode)
-                      (eq type 'first)))
-       (propertize "   " 'face (if (eq current 'previous)
-                                 'tab-bar-tab
-                               'tab-bar-tab-inactive)))
-     (apply #'propertize (if current
-                             (list " " 'face 'tab-bar-tab)
-                                        ; alternative: "¦" or "⦙"
-                           (list "I" 'face  'tab-bar-tab-inactive)))
+     (propertize " " 'display '((space :width 8))
+                 'face (funcall tab-bar-tab-face-function tab))
+     (tab-bar-tab-name-format-default tab i)
+     (propertize " " 'display '((space :width 8))
+                 'face (funcall tab-bar-tab-face-function tab))))
 
-     (unless (eq type 'last)
-       (propertize "   " 'face (if (eq current 'this)
-                                 'tab-bar-tab
-                               'tab-bar-tab-inactive)))))
   :custom
-  (tab-bar-separator #'pk/tab-bar--separator)
-  (tab-bar-close-button-show nil)
+  (tab-bar-separator (propertize "|"
+                                 'face 'tab-bar-tab-inactive
+                                 'display '((height .8)))) ; alternative: "¦" or "⦙" or "I" (for SF Pro)
+  (tab-bar-tab-name-format-function #'pk/tab-bar--tab-name-format)
+  (tab-bar-format '(tab-bar-format-tabs
+                    (lambda () " ")))
+  (tab-bar-auto-width nil)
   (tab-bar-tab-hints t)
+  (tab-bar-close-button-show nil)
+  (tab-bar-new-button-show nil)
+  (tab-bar-new-tab-choice 'clone)
   (tab-bar-select-tab-modifiers '(hyper))
   (tab-bar-show t)
   :bind
@@ -1333,6 +1348,8 @@ All the reminder parts of the separator will have
    ("M-S-<tab>" . tab-previous)
    ("H-t" . tab-new))
   :config
+  (advice-add 'tab-bar--format-tab :around
+              #'pk/tab-bar--format-tab)
   (tab-bar-mode))
 
 
