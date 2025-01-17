@@ -812,6 +812,14 @@ Defer it so that commands launched immediately after will enjoy the benefits."
     :defer t
     :defines (helm--locate-library-cache))
 
+  ;; Need dynamically bound variables to pass them to async process and
+  ;; sentinel ¯\_(ツ)_/¯
+  (defvar pk/async-loacte-library-batch nil
+    "A batch to inject into async scan process.")
+
+  (defvar pk/async-loacte-library-batch-start nil
+    "A batch start to inject into async scan sentinel.")
+
   (defun pk/async-locate-library-scan ()
     "Scan libraries and their documentation."
     (message "Scanning libraries...")
@@ -839,24 +847,33 @@ Defer it so that commands launched immediately after will enjoy the benefits."
                                   (directory-files dir nil suffixes-pat))))
                       load-path))))
            (libraries-size (length libraries))
-           (batch-size 250)
-           (batch-start 0))
+           (batch-size 250))
       (setq helm--locate-library-cache libraries)
       ;; Scanning documentation is quite slow, 4.5s to 5s on MacBook Air M2.
       ;; To avoid UI blocking, do it in batches in asynchronous processes
       ;; updating cache in sentinels.
+      (setq pk/async-loacte-library-batch-start 0)
       (while (and exordium-help-extensions
-                  (< batch-start libraries-size))
-        (let ((batch (cl-subseq libraries
-                                batch-start
-                                (min (+ batch-start batch-size)
-                                     libraries-size))))
-          (when async-debug
-            (message "exordium--async-locate-library-scan: starting batch: %s %s" batch-start
-                     (mapcar #'car (cl-subseq batch 0 (min 3 (length batch))))))
+                  (< pk/async-loacte-library-batch-start libraries-size))
+        (setq pk/async-loacte-library-batch
+              (cl-subseq libraries
+                         pk/async-loacte-library-batch-start
+                         (min (+ pk/async-loacte-library-batch-start batch-size)
+                              libraries-size)))
+        (when async-debug
+            (message "exordium--async-locate-library-scan: starting batch: %s %s"
+                     pk/async-loacte-library-batch-start
+                     (mapcar #'car
+                             (cl-subseq pk/async-loacte-library-batch
+                                        0
+                                        (min 3
+                                             (length pk/async-loacte-library-batch))))))
           (async-start
            `(lambda ()
-              ,(async-inject-variables (rx string-start (or "load-path" "batch") string-end))
+              ,(async-inject-variables (rx string-start
+                                           (or "load-path"
+                                               "pk/async-loacte-library-batch")
+                                           string-end))
               (require 'helm-lib)
               (require 'async)
               ;; Using `async-send' as "just" returning a result sometimes fails ¯\_(ツ)_/¯
@@ -865,20 +882,23 @@ Defer it so that commands launched immediately after will enjoy the benefits."
                            (lambda (entry)
                              (pcase-let* ((`(,basename . ,path) entry))
                                (cons basename (helm-locate-lib-get-summary path))))
-                           batch)))
+                           pk/async-loacte-library-batch)))
            `(lambda (result)
               (when-let* (((plistp result))
                           (docs-alist (plist-get result :docs-alist)))
                 (when async-debug
-                  ,(async-inject-variables (rx string-start "batch-start" string-end))
+                  ,(async-inject-variables (rx string-start
+                                               "pk/async-loacte-library-batch-start"
+                                               string-end))
                   (message "exordium--async-locate-library-scan: finished batch: %s docs: %S\n"
-                           batch-start
+                           pk/async-loacte-library-batch-start
                            (cl-subseq docs-alist 0 (min 3 (length docs-alist)))))
                 (dolist (entry docs-alist)
                   (pcase-let* ((`(,basename . ,doc) entry))
                     (unless (gethash basename helm--locate-library-doc-cache)
-                      (puthash basename doc helm--locate-library-doc-cache))))))))
-        (cl-incf batch-start batch-size))))
+                      (puthash basename doc helm--locate-library-doc-cache)))))))
+        (cl-incf pk/async-loacte-library-batch-start batch-size))))
+
   :hook
   (desktop-after-read . pk/async-locate-library-scan)
   :config
