@@ -795,6 +795,92 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 
 (use-package desktop
   :ensure nil
+  :init
+  (use-package find-func
+    :ensure nil
+    :defer t
+    :autoload (find-library-suffixes))
+  (use-package async
+    :defer t
+    :autoload (async-inject-variables))
+  (use-package helm-lib
+    :ensure helm
+    :defer t
+    :autoload (helm-basename))
+  (use-package helm-elisp
+    :ensure helm
+    :defer t
+    :defines (helm--locate-library-cache))
+
+  (defun pk/async-locate-library-scan ()
+    "Scan libraries and their documentation."
+    (message "Scanning libraries...")
+    (require 'helm-elisp)
+    (let* ((cache (make-hash-table :test 'equal))
+           (suffixes-pat (concat (regexp-opt (find-library-suffixes))
+                                 (rx string-end)))
+           ;; this scan should be reasonably fast, below 200ms on MacBook Air M2
+           (libraries
+            (delq
+             nil
+             (apply
+              #'append
+              (mapcar (lambda (dir)
+                        (when (and (file-exists-p dir)
+                                   (file-directory-p dir))
+                          (mapcar (lambda (file)
+                                    (when-let* ((basename (helm-basename file 2))
+                                                ((not (gethash basename cache)))
+                                                ((not (string-match-p (rx string-start ".#")
+                                                                      basename))))
+                                      (puthash basename t cache)
+                                      (cons basename
+                                            (file-name-concat dir file))))
+                                  (directory-files dir nil suffixes-pat))))
+                      load-path))))
+           (libraries-size (length libraries))
+           (batch-size 250)
+           (batch-start 0))
+      (setq helm--locate-library-cache libraries)
+      ;; Scanning documentation is quite slow, 4.5s to 5s on MacBook Air M2.
+      ;; To avoid UI blocking, do it in batches in asynchronous processes
+      ;; updating cache in sentinels.
+      (while (and exordium-help-extensions
+                  (< batch-start libraries-size))
+        (let ((batch (cl-subseq libraries
+                                batch-start
+                                (min (+ batch-start batch-size)
+                                     libraries-size))))
+          (when async-debug
+            (message "exordium--async-locate-library-scan: starting batch: %s %s" batch-start
+                     (mapcar #'car (cl-subseq batch 0 (min 3 (length batch))))))
+          (async-start
+           `(lambda ()
+              ,(async-inject-variables (rx string-start (or "load-path" "batch") string-end))
+              (require 'helm-lib)
+              (require 'async)
+              ;; Using `async-send' as "just" returning a result sometimes fails ¯\_(ツ)_/¯
+              (async-send :docs-alist
+                          (mapcar
+                           (lambda (entry)
+                             (pcase-let* ((`(,basename . ,path) entry))
+                               (cons basename (helm-locate-lib-get-summary path))))
+                           batch)))
+           `(lambda (result)
+              (when-let* (((plistp result))
+                          (docs-alist (plist-get result :docs-alist)))
+                (when async-debug
+                  ,(async-inject-variables (rx string-start "batch-start" string-end))
+                  (message "exordium--async-locate-library-scan: finished batch: %s docs: %S\n"
+                           batch-start
+                           (cl-subseq docs-alist 0 (min 3 (length docs-alist)))))
+                (dolist (entry docs-alist)
+                  (pcase-let* ((`(,basename . ,doc) entry))
+                    (unless (gethash basename helm--locate-library-doc-cache)
+                      (puthash basename doc helm--locate-library-doc-cache))))))))
+        (cl-incf batch-start batch-size))))
+  :hook
+  (desktop-after-read . pk/async-locate-library-scan)
   :config
   ;; Don't save some buffers in desktop
   (add-to-list 'desktop-modes-not-to-save 'dired-mode)
