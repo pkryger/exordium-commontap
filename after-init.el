@@ -1408,12 +1408,23 @@ language."
   (defun pk/tab-bar--tab-name-format (tab i)
                                         ; checkdoc-params: (i)
     "Add extra horizontal padding for TAB."
-    (concat
-     (propertize " " 'display '((space :width 8))
-                 'face (funcall tab-bar-tab-face-function tab))
-     (tab-bar-tab-name-format-default tab i)
-     (propertize " " 'display '((space :width 8))
-                 'face (funcall tab-bar-tab-face-function tab))))
+    (let ((face (funcall tab-bar-tab-face-function tab))
+          (mac-hint (and (eq tab-bar-tab-hints 'mac)
+                         (< i 9))))
+      (concat
+       (propertize " " 'display '((space :width 8))
+                   'face face)
+       (let ((tab-bar-tab-hints (unless (eq tab-bar-tab-hints 'mac)
+                                  tab-bar-tab-hints)))
+         (tab-bar-tab-name-format-default tab i))
+       (propertize " " 'display `((space :width ,(- 8 (if mac-hint 2 0))))
+                   'face (funcall tab-bar-tab-face-function tab))
+       (when mac-hint
+         (concat
+          (propertize (format "⌘%d " i)
+                      'face face)
+          (propertize " " 'display '((space :width 2))
+                      'face face))))))
 
   :custom
   (tab-bar-separator (propertize "|"
@@ -1423,7 +1434,7 @@ language."
   (tab-bar-format '(tab-bar-format-tabs
                     (lambda () " ")))
   (tab-bar-auto-width nil)
-  (tab-bar-tab-hints t)
+  (tab-bar-tab-hints (when exordium-osx 'mac))
   (tab-bar-close-button-show nil)
   (tab-bar-new-button-show nil)
   (tab-bar-new-tab-choice 'clone)
