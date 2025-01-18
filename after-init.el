@@ -813,14 +813,6 @@ Defer it so that commands launched immediately after will enjoy the benefits."
     :defer t
     :defines (helm--locate-library-cache))
 
-  ;; Need dynamically bound variables to pass them to async process and
-  ;; sentinel ¯\_(ツ)_/¯
-  (defvar pk/async-loacte-library-batch nil
-    "A batch to inject into async scan process.")
-
-  (defvar pk/async-loacte-library-batch-start nil
-    "A batch start to inject into async scan sentinel.")
-
   (defun pk/helm-locate-library-scan-alist ()
     "Return alist of libraries in `load-path' or in `find-library-source-path'.
 Each element is in a form of (BASENAME . PATH) where BASENAME is
@@ -867,67 +859,55 @@ the library and PATH is the file containing the library."
     "Scan libraries and their documentation."
     (message "Scanning libraries...")
     (require 'helm-elisp)
-    (let* (;; this scan should be reasonably fast, below 400ms (usually ~200ms)
-           ;; on MacBook Air M2
-           (libraries (pk/helm-locate-library-scan-alist))
-           (libraries-size (length libraries))
-           (batch-size 200))
+    ;; this scan should be reasonably fast, below 400ms (usually ~200ms) on
+    ;; MacBook Air M2 with ~2200 libraries
+    (let ((libraries (pk/helm-locate-library-scan-alist))
+          (t0 (current-time)))
       (if helm--locate-library-cache
+          ;; Update cache if it has some entries
           (dolist (library libraries)
             (unless (assoc (car library) libraries)
               (push library helm--locate-library-cache)))
         (setq helm--locate-library-cache libraries))
-      ;; Scanning documentation is quite slow, 4.5s to 5s on MacBook Air M2.
-      ;; To avoid UI blocking, do it in batches in asynchronous processes
-      ;; updating cache in sentinels.
-      (setq pk/async-loacte-library-batch-start 0)
-      (while (and exordium-help-extensions
-                  (< pk/async-loacte-library-batch-start libraries-size))
-        (setq pk/async-loacte-library-batch
-              (cl-subseq libraries
-                         pk/async-loacte-library-batch-start
-                         (min (+ pk/async-loacte-library-batch-start batch-size)
-                              libraries-size)))
-        (when async-debug
-            (message "pk/async-locate-library-scan: starting batch: %s %s"
-                     pk/async-loacte-library-batch-start
-                     (mapcar #'car
-                             (cl-subseq pk/async-loacte-library-batch
-                                        0
-                                        (min 3
-                                             (length pk/async-loacte-library-batch))))))
-          (async-start
-           `(lambda ()
-              ,(async-inject-variables (rx string-start
-                                           (or "load-path"
-                                               "pk/async-loacte-library-batch")
-                                           string-end))
-              (require 'helm-lib)
-              (require 'async)
-              ;; Using `async-send' as "just" returning a result sometimes fails ¯\_(ツ)_/¯
-              (async-send :docs-alist
-                          (mapcar
-                           (lambda (entry)
-                             (pcase-let* ((`(,basename . ,path) entry))
-                               (cons basename (helm-locate-lib-get-summary path))))
-                           pk/async-loacte-library-batch)))
-           `(lambda (result)
-              (when-let* (((plistp result))
-                          (docs-alist (plist-get result :docs-alist))
-                          (t0 (current-time)))
-                (when async-debug
-                  ,(async-inject-variables (rx string-start
-                                               "pk/async-loacte-library-batch-start"
-                                               string-end))
-                  (message "pk/async-locate-library-scan: finished batch: %s docs: %S\n"
-                           pk/async-loacte-library-batch-start
-                           (cl-subseq docs-alist 0 (min 3 (length docs-alist)))))
-                (dolist (entry docs-alist)
-                  (pcase-let* ((`(,basename . ,doc) entry))
-                    (unless (gethash basename helm--locate-library-doc-cache)
-                      (puthash basename doc helm--locate-library-doc-cache))))
-                (message "*** done: %s" (float-time (time-since t0))))))
-        (cl-incf pk/async-loacte-library-batch-start batch-size))))
+      ;; Scanning documentation is quite slow, 4.5s to 5s on MacBook Air M2
+      ;; with ~2200 libraries.  To avoid UI blocking, do it in an asynchronous
+      ;; process updating cache in a sentinel.
+      (when async-debug
+        (message
+         "pk/async-locate-library-scan: discovery done in %s, starting docs scan\n%s"
+         (float-time (time-since t0))
+         (mapcar #'car
+                 (cl-subseq helm--locate-library-cache
+                            0 (min 3 (length helm--locate-library-cache))))))
+      (async-start
+       `(lambda ()
+          ,(async-inject-variables (rx string-start
+                                       (or "load-path"
+                                           "helm--locate-library-cache")
+                                       string-end))
+          (require 'helm-lib)
+          (require 'async)
+          ;; Using `async-send' as "just" returning a result sometimes fails ¯\_(ツ)_/¯
+          (async-send :docs-alist
+                      (mapcar
+                       (lambda (entry)
+                         (pcase-let* ((`(,basename . ,path) entry))
+                           (cons basename (helm-locate-lib-get-summary path))))
+                       helm--locate-library-cache)))
+       `(lambda (result)
+          (when-let* (((plistp result))
+                      (docs-alist (plist-get result :docs-alist))
+                      (t0 (current-time)))
+            (when async-debug
+              (message "pk/async-locate-library-scan: docs scan finished\n%S"
+                       (cl-subseq docs-alist 0 (min 3 (length docs-alist)))))
+            (dolist (entry docs-alist)
+              (pcase-let* ((`(,basename . ,doc) entry))
+                (unless (gethash basename helm--locate-library-doc-cache)
+                  (puthash basename doc helm--locate-library-doc-cache))))
+            (when async-debug
+              (message "pk/async-locate-library-scan: docs cache updated in: %s"
+                       (float-time (time-since t0)))))))))
 
   :hook
   (desktop-after-read . pk/async-locate-library-scan)
