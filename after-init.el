@@ -1433,42 +1433,45 @@ language."
                                                  'display '((space :width 4))))
                                     ((or (eq (car tab) 'current-tab)
                                          (eq (car previous-tab) 'current-tab))
-                                     (propertize " "
+                                     (propertize ""
                                                  'face 'tab-bar-tab-inactive))
-                                    (t
-                                     tab-bar-separator))))
+                                    ((stringp tab-bar-separator)
+                                     (propertize tab-bar-separator
+                                                 'face 'tab-bar-tab-inactive
+                                                 'display '((height .8)))))))
       (funcall orig-fn tab i)))
 
   (defun pk/tab-bar--tab-name-format (tab i)
                                         ; checkdoc-params: (i)
-    "Add extra horizontal padding for TAB."
+    "Add extra horizontal padding and ⌘ hint (on macOS) for TAB."
     (let ((face (funcall tab-bar-tab-face-function tab))
-          (mac-hint (and (eq tab-bar-tab-hints 'mac)
-                         (< i 9))))
+          (mac-hint (and tab-bar-tab-hints exordium-osx)))
       (concat
-       (propertize " " 'display '((space :width 8))
-                   'face face)
-       (let ((tab-bar-tab-hints (unless (eq tab-bar-tab-hints 'mac)
+       (propertize " "
+                   'face face
+                   'display '((space :width 8)))
+       (let ((tab-bar-tab-hints (unless mac-hint
                                   tab-bar-tab-hints)))
          (tab-bar-tab-name-format-default tab i))
-       (propertize " " 'display `((space :width ,(- 8 (if mac-hint 2 0))))
-                   'face (funcall tab-bar-tab-face-function tab))
-       (when mac-hint
+       (propertize " "
+                   'face face
+                   'display `((space :width
+                                     ,(- 8 (if (and mac-hint (< i 9)) 2 0)))))
+       (when (and mac-hint (< i 9))
          (concat
           (propertize (format "⌘%d " i)
                       'face face)
-          (propertize " " 'display '((space :width 2))
-                      'face face))))))
+          (propertize " "
+                      'face face
+                      'display '((space :width 2))))))))
 
   :custom
-  (tab-bar-separator (propertize "|"
-                                 'face 'tab-bar-tab-inactive
-                                 'display '((height .8)))) ; alternative: "¦" or "⦙" or "I" (for SF Pro)
+  (tab-bar-separator "|") ; alternative: "¦" or "⦙" or "I" (for SF Pro)
   (tab-bar-tab-name-format-function #'pk/tab-bar--tab-name-format)
   (tab-bar-format '(tab-bar-format-tabs
-                    (lambda () " ")))
+                    (lambda () (make-string 1 ? ))))
   (tab-bar-auto-width nil)
-  (tab-bar-tab-hints (when exordium-osx 'mac))
+  (tab-bar-tab-hints t)
   (tab-bar-close-button-show nil)
   (tab-bar-new-button-show nil)
   (tab-bar-new-tab-choice 'clone)
