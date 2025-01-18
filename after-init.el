@@ -485,9 +485,18 @@ the library and PATH is the file containing the library."
             (when async-debug
               (message "pk/async-locate-library-scan: docs cache updated in: %s"
                        (float-time (time-since t0)))))))))
+
+  (defun pk/async-locacte-library-scan-when-idle (&rest _)
+    "Run async library scan next time Emacs is idle for 5 seconds"
+    (run-with-idle-timer 5 nil #'pk/async-locate-library-scan))
+
   :hook
-  (emacs-startup . (lambda ()
-                     (run-with-idle-timer 5 nil #'pk/async-locate-library-scan))))
+  (emacs-startup . pk/async-locacte-library-scan-when-idle)
+  :config
+  (advice-add 'package-install :after
+              #'pk/async-locacte-library-scan-when-idle)
+  (advice-add 'package-vc-install :after
+              #'pk/async-locacte-library-scan-when-idle))
 
 ;; @todo remove when exordium has it
 ;; (use-package helm
