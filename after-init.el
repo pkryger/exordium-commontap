@@ -435,10 +435,12 @@ the library and PATH is the file containing the library."
     (let ((libraries (pk/helm-locate-library-scan-alist))
           (t0 (current-time)))
       (if helm--locate-library-cache
-          ;; Update cache if it has some entries
+          ;; Update cached mappings to possibly new locations
           (dolist (library libraries)
-            (unless (assoc (car library) libraries)
-              (push library helm--locate-library-cache)))
+            (setf (alist-get (car library)
+                             helm--locate-library-cache
+                             nil nil #'equal)
+                  (cdr library)))
         (setq helm--locate-library-cache libraries))
       ;; Scanning documentation is quite slow, 4.5s to 5s on MacBook Air M2
       ;; with ~2200 libraries.  To avoid UI blocking, do it in an asynchronous
@@ -460,11 +462,14 @@ the library and PATH is the file containing the library."
           (require 'async)
           ;; Using `async-send' as "just" returning a result sometimes fails ¯\_(ツ)_/¯
           (async-send :docs-alist
-                      (mapcar
-                       (lambda (entry)
-                         (pcase-let* ((`(,basename . ,path) entry))
-                           (cons basename (helm-locate-lib-get-summary path))))
-                       helm--locate-library-cache)))
+                      (delq
+                       nil
+                       (mapcar
+                        (lambda (entry)
+                          (pcase-let* ((`(,basename . ,path) entry))
+                            (when (and basename path)
+                              (cons basename (helm-locate-lib-get-summary path)))))
+                        helm--locate-library-cache))))
        `(lambda (result)
           (when-let* (((plistp result))
                       (docs-alist (plist-get result :docs-alist))
@@ -474,8 +479,9 @@ the library and PATH is the file containing the library."
                        (cl-subseq docs-alist 0 (min 3 (length docs-alist)))))
             (dolist (entry docs-alist)
               (pcase-let* ((`(,basename . ,doc) entry))
-                (unless (gethash basename helm--locate-library-doc-cache)
-                  (puthash basename doc helm--locate-library-doc-cache))))
+                ;; Update cache in case doc has changed (i.e., in a VC
+                ;; installed package)
+                (puthash basename doc helm--locate-library-doc-cache)))
             (when async-debug
               (message "pk/async-locate-library-scan: docs cache updated in: %s"
                        (float-time (time-since t0)))))))))
