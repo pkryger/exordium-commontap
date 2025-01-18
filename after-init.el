@@ -795,6 +795,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
 
 (use-package desktop
   :ensure nil
+  :functions (pk/helm-locate-library-scan-alist)
   :init
   (use-package find-func
     :ensure nil
@@ -820,35 +821,62 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (defvar pk/async-loacte-library-batch-start nil
     "A batch start to inject into async scan sentinel.")
 
+  (defun pk/helm-locate-library-scan-alist ()
+    "Return alist of libraries in `load-path' or in `find-library-source-path'.
+Each element is in a form of (BASENAME . PATH) where BASENAME is
+the library and PATH is the file containing the library."
+    (require 'find-func)
+    (let ((cache (make-hash-table :test 'equal))
+          (dirs (or find-library-source-path load-path))
+          (suffixes-pat (concat (regexp-opt (cl-remove
+                                             ""
+                                             (append (find-library-suffixes)
+                                                     load-file-rep-suffixes)
+                                             :test #'equal))
+                                (rx string-end)))
+          (skip-files-pat
+           (rx (or
+                ;; A lock file in LOAD-PATH (bug#2626).
+                (seq string-start ".#")
+                ;; .dir-locals that are in VC installed packages
+                ;; and manual load-path/find-library-source-path entries
+                (seq string-start ".dir-locals"
+                     (zero-or-one "-2") string-end)))))
+      (delq
+       nil
+       (apply
+        #'append
+        (mapcar (lambda (dir)
+                  (when (and (file-exists-p dir)
+                             (file-directory-p dir))
+                    (mapcar (lambda (file)
+                              (when-let* ((basename (helm-basename file 2))
+                                          ;; Only the first occurrence
+                                          ((not (gethash basename cache)))
+                                          ((not (string-match-p skip-files-pat
+                                                                basename)))
+                                          ;; Skip directories, pipes, etc.
+                                          (path (file-name-concat dir file))
+                                          ((file-regular-p path)))
+                                (puthash basename t cache)
+                                (cons basename path)))
+                            (directory-files dir nil suffixes-pat))))
+                dirs)))))
+
   (defun pk/async-locate-library-scan ()
     "Scan libraries and their documentation."
     (message "Scanning libraries...")
     (require 'helm-elisp)
-    (let* ((cache (make-hash-table :test 'equal))
-           (suffixes-pat (concat (regexp-opt (find-library-suffixes))
-                                 (rx string-end)))
-           ;; this scan should be reasonably fast, below 200ms on MacBook Air M2
-           (libraries
-            (delq
-             nil
-             (apply
-              #'append
-              (mapcar (lambda (dir)
-                        (when (and (file-exists-p dir)
-                                   (file-directory-p dir))
-                          (mapcar (lambda (file)
-                                    (when-let* ((basename (helm-basename file 2))
-                                                ((not (gethash basename cache)))
-                                                ((not (string-match-p (rx string-start ".#")
-                                                                      basename))))
-                                      (puthash basename t cache)
-                                      (cons basename
-                                            (file-name-concat dir file))))
-                                  (directory-files dir nil suffixes-pat))))
-                      load-path))))
+    (let* (;; this scan should be reasonably fast, below 400ms (usually ~200ms)
+           ;; on MacBook Air M2
+           (libraries (pk/helm-locate-library-scan-alist))
            (libraries-size (length libraries))
-           (batch-size 250))
-      (setq helm--locate-library-cache libraries)
+           (batch-size 200))
+      (if helm--locate-library-cache
+          (dolist (library libraries)
+            (unless (assoc (car library) libraries)
+              (push library helm--locate-library-cache)))
+        (setq helm--locate-library-cache libraries))
       ;; Scanning documentation is quite slow, 4.5s to 5s on MacBook Air M2.
       ;; To avoid UI blocking, do it in batches in asynchronous processes
       ;; updating cache in sentinels.
@@ -861,7 +889,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
                          (min (+ pk/async-loacte-library-batch-start batch-size)
                               libraries-size)))
         (when async-debug
-            (message "exordium--async-locate-library-scan: starting batch: %s %s"
+            (message "pk/async-locate-library-scan: starting batch: %s %s"
                      pk/async-loacte-library-batch-start
                      (mapcar #'car
                              (cl-subseq pk/async-loacte-library-batch
@@ -885,18 +913,20 @@ Defer it so that commands launched immediately after will enjoy the benefits."
                            pk/async-loacte-library-batch)))
            `(lambda (result)
               (when-let* (((plistp result))
-                          (docs-alist (plist-get result :docs-alist)))
+                          (docs-alist (plist-get result :docs-alist))
+                          (t0 (current-time)))
                 (when async-debug
                   ,(async-inject-variables (rx string-start
                                                "pk/async-loacte-library-batch-start"
                                                string-end))
-                  (message "exordium--async-locate-library-scan: finished batch: %s docs: %S\n"
+                  (message "pk/async-locate-library-scan: finished batch: %s docs: %S\n"
                            pk/async-loacte-library-batch-start
                            (cl-subseq docs-alist 0 (min 3 (length docs-alist)))))
                 (dolist (entry docs-alist)
                   (pcase-let* ((`(,basename . ,doc) entry))
                     (unless (gethash basename helm--locate-library-doc-cache)
-                      (puthash basename doc helm--locate-library-doc-cache)))))))
+                      (puthash basename doc helm--locate-library-doc-cache))))
+                (message "*** done: %s" (float-time (time-since t0))))))
         (cl-incf pk/async-loacte-library-batch-start batch-size))))
 
   :hook
