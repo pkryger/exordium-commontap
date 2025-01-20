@@ -391,11 +391,7 @@ the library and PATH is the file containing the library."
     (require 'find-func)
     (let ((cache (make-hash-table :test 'equal))
           (dirs (or find-library-source-path load-path))
-          (suffixes-pat (concat (regexp-opt (cl-remove
-                                             ""
-                                             (append (find-library-suffixes)
-                                                     load-file-rep-suffixes)
-                                             :test #'equal))
+          (suffixes-pat (concat (regexp-opt (find-library-suffixes))
                                 (rx string-end)))
           (skip-files-pat
            (rx (or
@@ -423,7 +419,7 @@ the library and PATH is the file containing the library."
                                           ((file-regular-p path)))
                                 (puthash basename t cache)
                                 (cons basename path)))
-                            (directory-files dir nil suffixes-pat))))
+                            (directory-files dir nil suffixes-pat t))))
                 dirs)))))
 
   (defun pk/async-locate-library-scan ()
