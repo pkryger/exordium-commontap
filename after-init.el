@@ -2253,10 +2253,28 @@ I.e., created with `scratch' or named scratch-"
 (use-package ultra-scroll
   :vc (:url "https://github.com/jdtsmith/ultra-scroll.git" :rev :newest)
   :if (featurep 'mac-win)
+  :functions (pk/maybe-disable-vscroll)
+  :init
+  (defun pk/maybe-disable-vscroll (orig-fun &rest args)
+    "Maybe disable vscroll when caling ORIG-FUN.
+The vscroll is disabled when this is an intarctive call made by
+an user, and this call is not for command `previous-line' that
+would move point to an (partially) invisible line."
+    (if (and (called-interactively-p 'interactive)
+             (not (and (eq this-command 'previous-line)
+                       (save-excursion
+                         (forward-line (- (or (car args) 1)))
+                         (not (pos-visible-in-window-p (point)))))))
+        (cl-letf (((symbol-function 'set-window-vscroll) 'ignore))
+          (apply orig-fun args))
+      (apply orig-fun args)))
+
   :custom
   (scroll-conservatively 101) ; important for jumbo images
   (scroll-margin 0)
   :config
+  (advice-add 'previous-line :around #'pk/maybe-disable-vscroll)
+  (advice-add 'next-line :around #'pk/maybe-disable-vscroll)
   (ultra-scroll-mode))
 
 
