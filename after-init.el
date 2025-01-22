@@ -2252,7 +2252,6 @@ I.e., created with `scratch' or named scratch-"
 
 (use-package ultra-scroll
   :vc (:url "https://github.com/jdtsmith/ultra-scroll.git" :rev :newest)
-  :if (featurep 'mac-win)
   :functions (pk/maybe-disable-vscroll)
   :init
   (defun pk/maybe-disable-vscroll (orig-fun &rest args)
@@ -2272,6 +2271,7 @@ would move point to an (partially) invisible line."
   :custom
   (scroll-conservatively 101) ; important for jumbo images
   (scroll-margin 0)
+  (ultra-scroll-hide-functions '(hl-line-mode global-hl-line-mode))
   :config
   (advice-add 'previous-line :around #'pk/maybe-disable-vscroll)
   (advice-add 'next-line :around #'pk/maybe-disable-vscroll)
