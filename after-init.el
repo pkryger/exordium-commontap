@@ -366,7 +366,8 @@
 (use-package helm
   :diminish
   :functions (pk/helm-locate-library-scan-alist
-              pk/async-locate-library-scan)
+              pk/async-locate-library-scan
+              pk/async-info-files-scan)
   :init
   (use-package find-func
     :ensure nil
@@ -383,6 +384,63 @@
     :ensure helm
     :defer t
     :defines (helm--locate-library-cache))
+  (use-package helm-info
+    :ensure helm
+    :defer t)
+
+  (defun pk/async-info-files-scan ()
+  (async-start
+   `(lambda ()
+      (require 'info)
+      ,(async-inject-variables (rx string-start
+                                   (or "load-path"
+                                       "Info-directory-list"
+                                       "Info-additional-directory-list"
+                                       "Info-suffix-list")
+                                   string-end))
+      (require 'async)
+      (require 'helm-info)
+      (require 'helm-lib)
+      (let* ((Info-directory-list (if (version< emacs-version "30")
+                                      (append Info-directory-list ; Until Emacs-29
+                                              Info-additional-directory-list)
+                                    Info-directory-list))
+             (info-index-list (helm-get-info-files))
+             ;; Use what `info-display-manual' and `helm-info' would
+             (infos
+              (helm-fast-remove-dups
+               (append info-index-list
+                       (info--filter-manual-names (info--manual-names nil)))
+               :test #'equal))
+             (info-files
+              (delq nil (mapcar (lambda (info)
+                                   (when-let* ((file (Info-find-file info t)))
+                                     (cons info file)))
+                                 infos)))
+             (info-files-docs
+              (delq nil (mapcar (lambda (info-file)
+                                  (when-let* ((file (cdr info-file))
+                                              (doc (helm-info-file-doc file)))
+                                    (cons file doc)))
+                                info-files))))
+        (async-send
+         :info-index-list info-index-list
+         :info-files info-files
+         :info-files-docs info-files-docs)))
+
+   (lambda (result)
+     (when (plistp result)
+       (when-let* ((info-index-list (plist-get result :info-index-list)))
+         (setq helm-default-info-index-list info-index-list))
+       (when-let* ((info-files (plist-get result :info-files)))
+         (if helm-info--files-cache
+             (dolist (file info-files)
+               (setf (alist-get (car file) helm-info--files-cache)
+                     (cdr file)))
+           (setq helm-info--files-cache info-files)))
+       (dolist (manual-summary (plist-get result :info-files-docs))
+         (puthash (car manual-summary) (cdr manual-summary)
+                  helm-info--files-doc-cache))))))
 
   (defun pk/helm-locate-library-scan-alist ()
     "Return alist of libraries in `load-path' or in `find-library-source-path'.
@@ -398,7 +456,7 @@ the library and PATH is the file containing the library."
                 ;; A lock file in LOAD-PATH (bug#2626).
                 (seq string-start ".#")
                 ;; .dir-locals that are in VC installed packages
-                ;; and manual load-path/find-library-source-path entries
+                ;; and file load-path/find-library-source-path entries
                 (seq string-start ".dir-locals"
                      (zero-or-one "-2") string-end)))))
       (delq
@@ -424,12 +482,10 @@ the library and PATH is the file containing the library."
 
   (defun pk/async-locate-library-scan ()
     "Scan libraries and their documentation."
-    (message "Scanning libraries...")
     (require 'helm-elisp)
     ;; this scan should be reasonably fast, below 400ms (usually ~200ms) on
     ;; MacBook Air M2 with ~2200 libraries
-    (let ((libraries (pk/helm-locate-library-scan-alist))
-          (t0 (current-time)))
+    (let ((libraries (pk/helm-locate-library-scan-alist)))
       (if helm--locate-library-cache
           ;; Update cached mappings to possibly new locations
           (dolist (library libraries)
@@ -441,13 +497,6 @@ the library and PATH is the file containing the library."
       ;; Scanning documentation is quite slow, 4.5s to 5s on MacBook Air M2
       ;; with ~2200 libraries.  To avoid UI blocking, do it in an asynchronous
       ;; process updating cache in a sentinel.
-      (when async-debug
-        (message
-         "pk/async-locate-library-scan: discovery done in %s, starting docs scan\n%s ..."
-         (float-time (time-since t0))
-         (mapcar #'car
-                 (cl-subseq helm--locate-library-cache
-                            0 (min 3 (length helm--locate-library-cache))))))
       (async-start
        `(lambda ()
           ,(async-inject-variables (rx string-start
@@ -456,7 +505,8 @@ the library and PATH is the file containing the library."
                                        string-end))
           (require 'helm-lib)
           (require 'async)
-          ;; Using `async-send' as "just" returning a result sometimes fails ¯\_(ツ)_/¯
+          ;; Using `async-send' as "just" returning a result sometimes fails
+          ;; ¯\_(ツ)_/¯
           (async-send :docs-alist
                       (delq
                        nil
@@ -466,33 +516,27 @@ the library and PATH is the file containing the library."
                             (when (and basename path)
                               (cons basename (helm-locate-lib-get-summary path)))))
                         helm--locate-library-cache))))
-       `(lambda (result)
-          (when-let* (((plistp result))
-                      (docs-alist (plist-get result :docs-alist))
-                      (t0 (current-time)))
-            (when async-debug
-              (message "pk/async-locate-library-scan: docs scan finished\n%S ..."
-                       (cl-subseq docs-alist 0 (min 3 (length docs-alist)))))
-            (dolist (entry docs-alist)
-              (pcase-let* ((`(,basename . ,doc) entry))
-                ;; Update cache in case doc has changed (i.e., in a VC
-                ;; installed package)
-                (puthash basename doc helm--locate-library-doc-cache)))
-            (when async-debug
-              (message "pk/async-locate-library-scan: docs cache updated in: %s"
-                       (float-time (time-since t0)))))))))
+       (lambda (result)
+         (when-let* (((plistp result))
+                     (docs-alist (plist-get result :docs-alist)))
+           (dolist (entry docs-alist)
+             (pcase-let* ((`(,basename . ,doc) entry))
+               ;; Update cache in case doc has changed (i.e., in a VC
+               ;; installed package)
+               (puthash basename doc helm--locate-library-doc-cache))))))))
 
-  (defun pk/async-locacte-library-scan-when-idle (&rest _)
+  (defun pk/async-helm-cache-scan-when-idle (&rest _)
     "Run async library scan next time Emacs is idle for 5 seconds"
-    (run-with-idle-timer 5 nil #'pk/async-locate-library-scan))
+    (run-with-idle-timer 5 nil #'pk/async-locate-library-scan)
+    (run-with-idle-timer 5 nil #'pk/async-info-files-scan))
 
   :hook
-  (emacs-startup . pk/async-locacte-library-scan-when-idle)
+  (emacs-startup . pk/async-helm-cache-scan-when-idle)
   :config
   (advice-add 'package-install :after
-              #'pk/async-locacte-library-scan-when-idle)
+              #'pk/async-helm-cache-scan-when-idle)
   (advice-add 'package-vc-install :after
-              #'pk/async-locacte-library-scan-when-idle))
+              #'pk/async-helm-cache-scan-when-idle))
 
 ;; @todo remove when exordium has it
 ;; (use-package helm
