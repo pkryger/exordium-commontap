@@ -2201,7 +2201,9 @@ would move point to an (partially) invisible line."
   (advice-add 'next-line :around #'pk/maybe-disable-vscroll-next)
   (advice-add 'magit-next-line :around #'pk/maybe-disable-vscroll-next)
   (advice-add 'backward-char :before #'pk/maybe-vscroll-backward)
+  (advice-add 'left-char :before #'pk/maybe-vscroll-backward)
   (advice-add 'forward-char :before #'pk/maybe-vscroll-forward)
+  (advice-add 'right-char :before #'pk/maybe-vscroll-forward)
   (ultra-scroll-mode))
 
 
