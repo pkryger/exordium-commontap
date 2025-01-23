@@ -2252,18 +2252,27 @@ I.e., created with `scratch' or named scratch-"
 
 (use-package ultra-scroll
   :vc (:url "https://github.com/jdtsmith/ultra-scroll.git" :rev :newest)
-  :functions (pk/maybe-disable-vscroll)
+  :functions (pk/maybe-disable-vscroll-previous
+              pk/maybe-disable-vscroll-next)
   :init
-  (defun pk/maybe-disable-vscroll (orig-fun &rest args)
+  (defun pk/maybe-disable-vscroll-previous (orig-fun &rest args)
     "Maybe disable vscroll when caling ORIG-FUN.
-The vscroll is disabled when this is an intarctive call made by
-an user, and this call is not for command `previous-line' that
+The vscroll is disabled unless moving line backward by (car ARGS)
 would move point to an (partially) invisible line."
-    (if (and (called-interactively-p 'interactive)
-             (not (and (eq this-command 'previous-line)
-                       (save-excursion
-                         (forward-line (- (or (car args) 1)))
-                         (not (pos-visible-in-window-p (point)))))))
+    (if (save-excursion
+          (forward-line (- (or (car args) 1)))
+          (pos-visible-in-window-p (point)))
+        (cl-letf (((symbol-function 'set-window-vscroll) 'ignore))
+          (apply orig-fun args))
+      (apply orig-fun args)))
+
+  (defun pk/maybe-disable-vscroll-next (orig-fun &rest args)
+    "Maybe disable vscroll when caling ORIG-FUN.
+The vscroll is disabled unless moving line forward by (car ARGS)
+would move point to an (partially) invisible line."
+    (if (save-excursion
+          (forward-line (or (car args) 1))
+          (pos-visible-in-window-p (point)))
         (cl-letf (((symbol-function 'set-window-vscroll) 'ignore))
           (apply orig-fun args))
       (apply orig-fun args)))
@@ -2273,8 +2282,8 @@ would move point to an (partially) invisible line."
   (scroll-margin 0)
   (ultra-scroll-hide-functions '(hl-line-mode global-hl-line-mode))
   :config
-  (advice-add 'previous-line :around #'pk/maybe-disable-vscroll)
-  (advice-add 'next-line :around #'pk/maybe-disable-vscroll)
+  (advice-add 'previous-line :around #'pk/maybe-disable-vscroll-previous)
+  (advice-add 'next-line :around #'pk/maybe-disable-vscroll-next)
   (ultra-scroll-mode))
 
 
