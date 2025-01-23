@@ -2178,15 +2178,18 @@ I.e., created with `scratch' or named scratch-"
 (use-package ultra-scroll
   :vc (:url "https://github.com/jdtsmith/ultra-scroll.git" :rev :newest)
   :functions (pk/maybe-disable-vscroll-previous
-              pk/maybe-disable-vscroll-next)
+              pk/maybe-disable-vscroll-next
+              pk/maybe-vscroll-backward
+              pk/maybe-vscroll-forward)
   :init
   (defun pk/maybe-disable-vscroll-previous (orig-fun &rest args)
     "Maybe disable vscroll when caling ORIG-FUN.
 The vscroll is disabled unless moving line backward by (car ARGS)
 would move point to an (partially) invisible line."
-    (if (save-excursion
-          (forward-line (- (or (car args) 1)))
-          (pos-visible-in-window-p (point)))
+    (if (and (called-interactively-p 'interactive)
+             (save-excursion
+               (forward-line (- (or (car args) 1)))
+               (pos-visible-in-window-p (point))))
         (cl-letf (((symbol-function 'set-window-vscroll) 'ignore))
           (apply orig-fun args))
       (apply orig-fun args)))
@@ -2195,12 +2198,25 @@ would move point to an (partially) invisible line."
     "Maybe disable vscroll when caling ORIG-FUN.
 The vscroll is disabled unless moving line forward by (car ARGS)
 would move point to an (partially) invisible line."
-    (if (save-excursion
-          (forward-line (or (car args) 1))
-          (pos-visible-in-window-p (point)))
+    (if (and (called-interactively-p 'interactive)
+             (save-excursion
+               (forward-line (or (car args) 1))
+               (pos-visible-in-window-p (point))))
         (cl-letf (((symbol-function 'set-window-vscroll) 'ignore))
           (apply orig-fun args))
       (apply orig-fun args)))
+
+  (defun pk/maybe-vscroll-backward (&rest args)
+    "Reset vscroll if moving to an (partially) invisible line."
+    (when (called-interactively-p 'interactive)
+      (unless (pos-visible-in-window-p (- (point) (or (car args) 1)))
+        (set-window-vscroll nil 0 t))))
+
+  (defun pk/maybe-vscroll-forward (&rest args)
+    "Reset vscroll if moving to an (partially) invisible line."
+    (when (called-interactively-p 'interactive)
+      (unless (pos-visible-in-window-p (+ (point) (or (car args) 1)))
+        (set-window-vscroll nil 0 t))))
 
   :custom
   (scroll-conservatively 101) ; important for jumbo images
@@ -2208,7 +2224,11 @@ would move point to an (partially) invisible line."
   (ultra-scroll-hide-functions '(hl-line-mode global-hl-line-mode))
   :config
   (advice-add 'previous-line :around #'pk/maybe-disable-vscroll-previous)
+  (advice-add 'magit-previous-line :around #'pk/maybe-disable-vscroll-previous)
   (advice-add 'next-line :around #'pk/maybe-disable-vscroll-next)
+  (advice-add 'magit-next-line :around #'pk/maybe-disable-vscroll-next)
+  (advice-add 'backward-char :before #'pk/maybe-vscroll-backward)
+  (advice-add 'forward-char :before #'pk/maybe-vscroll-forward)
   (ultra-scroll-mode))
 
 
