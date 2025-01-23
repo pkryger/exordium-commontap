@@ -538,6 +538,7 @@ the library and PATH is the file containing the library."
   (advice-add 'package-vc-install :after
               #'pk/async-helm-cache-scan-when-idle))
 
+
 ;; @todo remove when exordium has it
 ;; (use-package helm
 ;;   :diminish
@@ -551,16 +552,6 @@ the library and PATH is the file containing the library."
 ;;    :map helm-command-map
 ;;         ("g" . #'helm-google-suggest)))
 
-
-;; @todo : remove when exordium has it
-;; (use-package elisp-mode
-;;   :ensure nil
-;;   :bind
-;;   (:map emacs-lisp-mode-map
-;;         ("M-." . #'xref-find-definitions)
-;;         ("M-," . #'xref-pop-marker-stack)
-;;         ("M-r" . #'xref-find-references)
-;;         ("M-?" . #'helpful-at-point)))
 
 (use-package eldoc
   :ensure nil
@@ -753,14 +744,6 @@ See: https://github.com/PrincetonUniversity/blocklint"
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 
 
-;; @todo: remove when exordium has it
-;; (use-package orderless
-;;   :custom
-;;   (helm-completion-style 'emacs)
-;;   (completion-styles '(orderless basic))
-;;   (completion-category-overrides '((file (styles basic partial-completion)))))
-
-
 (use-package ispell
   ;;   :ensure-system-package aspell
   :defer t
@@ -934,23 +917,6 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   (setq deft-use-filename-as-title t)
   (setq deft-use-filter-string-for-filename t)
   (setq deft-auto-save-interval 0))
-
-
-;; (use-package posframe
-;;   :defer t)
-;; (use-package ace-window
-;;   :defer t
-;;   :after (posframe)
-;;   :diminish "AW"
-;;   :custom
-;;   (aw-scope 'frame)
-;;   (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
-;;   (aw-translate-char-function #'(lambda (c)
-;;                                   (if (eq ?\M-o c) ?n c)))
-;;   :config
-;;   (global-set-key (kbd "M-o") #'ace-window)
-;;   (when (and (require 'posframe nil t) (posframe-workable-p))
-;;     (ace-window-posframe-mode)))
 
 
 (defun pk/read-only-mode-maybe ()
@@ -1191,10 +1157,6 @@ If the input is empty, select the previous history element instead."
   :custom
   (org-src-tab-acts-natively t))
 
-;; (use-package magit-todos
-;;   :ensure-system-package (rg . ripgrep)
-;;   :config
-;;   (magit-todos-mode))
 
 ;; (define-advice
 ;;     magit-remote--cleanup-push-variables
@@ -1424,33 +1386,6 @@ language."
   :ensure nil
   :custom
   (ediff-window-setup-function #'ediff-setup-windows-plain))
-
-;; TODO: move to exordium and likely hide behind the
-;; `exordium-complete-mode' set to `:company'
-;; (use-package company-posframe
-;;   :demand t
-;;   :diminish
-;;   :init
-;;   (use-package company
-;;     :defer t
-;;     :commands (company-show-doc-buffer))
-;;   :commands (company-posframe-quickhelp-toggle
-;;              company-posframe-quickhelp-scroll-down
-;;              company-posframe-quickhelp-scroll-up)
-;;   :bind
-;;   (:map company-posframe-active-map
-;;    ("C-h" . #'company-posframe-quickhelp-toggle)
-;;    ("C-S-h" . #'company-show-doc-buffer)
-;;    ("C-M-v" . #'company-posframe-quickhelp-scroll-up)
-;;    ("C-M-S-v" . #'company-posframe-quickhelp-scroll-down))
-;;   :custom
-;;   (company-posframe-quickhelp-delay 0.2)
-;;   (company-posframe-quickhelp-x-offset 5)
-;;   :config
-;;   (company-posframe-mode 1)
-;;   ;; TODO: move this to desktop configuration
-;;   (add-to-list 'desktop-minor-mode-table '(company-posframe-mode nil)))
-
 
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
@@ -1949,12 +1884,6 @@ I.e., created with `scratch' or named scratch-"
   (persistent-scratch-scratch-buffer-p-function #'pk/persistent-scratch--scratch-buffer-p)
   :config
   (persistent-scratch-setup-default))
-
-
-;; (use-package flycheck-package
-;;   :config
-;;   (eval-after-load 'flycheck
-;;     '(flycheck-package-setup)))
 
 
 (use-package cperl-mode
