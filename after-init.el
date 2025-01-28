@@ -1970,119 +1970,12 @@ I.e., created with `scratch' or named scratch-"
   :demand t
   :after dwim-shell-command
   :commands dwim-shell-commands-kill-process)
-
 
-(use-package shr
-  :ensure nil
-  :autoload (shr-render-buffer))
-
-(defvar pk/ipynb--convert-command
-  "jupyter nbconvert --to html --log-level WARN --stdout --stdin")
-
-(defvar pk/ipynb--in-or-out-regexp
-  (rx-to-string
-   '(seq line-start (or "In" "Out") (zero-or-more space) "[" (one-or-more digit) "]:" line-end)))
-
-(defun pk/ipynb--next-in-or-out ()
-  "Find line beginning position of next In or Out."
-  (save-excursion
-    (goto-char (line-end-position))
-    (when (re-search-forward pk/ipynb--in-or-out-regexp nil t)
-      (line-beginning-position))))
-
-(defun pk/ipynb--prev-in-or-out ()
-  "Find line beginning position of previous In or Out."
-  (save-excursion
-    (goto-char (line-beginning-position))
-    (backward-char)
-    (cl-block searching-prev-chunk
-      (when (re-search-backward pk/ipynb--in-or-out-regexp nil t)
-        (line-beginning-position)))))
-
-(defun pk/ipynb-next-in-or-out ()
-  "Move to the next file."
-  (interactive)
-  (if-let* ((next (pk/ipynb--next-in-or-out)))
-      (goto-char next)
-    (user-error "No more In nor Out")))
-
-(defun pk/ipynb-previous-in-or-out ()
-  "Move to the previous file."
-  (interactive)
-  (if-let* ((previous (pk/ipynb--prev-in-or-out)))
-      (goto-char previous)
-    (user-error "No more In nor Out")))
-
-(defvar-keymap pk/ipynb-render-mode-map
-  :doc "Keymap for `pk/ipynb-mode'."
-  "N"     #'pk/ipynb-next-in-or-out
-  "P"     #'pk/ipynb-previous-in-or-out)
-
-(define-derived-mode pk/ipynb-render-mode fundamental-mode "ipynb-render"
-  "Major mode to display output of rendered ipynb files."
-  (view-mode)
-  (setq buffer-read-only t))
-
-(defun pk/ipynb-find-and-render-file (file-name)
-  "Find FILE-NAME and open is as html."
-  (interactive
-   (list (read-file-name "Find ipynb file to render: " nil nil t)))
-  (let ((base-name (file-name-nondirectory file-name)))
-    (with-temp-buffer
-      (insert-file-contents file-name)
-      (shell-command-on-region (point-min)
-                               (point-max)
-                               pk/ipynb--convert-command
-                               nil
-                               'no-mark)
-      (shr-render-buffer (current-buffer)))
-    (with-current-buffer "*html*"
-      (rename-buffer (format "*%s<render>*" base-name) 'unique)
-      (pk/ipynb-render-mode))))
-
-(defun pk/ipynb-render-buffer (buffer)
-  "Render ipynb BUFFER as html."
-  (interactive
-   (list (read-buffer "ipynb buffer to render: " (current-buffer) t)))
-  (let ((buffer-name (buffer-name)))
-    (with-temp-buffer
-      (insert-buffer-substring (get-buffer buffer))
-      (shell-command-on-region (point-min)
-                               (point-max)
-                               pk/ipynb--convert-command
-                               nil
-                               'no-mark)
-      (shr-render-buffer (current-buffer)))
-    (with-current-buffer "*html*"
-      (rename-buffer (format "*%s<render>*" buffer-name) 'unique)
-      (pk/ipynb-render-mode))))
-
-(defun pk/ipynb-find-and-browse-file (file-name)
-  "Find FILE-NAME and open is as html."
-  (interactive
-   (list (read-file-name "Find ipynb file to browse: " nil nil t)))
-  (with-temp-buffer
-    (insert-file-contents file-name)
-    (shell-command-on-region (point-min)
-                             (point-max)
-                             pk/ipynb--convert-command
-                             nil
-                             'no-mark)
-    (browse-url-of-buffer)))
-
-(defun pk/ipynb-browse-buffer (buffer)
-  "Render ipynb BUFFER as html."
-  (interactive
-   (list (read-buffer "ipynb buffer to browse: " (current-buffer) t)))
-  (with-temp-buffer
-    (insert-buffer-substring (get-buffer buffer))
-    (shell-command-on-region (point-min)
-                             (point-max)
-                             pk/ipynb--convert-command
-                             nil
-                             'no-mark)
-    (browse-url-of-buffer)))
-
+(use-package ipynb
+  :defer t
+  :exordium-vc-checkout "~/gh/pkryger/ipynb.el"
+  :vc (:url "https://github.com/pkryger/ipynb.el.git"
+       :rev :newest))
 
 ;; (setf (alist-get 'ruby-mode
 ;;                             eglot-server-programs
