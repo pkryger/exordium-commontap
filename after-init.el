@@ -1977,6 +1977,12 @@ I.e., created with `scratch' or named scratch-"
   :vc (:url "https://github.com/pkryger/ipynb.el.git"
        :rev :newest))
 
+(use-package basic-stats
+  :defer t
+  :exordium-vc-checkout "~/gh/pkryger/basic-stats.el"
+  :vc (:url "https://github.com/pkryger/basic-stats.el.git"
+       :rev :newest))
+
 ;; (setf (alist-get 'ruby-mode
 ;;                             eglot-server-programs
 ;;                             nil nil
