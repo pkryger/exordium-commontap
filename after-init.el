@@ -1983,6 +1983,7 @@ I.e., created with `scratch' or named scratch-"
   :vc (:url "https://github.com/pkryger/basic-stats.el.git"
        :rev :newest))
 
+;; Experimental setup for Homebrew ruby
 ;; (setf (alist-get 'ruby-mode
 ;;                             eglot-server-programs
 ;;                             nil nil
