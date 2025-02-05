@@ -2054,14 +2054,19 @@ I.e., created with `scratch' or named scratch-"
               pk/maybe-vscroll-backward
               pk/maybe-vscroll-forward)
   :init
+  ;; Check for point visibility before calling checking `call-interactively-p'.
+  ;; The former is relatively fast compared to the latter.  This came up from
+  ;; investigating slowness in `helm-M-x'.  When affixation is computed for the
+  ;; latter, it calls `substitute-command-keys' which in turn calls
+  ;; `forward-char'.
   (defun pk/maybe-disable-vscroll-previous (orig-fun &rest args)
     "Maybe disable vscroll when caling ORIG-FUN.
 The vscroll is disabled unless moving line backward by (car ARGS)
 would move point to an (partially) invisible line."
-    (if (and (called-interactively-p 'interactive)
-             (save-excursion
+    (if (and (save-excursion
                (forward-line (- (or (car args) 1)))
-               (pos-visible-in-window-p (point))))
+               (pos-visible-in-window-p (point)))
+             (called-interactively-p 'interactive))
         (cl-letf (((symbol-function 'set-window-vscroll) 'ignore))
           (apply orig-fun args))
       (apply orig-fun args)))
@@ -2070,39 +2075,58 @@ would move point to an (partially) invisible line."
     "Maybe disable vscroll when caling ORIG-FUN.
 The vscroll is disabled unless moving line forward by (car ARGS)
 would move point to an (partially) invisible line."
-    (if (and (called-interactively-p 'interactive)
-             (save-excursion
+    (if (and (save-excursion
                (forward-line (or (car args) 1))
-               (pos-visible-in-window-p (point))))
+               (pos-visible-in-window-p (point)))
+             (called-interactively-p 'interactive))
         (cl-letf (((symbol-function 'set-window-vscroll) 'ignore))
           (apply orig-fun args))
       (apply orig-fun args)))
 
   (defun pk/maybe-vscroll-backward (&rest args)
     "Reset vscroll if moving to an (partially) invisible line."
-    (when (called-interactively-p 'interactive)
-      (unless (pos-visible-in-window-p (- (point) (or (car args) 1)))
-        (set-window-vscroll nil 0 t))))
+    (when (and (pos-visible-in-window-p (point))
+               (not (pos-visible-in-window-p (- (point) (or (car args) 1))))
+               (called-interactively-p 'interactive))
+        (set-window-vscroll nil 0 t)))
 
   (defun pk/maybe-vscroll-forward (&rest args)
     "Reset vscroll if moving to an (partially) invisible line."
-    (when (called-interactively-p 'interactive)
-      (unless (pos-visible-in-window-p (+ (point) (or (car args) 1)))
-        (set-window-vscroll nil 0 t))))
+    (when (and (pos-visible-in-window-p (point))
+               (not (pos-visible-in-window-p (+ (point) (or (car args) 1))))
+               (called-interactively-p 'interactive))
+        (set-window-vscroll nil 0 t)))
+
+  (defun pk/add-vscroll-advices ()
+    (advice-add 'previous-line :around #'pk/maybe-disable-vscroll-previous)
+    (advice-add 'magit-previous-line :around #'pk/maybe-disable-vscroll-previous)
+    (advice-add 'next-line :around #'pk/maybe-disable-vscroll-next)
+    (advice-add 'magit-next-line :around #'pk/maybe-disable-vscroll-next)
+    (advice-add 'backward-char :before #'pk/maybe-vscroll-backward)
+    (advice-add 'left-char :before #'pk/maybe-vscroll-backward)
+    (advice-add 'forward-char :before #'pk/maybe-vscroll-forward)
+    (advice-add 'right-char :before #'pk/maybe-vscroll-forward))
+
+  (defun pk/remove-vscroll-advices ()
+    (advice-remove 'previous-line #'pk/maybe-disable-vscroll-previous)
+    (advice-remove 'magit-previous-line #'pk/maybe-disable-vscroll-previous)
+    (advice-remove 'next-line #'pk/maybe-disable-vscroll-next)
+    (advice-remove 'magit-next-line #'pk/maybe-disable-vscroll-next)
+    (advice-remove 'backward-char #'pk/maybe-vscroll-backward)
+    (advice-remove 'left-char #'pk/maybe-vscroll-backward)
+    (advice-remove 'forward-char #'pk/maybe-vscroll-forward)
+    (advice-remove 'right-char #'pk/maybe-vscroll-forward))
+
+  :hook
+  (helm-before-initialize . pk/remove-vscroll-advices)
+  (helm-cleanup . pk/add-vscroll-advices)
 
   :custom
   (scroll-conservatively 101) ; important for jumbo images
   (scroll-margin 0)
   (ultra-scroll-hide-functions '(hl-line-mode global-hl-line-mode))
   :config
-  (advice-add 'previous-line :around #'pk/maybe-disable-vscroll-previous)
-  (advice-add 'magit-previous-line :around #'pk/maybe-disable-vscroll-previous)
-  (advice-add 'next-line :around #'pk/maybe-disable-vscroll-next)
-  (advice-add 'magit-next-line :around #'pk/maybe-disable-vscroll-next)
-  (advice-add 'backward-char :before #'pk/maybe-vscroll-backward)
-  (advice-add 'left-char :before #'pk/maybe-vscroll-backward)
-  (advice-add 'forward-char :before #'pk/maybe-vscroll-forward)
-  (advice-add 'right-char :before #'pk/maybe-vscroll-forward)
+  (pk/add-vscroll-advices)
   (ultra-scroll-mode))
 
 
