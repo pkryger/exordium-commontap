@@ -888,38 +888,40 @@ See: https://github.com/PrincetonUniversity/blocklint"
   (compilation-scroll-output 'first-error))
 
 
-(defconst pk/gc-cons-threshold (* 16 1024 1024))
-;; From DOOM FAQ:
-;; https://github.com/hlissner/doom-emacs/blob/64922dd/docs/faq.org#L215-L225
-(defun pk/defer-garbage-collection ()
-  "Use max value for gc, when in minibuffer.
-It's so it won't slow expensive commands and completion frameworks."
-  (setf gc-cons-threshold most-positive-fixnum))
-
-(defun pk/restore-garbage-collection ()
-  "Get back to the original gc threshold.
-Defer it so that commands launched immediately after will enjoy the benefits."
-  (run-at-time
-   1 nil (lambda () (setf gc-cons-threshold pk/gc-cons-threshold))))
-
-(add-hook 'minibuffer-setup-hook #'pk/defer-garbage-collection)
-(add-hook 'minibuffer-exit-hook #'pk/restore-garbage-collection)
-
-;; garbage collect magic hack from https://gitlab.com/koral/gcmh
+;; Garbage collect magic hack from https://gitlab.com/koral/gcmh
 ;; tuned like in DOOM:
 ;; https://github.com/hlissner/doom-emacs/blob/db16e5c/core/core.el#L350-L351
 ;; https://github.com/hlissner/doom-emacs/blob/ed1996e/modules/lang/org/config.el#L548
 (use-package gcmh
   :diminish
+  :init
+  ;; From DOOM FAQ:
+  ;; https://github.com/hlissner/doom-emacs/blob/64922dd/docs/faq.org#L215-L225
+  (defun pk/defer-garbage-collection ()
+    "Use max value for gc, when in minibuffer.
+It's so it won't slow expensive commands and completion frameworks."
+    (setf gc-cons-threshold most-positive-fixnum))
+
+  (defun pk/restore-garbage-collection ()
+    "Get back to the original gc threshold.
+Defer it so that commands launched immediately after will enjoy the benefits."
+    (run-at-time
+     1 nil (lambda () (setf gc-cons-threshold gcmh-high-cons-threshold))))
+
   :custom
   (gcmh-idle-delay 5)
-  (gcmh-high-cons-threshold pk/gc-cons-threshold)
+  (gcmh-high-cons-threshold (* 16 1024 1024))
   :hook
   ;; TODO: this also needs to be after a buffer switch, including current value of `gc-cons-threshold'
   ;; likely in `buffer-list-update-hook'
   (org-mode . (lambda ()
-                (setq-local gcmh-high-cons-threshold (* 2 pk/gc-cons-threshold))))
-  (after-init . gcmh-mode))
+                (setq-local gcmh-high-cons-threshold
+                            (* 2 gcmh-high-cons-threshold))))
+  (after-init . gcmh-mode)
+  (minibuffer-setup . pk/defer-garbage-collection)
+  (helm-before-initialize . pk/defer-garbage-collection)
+  (minibuffer-exit . pk/restore-garbage-collection)
+  (helm-cleanup . pk/restore-garbage-collection))
 
 
 (use-package deft
