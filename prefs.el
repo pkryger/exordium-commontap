@@ -6,6 +6,10 @@
 
 ;;; Code:
 
+(setq user-full-name "Przemysław Kryger"
+      user-mail-address (or (getenv "EMAIL")
+                            "pkryger@gmail.com"))
+
 (eval-when-compile
   (unless (featurep 'init-require)
     (load (file-name-concat (locate-user-emacs-file "modules") "init-require"))))

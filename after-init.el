@@ -311,7 +311,19 @@
 (setq confirm-kill-emacs 'y-or-n-p)
 (setq-default display-line-numbers-widen t)
 
+;; The following needs an smtp.gmail.com entry in ~/.netrc (or in ~/.authinfo)
+(use-package smtpmail
+  :ensure nil
+  :custom
+  ;; (smtpmail-debug-info t)
+  ;; (smtpmail-debug-verb t)
+  (smtpmail-smtp-server "smtp.gmail.com")
+  (smtpmail-smtp-service 587)
+  (smtpmail-servers-requiring-authorization (rx "gmail.com" string-end))
+  (smtpmail-smtp-user "pkryger@gmail.com")
+  (smtpmail-mail-address "prkyger@gmail.com"))
 
+
 
 (use-package window
   :ensure nil
