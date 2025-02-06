@@ -833,6 +833,16 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 
 (use-package projectile
+  :custom
+  (projectile-auto-cleanup-known-projects t)
+  (projectile-auto-discover t)
+  (projectile-project-search-path (list (cons "~/gh" 2)
+                                        package-user-dir
+                                        user-emacs-directory
+                                        (expand-file-name "taps"
+                                                          user-emacs-directory))))
+
+(use-package projectile
   :autoload (projectile-project-name
              projectile-register-project-type
              projectile-verify-file
