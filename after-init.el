@@ -2048,11 +2048,15 @@ I.e., created with `scratch' or named scratch-"
 
 
 (use-package ultra-scroll
+  :demand t
   :vc (:url "https://github.com/jdtsmith/ultra-scroll.git" :rev :newest)
   :functions (pk/maybe-disable-vscroll-previous
               pk/maybe-disable-vscroll-next
               pk/maybe-vscroll-backward
-              pk/maybe-vscroll-forward)
+              pk/maybe-vscroll-forward
+              pk/add-vscroll-advices
+              pk/remove-vscroll-advices
+              pk/ultra-scroll-advices)
   :init
   ;; Check for point visibility before calling checking `call-interactively-p'.
   ;; The former is relatively fast compared to the latter.  This came up from
@@ -2098,6 +2102,7 @@ would move point to an (partially) invisible line."
         (set-window-vscroll nil 0 t)))
 
   (defun pk/add-vscroll-advices ()
+    "Add advices for vscroll while point movement in `ultra-scroll' mode."
     (advice-add 'previous-line :around #'pk/maybe-disable-vscroll-previous)
     (advice-add 'magit-previous-line :around #'pk/maybe-disable-vscroll-previous)
     (advice-add 'next-line :around #'pk/maybe-disable-vscroll-next)
@@ -2108,6 +2113,7 @@ would move point to an (partially) invisible line."
     (advice-add 'right-char :before #'pk/maybe-vscroll-forward))
 
   (defun pk/remove-vscroll-advices ()
+    "Remove advices for vscroll while point movement in `ultra-stroll' mode."
     (advice-remove 'previous-line #'pk/maybe-disable-vscroll-previous)
     (advice-remove 'magit-previous-line #'pk/maybe-disable-vscroll-previous)
     (advice-remove 'next-line #'pk/maybe-disable-vscroll-next)
@@ -2117,18 +2123,26 @@ would move point to an (partially) invisible line."
     (advice-remove 'forward-char #'pk/maybe-vscroll-forward)
     (advice-remove 'right-char #'pk/maybe-vscroll-forward))
 
+  (defun pk/ultra-scroll-advices ()
+    "Add or remove advices for vscroll while point movement."
+    (message "ultra-scroll-mode %s" ultra-scroll-mode)
+    (if ultra-scroll-mode
+        (pk/add-vscroll-advices)
+      (pk/remove-vscroll-advices)))
+
   :hook
   (helm-before-initialize . pk/remove-vscroll-advices)
   (helm-cleanup . pk/add-vscroll-advices)
+  (ultra-scroll-mode . pk/ultra-scroll-advices)
 
   :custom
   (scroll-conservatively 101) ; important for jumbo images
   (scroll-margin 0)
   (ultra-scroll-hide-functions '(hl-line-mode global-hl-line-mode))
+
   :config
   (pk/add-vscroll-advices)
   (ultra-scroll-mode))
-
 
 ;; (use-package jinx
 ;;   :ensure nil
