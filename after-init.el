@@ -1424,7 +1424,8 @@ language."
 
 
 (use-package company-forge
-  :exordium-vc-checkout "~/gh/pkryger/company-forge.el/")
+  :exordium-vc-checkout "~/gh/pkryger/company-forge.el/"
+  :vc (:url "https://github.com/pkryger/company-forge.el.git" :rev :newest))
 
 
 (when-let*  ((font-and-size (car (cl-remove-if-not
