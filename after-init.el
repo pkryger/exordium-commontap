@@ -1784,10 +1784,17 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 (when (and exordium-helm-everywhere
            exordium-help-extensions)
   (exordium-require 'init-help)
-  (add-to-list 'helm-completing-read-handlers-alist
-               (cons #'pk/advice-unadvice #'exordium--helm-helpful-completing-read))
-  (add-to-list 'helm-completing-read-handlers-alist
-               (cons #'pk/advice-unadvice-all #'exordium--helm-helpful-completing-read)))
+  (dolist (fun '(pk/advice-unadvice
+                 pk/advice-unadvice-all
+                 debug-on-entry
+                 cancel-debug-on-entry
+                 debug-watch
+                 cancel-debug-watch
+                 debug-on-variable-change
+                 cancel-debug-on-variable-change))
+    (add-to-list 'helm-completing-read-handlers-alist
+                 (cons fun #'exordium--helm-helpful-completing-read))))
+
 
 
 (define-obsolete-function-alias
