@@ -2076,6 +2076,17 @@ I.e., created with `scratch' or named scratch-"
   :vc (:url "https://github.com/pkryger/org-commentary.el.git"
        :rev :newest))
 
+(use-package checkdoc
+  :ensure nil
+  :functions (pk/checkdoc--supress-cask-emacs)
+  :autoload (checkdoc-in-example-string-p)
+  :init
+  (defun pk/checkdoc--supress-cask-emacs (&rest _)
+    (save-match-data
+      (looking-back (rx symbol-start "cask emacs") (pos-bol))))
+  :config
+  (advice-add #'checkdoc-in-example-string-p
+              :after-until #'pk/checkdoc--supress-cask-emacs))
 
 
 (use-package ultra-scroll
