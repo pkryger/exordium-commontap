@@ -113,6 +113,10 @@
 
           (custom-theme-set-faces
            'user
+           ;; Something mid Feb 2025 something is messing up with default face, setting its foreground to "unspecifed-fg"
+           ;; and background to "unspecified-bg". Until that's pinpointed and eliminated, forcibly fix it on user level.
+           `(default ((t (,@c :background ,bg-main :foreground ,fg-main))))
+
            `(fixed-pitch ((t (,@c :family ,(face-attribute 'default :family) :height ,(face-attribute 'default :height)))))
            `(scroll-bar ((t (,@c :background ,bg-inactive :foreground ,fg-dim))))
            `(fill-column-indicator ((t (,@c :height 1.0 :background ,bg-main :foreground ,bg-inactive))))
