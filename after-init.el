@@ -2070,6 +2070,12 @@ I.e., created with `scratch' or named scratch-"
   :defer t)
 (use-package undercover
   :defer t)
+(use-package org-commentary
+  :defer t
+  :exordium-vc-checkout "/Users/pkryger/gh/pkryger/org-commentary.el"
+  :vc (:url "https://github.com/pkryger/org-commentary.el.git"
+       :rev :newest))
+
 
 
 (use-package ultra-scroll
