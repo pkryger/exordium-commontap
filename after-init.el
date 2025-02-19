@@ -1423,6 +1423,10 @@ language."
   (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium"))))
 
 
+(use-package company-forge
+  :exordium-vc-checkout "~/gh/pkryger/company-forge.el/")
+
+
 (when-let*  ((font-and-size (car (cl-remove-if-not
                                   (lambda (font-and-size)
                                     (member (car font-and-size)
