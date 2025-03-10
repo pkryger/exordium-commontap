@@ -1427,6 +1427,9 @@ language."
   :exordium-vc-checkout "~/gh/pkryger/company-forge.el/"
   :vc (:url "https://github.com/pkryger/company-forge.el.git" :rev :newest)
   :config
+  (company-forge-icons-mode) ;; Display icons
+  (advice-add #'forge--pull ;; Reset cache after forge pull
+              :filter-args #'company-forge-reset-cache-after-pull)
   (setq company-backends
         (delq 'exordium-company-assignees
               (delq 'exordium-company-topics company-backends)))
