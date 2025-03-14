@@ -1028,6 +1028,20 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   :config
   (savehist-mode))
 
+(use-package treesit-auto
+  :defer t
+  :autoload (treesit-auto--build-treesit-source-alist)
+  :defines (treesit-auto-langs)
+  :init
+  (defun pk/treesit-auto-install-language-grammar (lang)
+  "Install a grammar for LANG using recipe from `treesit-auto-recipe-list'."
+  (interactive
+   (list (intern (completing-read "Language: " treesit-auto-langs))))
+  (let ((treesit-language-source-alist
+         (treesit-auto--build-treesit-source-alist)))
+    (treesit-install-language-grammar lang))))
+
+
 (use-package python
   :ensure nil
   :init
