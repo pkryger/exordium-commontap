@@ -1440,19 +1440,6 @@ language."
   (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium"))))
 
 
-(use-package company-forge
-  :exordium-vc-checkout "~/gh/pkryger/company-forge.el/"
-  :vc (:url "https://github.com/pkryger/company-forge.el.git" :rev :newest)
-  :config
-  (company-forge-icons-mode) ;; Display icons
-  (advice-add #'forge--pull ;; Reset cache after forge pull
-              :filter-args #'company-forge-reset-cache-after-pull)
-  (setq company-backends
-        (delq 'exordium-company-assignees
-              (delq 'exordium-company-topics company-backends)))
-  (add-to-list 'company-backends #'company-forge))
-
-
 (when-let*  ((font-and-size (car (cl-remove-if-not
                                   (lambda (font-and-size)
                                     (member (car font-and-size)

@@ -22,6 +22,8 @@
   (setq exordium-vc-checkout-alist
         `(;; (jinx
           ;;  . ,(file-name-concat workspace "gh" "minad" "jinx"))
+          (company-forge
+           . ,(file-name-concat workspace "gh" "pkryger" "company-forge.el"))
           (difftastic
            . ,(file-name-concat workspace "gh" "pkryger" "difftastic.el"))
           (basic-stats
