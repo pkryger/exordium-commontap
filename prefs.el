@@ -14,7 +14,7 @@
   (unless (featurep 'init-require)
     (load (file-name-concat (locate-user-emacs-file "modules") "init-require"))))
 (exordium-require 'init-prefs)
-;; TODO: remove comment when ported (exordium-require 'init-vc-checkout)
+(exordium-require 'init-vc-checkout)
 
 (setq exordium-always-vc-checkout t)
 (let ((workspace (or (getenv "GITHUB_WORKSPACE")
