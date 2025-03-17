@@ -603,8 +603,9 @@ packages are reinstalled from MELPA."
                      (rx string-start "flycheck_"
                          (one-or-more (or alnum punct)) ".el" string-end)))))
     args)
-
+
   :config
+  (put 'flycheck-emacs-lisp-load-path 'risky-local-variable nil)
   (advice-add 'loaddefs-generate
               :filter-args #'pk/loaddefs-generate--filter-flycheck)
 
