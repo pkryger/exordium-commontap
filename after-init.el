@@ -350,7 +350,7 @@
   ;; For testing use:
   ;;
   ;; (split-window-sensibly)
-  (split-height-threshold 55)
+  (split-height-threshold 56)
   (split-width-threshold 160))
 
 (use-package helm-core
