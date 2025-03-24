@@ -75,7 +75,7 @@ available font names by evaluating (font-family-list)."
 ;; annotation/affixation search (&) doesn't work anyway
 (setq exordium-helm-completion-style 'helm)
 (setq exordium-enable-which-key nil)
-(setq exordium-split-window-preffered-direction 'longest)
+(setq exordium-split-window-preferred-direction 'longest)
 (setq exordium-desktop t)
 (setq exordium-helm-everywhere t)
 (setq exordium-theme nil)

@@ -1759,57 +1759,6 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
           '(ruff-format ruff-isort))))
 
 
-(defun pk/advice-unadvice (symbol function)
-  "Remove FUNCTION advice form SYMBOL."
-  (interactive
-   ;; From Emacs-30 definition of `advice-remove'
-   (let* ((pred (lambda (sym) (advice--p (advice--symbol-function sym))))
-          (default (when-let* ((f (function-called-at-point))
-                               ((funcall pred f)))
-                     (symbol-name f)))
-          (prompt (format-prompt "Remove advice from function" default))
-          (symbol (intern (completing-read prompt obarray pred t nil nil default)))
-          advices)
-     (advice-mapc (lambda (f p)
-                    (let ((k (or (alist-get 'name p) f)))
-                      (push (cons
-                             (prin1-to-string k)
-                             k)
-                            advices)))
-                  symbol)
-     (list symbol (cdr (assoc-string
-                        (completing-read "Advice to remove: " advices nil t)
-                        advices)))))
-  (advice-remove symbol function))
-
-(defun pk/advice-unadvice-all (symbol)
-  "Remove all advices from SYMBOL."
-  ;; From Emacs-30 definition of `advice-remove'
-  (interactive
-   (let* ((pred (lambda (sym) (advice--p (advice--symbol-function sym))))
-          (default (when-let* ((f (function-called-at-point))
-                               ((funcall pred f)))
-                     (symbol-name f)))
-          (prompt (format-prompt "Remove advice from function" default)))
-     (list (intern (completing-read prompt obarray pred t nil nil default)))))
-  (advice-mapc (lambda (advice _props) (advice-remove symbol advice)) symbol))
-
-(when (and exordium-helm-everywhere
-           exordium-help-extensions)
-  (exordium-require 'init-help)
-  (dolist (fun '(pk/advice-unadvice
-                 pk/advice-unadvice-all
-                 debug-on-entry
-                 cancel-debug-on-entry
-                 debug-watch
-                 cancel-debug-watch
-                 debug-on-variable-change
-                 cancel-debug-on-variable-change))
-    (add-to-list 'helm-completing-read-handlers-alist
-                 (cons fun #'exordium--helm-helpful-completing-read))))
-
-
-
 (define-obsolete-function-alias
   'pk/rename-file-and-buffer #'rename-visited-file "29.1")
 (define-obsolete-function-alias
