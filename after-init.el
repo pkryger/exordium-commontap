@@ -1765,40 +1765,127 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
  'pk/move-buffer-file #'rename-visited-file "29.1")
 
 
-
-;; Slightly modified version of https://www.emacswiki.org/emacs/AddCommasToNumbers
-
 (defun pk/add-number-grouping (number &optional separator)
-  "Add commas to NUMBER and return it as a string.
-Optional SEPARATOR is the string to use to separate groups.  It
-defaults to a comma."
+  "Add commas to NUMBER and return it as a grouped string.
+Optional SEPARATOR is a string to use to separate groups.  It
+defaults to a comma.
+
+When called interactively then add SEPARATOR to a number in
+active region, replacing it if region is active.  Otherwise, if
+region is not active ask for a number and insert a grouped number
+at point.  When called with a prefix arg ask for SEPARATOR."
+  ;; Slightly modified version of
+  ;; https://www.emacswiki.org/emacs/AddCommasToNumbers
+  (interactive
+   (list (if (region-active-p)
+             (buffer-substring-no-properties (region-beginning)
+                                             (region-end))
+           (read-number "Number: "))
+         (if current-prefix-arg
+             (read-string "Separator: ")
+           ",")))
   (let ((num (if (stringp number)
                  number
                (number-to-string number)))
-        (op (or separator ",")))
+        (separator (pcase separator
+                     ((pred integerp) (format "%c" separator))
+                     ((pred stringp) separator)
+                     ((pred null) ","))))
     (save-match-data
-      (while (string-match "\\(.*[0-9]\\)\\([0-9]\\{3\\}[0-9,\.]*\\)" num)
+      (while (string-match "\\(.*[0-9]\\)\\([0-9][0-9][0-9].*\\)" num)
         (setq num (concat (match-string 1 num)
-                          op
+                          separator
                           (match-string 2 num)))))
+    (when (called-interactively-p 'interactive)
+      (when (region-active-p)
+        (delete-region (region-beginning) (region-end)))
+      (insert num))
     num))
+
+(defun pk/add-numbers-grouping (numbers &optional separator)
+  "Add commas to NUMBERS and return them as a list of strings.
+Optional SEPARATOR is a string to use to separate groups.  It
+defaults to a comma.
+
+When called interactively then add SEPARATOR to numbers in active
+region, replacing them.  Each line in the region is assumed to be
+a number.  When called with a prefix arg ask for SEPARATOR."
+  (interactive
+   (list (if (region-active-p)
+             (split-string (buffer-substring-no-properties (region-beginning)
+                                                           (region-end))
+                           "\n" t)
+           (user-error "Region must be active"))
+         (if current-prefix-arg
+             (read-string "Separator: ")
+           ",")))
+  (let ((numbers (mapcar (lambda (num)
+                           (pk/add-number-grouping num separator))
+                         numbers)))
+    (when (called-interactively-p 'interactive)
+      (delete-region (region-beginning) (region-end))
+      (dolist (num numbers)
+        (insert num "\n")))
+    numbers))
 
 
 (defun pk/remove-number-grouping (number &optional separator)
-  "Remove commas from NUMBER and return it as a number.
-Optional SEPARATOR is the string to use to separate groups.  It
-defaults to a comma."
-  (let ((sep (or separator ?,)))
-    (string-to-number (cl-remove sep number))))
+  "Remove commas from a grouped NUMBER (a string) and return it as a number.
+Optional SEPARATOR is a string to use to separate groups.  It
+defaults to a comma.
 
+When called interactively then remove SEPARATOR from a grouped
+number in active region, replacing it if region is active.
+Otherwise, if region is not active ask for a grouped number and
+insert number with SEPARATOR removed at point.  When called with
+a prefix arg ask for SEPARATOR."
+  (interactive
+   (list (if (region-active-p)
+             (buffer-substring-no-properties (region-beginning)
+                                             (region-end))
+           (read-number "Number: "))
+         (if current-prefix-arg
+             (read-string "Separator: ")
+           ",")))
+  (let* ((separator (pcase separator
+                      ((pred integerp) (format "%c" separator))
+                      ((pred stringp) separator)
+                      ((pred null) ",")))
+         (num (apply #'concat
+                     (string-split number (rx-to-string separator) t))))
+    (when (called-interactively-p 'interactive)
+      (when (called-interactively-p 'interactive)
+        (when (region-active-p)
+          (delete-region (region-beginning) (region-end)))
+        (insert num)))
+    (string-to-number num)))
 
-(defun pk/mapcar-grouped-numbers (numbers &optional separator)
-  "Remove commas from NUMBERS and return them a list of numbers.
-Optional SEPARATOR is the string to use to separate groups.  It
-defaults to a comma."
-  (mapcar (lambda (num)
-            (pk/remove-number-grouping num separator))
-          numbers))
+(defun pk/remove-numbers-grouping (numbers &optional separator)
+  "Remove commas from grouped NUMBERS and return them a list of numbers.
+Optional SEPARATOR is a string to use to separate groups.  It
+defaults to a comma.
+
+When called interactively then remove SEPARATOR from a grouped
+numbers in active region, replacing them.  Each line in the region
+is assumed to be a number.  When called with a prefix arg ask for
+SEPARATOR."
+  (interactive
+   (list (if (region-active-p)
+             (split-string (buffer-substring-no-properties (region-beginning)
+                                                           (region-end))
+                           "\n" t)
+           (user-error "Region must be active"))
+         (if current-prefix-arg
+             (read-string "Separator: ")
+           ",")))
+  (let ((numbers (mapcar (lambda (num)
+                           (pk/remove-number-grouping num separator))
+                         numbers)))
+    (when (called-interactively-p 'interactive)
+      (delete-region (region-beginning) (region-end))
+      (dolist (num numbers)
+        (insert (format "%s\n" num))))
+    numbers))
 
 
 (use-package graphviz-dot-mode)
