@@ -2001,16 +2001,13 @@ I.e., created with `scratch' or named scratch-"
               pk/maybe-disable-vscroll-previous
               pk/maybe-disable-vscroll-next
               pk/maybe-vscroll
-              pk/maybe-vscroll-backward
-              pk/maybe-vscroll-forward
-              pk/add-vscroll-advices
-              pk/remove-vscroll-advices
+              pk/vscroll-advices
               pk/ultra-scroll-advices)
   :init
   (defun pk/vscroll-advice-spec (spec)
     "Eval interactive SPEC and preppend it with `pk/interactive'."
-    (let ((spec (advice-eval-interactive-spec spec)))
-      (cons 'pk/interactive spec)))
+    (let ((args (advice-eval-interactive-spec spec)))
+      (cons 'pk/interactive args)))
 
   (defun pk/maybe-disable-vscroll (op orig-fun args)
     "Maybe disable vscroll when caling ORIG-FUN.
@@ -2041,58 +2038,80 @@ would move point to an (partially) invisible line."
     (interactive #'pk/vscroll-advice-spec)
     (pk/maybe-disable-vscroll #'+ orig-fun args))
 
-  (defun pk/maybe-vscroll (op orig-fun args)
+  (defun pk/maybe-vscroll (orig-fun &rest args)
                                         ; checkdoc-params: (orig-fun)
-    "Reset vscroll if moving according to OP to an (partially) invisible line."
+    "Reset vscroll after moving according to a (partially) invisible line."
+    (interactive #'pk/vscroll-advice-spec)
     (let* ((interactive (eq (car args) 'pk/interactive))
            (args (if interactive (cdr args) args)))
-      (when (and interactive
-                 (pos-visible-in-window-p (point))
-                 (not (pos-visible-in-window-p
-                       (funcall op (point) (or (car args) 1)))))
-        (set-window-vscroll nil 0 t))
-      (apply orig-fun args)))
+      (prog1
+          (apply orig-fun args)
+        (when (and interactive
+                   (not (pos-visible-in-window-p (point))))
+          (set-window-vscroll nil 0 t)))))
 
-  (defun pk/maybe-vscroll-backward (orig-fun &rest args)
-                                        ; checkdoc-params: (orig-fun)
-    "Reset vscroll if moving backward to an (partially) invisible line."
-    (interactive #'pk/vscroll-advice-spec)
-    (pk/maybe-vscroll #'- orig-fun args))
-
-  (defun pk/maybe-vscroll-forward (orig-fun &rest args)
-                                        ; checkdoc-params: (orig-fun)
-    "Reset vscroll if moving forward to an (partially) invisible line."
-    (interactive #'pk/vscroll-advice-spec)
-    (pk/maybe-vscroll #'+ orig-fun args))
-
-  (defun pk/add-vscroll-advices ()
-    "Add advices for vscroll while point movement in `ultra-scroll' mode."
-    (advice-add 'previous-line :around #'pk/maybe-disable-vscroll-previous)
-    (advice-add 'magit-previous-line :around #'pk/maybe-disable-vscroll-previous)
-    (advice-add 'next-line :around #'pk/maybe-disable-vscroll-next)
-    (advice-add 'magit-next-line :around #'pk/maybe-disable-vscroll-next)
-    (advice-add 'backward-char :around #'pk/maybe-vscroll-backward)
-    (advice-add 'left-char :around #'pk/maybe-vscroll-backward)
-    (advice-add 'forward-char :around #'pk/maybe-vscroll-forward)
-    (advice-add 'right-char :around #'pk/maybe-vscroll-forward))
-
-  (defun pk/remove-vscroll-advices ()
-    "Remove advices for vscroll while point movement in `ultra-stroll' mode."
-    (advice-remove 'previous-line #'pk/maybe-disable-vscroll-previous)
-    (advice-remove 'magit-previous-line #'pk/maybe-disable-vscroll-previous)
-    (advice-remove 'next-line #'pk/maybe-disable-vscroll-next)
-    (advice-remove 'magit-next-line #'pk/maybe-disable-vscroll-next)
-    (advice-remove 'backward-char #'pk/maybe-vscroll-backward)
-    (advice-remove 'left-char #'pk/maybe-vscroll-backward)
-    (advice-remove 'forward-char #'pk/maybe-vscroll-forward)
-    (advice-remove 'right-char #'pk/maybe-vscroll-forward))
+  (defun pk/vscroll-advices (action)
+    "Take ACTION on advices for vscroll for point movement in `ultra-scroll' mode."
+    (let ((args (when (eq action 'advice-add) '(:around))))
+      (dolist (fun '(previous-line
+                     magit-prefious-line))
+        (apply action `(,fun ,@args pk/maybe-disable-vscroll-previous)))
+      (dolist (fun '(next-line
+                     magit-next-line))
+        (apply action `(,fun ,@args pk/maybe-disable-vscroll-next)))
+      (dolist (fun '(backward-char
+                     left-char
+                     forward-char
+                     right-char
+                     backward-word
+                     left-word
+                     forward-word
+                     right-word
+                     backward-sentence
+                     forward-sentence
+                     backward-paragraph
+                     forward-paragraph
+                     backward-page
+                     forward-page
+                     backward-sexp
+                     forward-sexp
+                     backward-symbol
+                     forward-symbol
+                     backward-list
+                     forward-list
+                     backward-to-word
+                     forward-to-word
+                     backward-to-indentation
+                     forward-to-indentation
+                     backward-button
+                     forward-button
+                     forward-same-syntax
+                     beginning-of-buffer
+                     end-of-buffer
+                     backward-up-list
+                     backward-kill-word
+                     backward-kill-sentence
+                     backward-kill-paragraph
+                     backward-kill-sexp
+                     backward-delete-char
+                     backward-delete-char-untabify
+                     backward-delete-word
+                     exchange-point-and-mark))
+        (apply action `(,fun ,@args pk/maybe-vscroll)))))
 
   (defun pk/ultra-scroll-advices ()
     "Add or remove advices for vscroll while point movement."
-    (message "ultra-scroll-mode %s" ultra-scroll-mode)
     (if ultra-scroll-mode
-        (pk/add-vscroll-advices)
-      (pk/remove-vscroll-advices)))
+        (pk/vscroll-advices #'advice-add)
+      (pk/vscroll-advices #'advice-remove)))
+
+  (defun pk/remove-vscroll-advices ()
+    "Remove advices for vscroll while point movement."
+    (pk/vscroll-advices #'advice-remove))
+
+  (defun pk/add-vscroll-advices ()
+    "Add advices for vscroll while point movement."
+    (pk/vscroll-advices #'advice-add))
 
   :hook
   (helm-before-initialize . pk/remove-vscroll-advices)
@@ -2105,7 +2124,7 @@ would move point to an (partially) invisible line."
   (ultra-scroll-hide-functions '(hl-line-mode global-hl-line-mode))
 
   :config
-  (pk/add-vscroll-advices)
+  (pk/vscroll-advices #'advice-add)
   (ultra-scroll-mode))
 
 ;; (use-package jinx
