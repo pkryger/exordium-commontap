@@ -1996,56 +1996,74 @@ I.e., created with `scratch' or named scratch-"
 (use-package ultra-scroll
   :demand t
   :vc (:url "https://github.com/jdtsmith/ultra-scroll.git" :rev :newest)
-  :functions (pk/maybe-disable-vscroll-previous
+  :functions (pk/vscroll-advice-spec
+              pk/maybe-disable-vscroll
+              pk/maybe-disable-vscroll-previous
               pk/maybe-disable-vscroll-next
+              pk/maybe-vscroll
               pk/maybe-vscroll-backward
               pk/maybe-vscroll-forward
               pk/add-vscroll-advices
               pk/remove-vscroll-advices
               pk/ultra-scroll-advices)
   :init
-  ;; Check for point visibility before calling checking `call-interactively-p'.
-  ;; The former is relatively fast compared to the latter.  This came up from
-  ;; investigating slowness in `helm-M-x'.  When affixation is computed for the
-  ;; latter, it calls `substitute-command-keys' which in turn calls
-  ;; `forward-char'.
+  (defun pk/vscroll-advice-spec (spec)
+    "Eval interactive SPEC and preppend it with `pk/interactive'."
+    (let ((spec (advice-eval-interactive-spec spec)))
+      (cons 'pk/interactive spec)))
+
+  (defun pk/maybe-disable-vscroll (op orig-fun args)
+    "Maybe disable vscroll when caling ORIG-FUN.
+The vscroll is disabled unless moving line according to OP
+by (car ARGS) or (caar ARGS) would move point to an (partially)
+invisible line."
+    (let* ((interactive (eq (car args) 'pk/interactive))
+           (args (if interactive (cdr args) args)))
+      (if (and interactive
+               (save-excursion
+                 (forward-line (funcall op (or (car args) 1)))
+                 (pos-visible-in-window-p (point))))
+          (cl-letf (((symbol-function 'set-window-vscroll) 'ignore))
+            (apply orig-fun args))
+        (apply orig-fun args))))
+
   (defun pk/maybe-disable-vscroll-previous (orig-fun &rest args)
     "Maybe disable vscroll when caling ORIG-FUN.
 The vscroll is disabled unless moving line backward by (car ARGS)
 would move point to an (partially) invisible line."
-    (if (and (save-excursion
-               (forward-line (- (or (car args) 1)))
-               (pos-visible-in-window-p (point)))
-             (called-interactively-p 'interactive))
-        (cl-letf (((symbol-function 'set-window-vscroll) 'ignore))
-          (apply orig-fun args))
-      (apply orig-fun args)))
+    (interactive #'pk/vscroll-advice-spec)
+    (pk/maybe-disable-vscroll #'- orig-fun args))
 
   (defun pk/maybe-disable-vscroll-next (orig-fun &rest args)
     "Maybe disable vscroll when caling ORIG-FUN.
 The vscroll is disabled unless moving line forward by (car ARGS)
 would move point to an (partially) invisible line."
-    (if (and (save-excursion
-               (forward-line (or (car args) 1))
-               (pos-visible-in-window-p (point)))
-             (called-interactively-p 'interactive))
-        (cl-letf (((symbol-function 'set-window-vscroll) 'ignore))
-          (apply orig-fun args))
+    (interactive #'pk/vscroll-advice-spec)
+    (pk/maybe-disable-vscroll #'+ orig-fun args))
+
+  (defun pk/maybe-vscroll (op orig-fun args)
+                                        ; checkdoc-params: (orig-fun)
+    "Reset vscroll if moving according to OP to an (partially) invisible line."
+    (let* ((interactive (eq (car args) 'pk/interactive))
+           (args (if interactive (cdr args) args)))
+      (when (and interactive
+                 (pos-visible-in-window-p (point))
+                 (not (pos-visible-in-window-p
+                       (funcall op (point) (or (car args) 1)))))
+        (set-window-vscroll nil 0 t))
       (apply orig-fun args)))
 
-  (defun pk/maybe-vscroll-backward (&rest args)
-    "Reset vscroll if moving to an (partially) invisible line."
-    (when (and (pos-visible-in-window-p (point))
-               (not (pos-visible-in-window-p (- (point) (or (car args) 1))))
-               (called-interactively-p 'interactive))
-        (set-window-vscroll nil 0 t)))
+  (defun pk/maybe-vscroll-backward (orig-fun &rest args)
+                                        ; checkdoc-params: (orig-fun)
+    "Reset vscroll if moving backward to an (partially) invisible line."
+    (interactive #'pk/vscroll-advice-spec)
+    (pk/maybe-vscroll #'- orig-fun args))
 
-  (defun pk/maybe-vscroll-forward (&rest args)
-    "Reset vscroll if moving to an (partially) invisible line."
-    (when (and (pos-visible-in-window-p (point))
-               (not (pos-visible-in-window-p (+ (point) (or (car args) 1))))
-               (called-interactively-p 'interactive))
-        (set-window-vscroll nil 0 t)))
+  (defun pk/maybe-vscroll-forward (orig-fun &rest args)
+                                        ; checkdoc-params: (orig-fun)
+    "Reset vscroll if moving forward to an (partially) invisible line."
+    (interactive #'pk/vscroll-advice-spec)
+    (pk/maybe-vscroll #'+ orig-fun args))
 
   (defun pk/add-vscroll-advices ()
     "Add advices for vscroll while point movement in `ultra-scroll' mode."
@@ -2053,10 +2071,10 @@ would move point to an (partially) invisible line."
     (advice-add 'magit-previous-line :around #'pk/maybe-disable-vscroll-previous)
     (advice-add 'next-line :around #'pk/maybe-disable-vscroll-next)
     (advice-add 'magit-next-line :around #'pk/maybe-disable-vscroll-next)
-    (advice-add 'backward-char :before #'pk/maybe-vscroll-backward)
-    (advice-add 'left-char :before #'pk/maybe-vscroll-backward)
-    (advice-add 'forward-char :before #'pk/maybe-vscroll-forward)
-    (advice-add 'right-char :before #'pk/maybe-vscroll-forward))
+    (advice-add 'backward-char :around #'pk/maybe-vscroll-backward)
+    (advice-add 'left-char :around #'pk/maybe-vscroll-backward)
+    (advice-add 'forward-char :around #'pk/maybe-vscroll-forward)
+    (advice-add 'right-char :around #'pk/maybe-vscroll-forward))
 
   (defun pk/remove-vscroll-advices ()
     "Remove advices for vscroll while point movement in `ultra-stroll' mode."
