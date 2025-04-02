@@ -473,10 +473,12 @@ the library and PATH is the file containing the library."
            (rx (or
                 ;; A lock file in LOAD-PATH (bug#2626).
                 (seq string-start ".#")
-                ;; .dir-locals that are in VC installed packages
-                ;; and file load-path/find-library-source-path entries
+                ;; .dir-locals that are in VC installed packages and file
+                ;; load-path/find-library-source-path entries
                 (seq string-start ".dir-locals"
-                     (zero-or-one "-2") string-end)))))
+                     (zero-or-one "-2") string-end)
+                ;; Sometimes temporary files created by flycheck are picked up.
+                (seq string-start "flycheck_")))))
       (delq
        nil
        (apply
