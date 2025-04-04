@@ -316,6 +316,7 @@
 (setq disabled-command-function nil)
 (setq confirm-kill-emacs 'y-or-n-p)
 (setq-default display-line-numbers-widen t)
+(setq uniquify-dirname-transform 'project-uniquify-dirname-transform)
 
 ;; The following needs an smtp.gmail.com entry in ~/.netrc (or in ~/.authinfo)
 (use-package smtpmail
