@@ -1654,7 +1654,8 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   (dired-use-ls-dired 'unspecified)
   (dired-dwim-target t)
   :config
-  (setq insert-directory-program (or (executable-find "gls") "ls")))
+  (when (version< emacs-version "30")
+    (setq insert-directory-program (or (executable-find "gls") "ls"))))
 
 (use-package dired-du
   :custom
