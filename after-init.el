@@ -2133,7 +2133,24 @@ would move point to an (partially) invisible line."
 ;;   (remove-hook 'text-mode-hook #'flyspell-mode)
 ;;   (flyspell-mode-off))
 
-
+(use-package gptel
+  :autoload (gptel-api-key-from-auth-source)
+  :custom
+  ;; (gptel-model 'gemini-2.5-pro-exp-03-25)
+  (gptel-model 'gpt-4.1)
+  :config
+  (gptel-make-gemini "Gemini"
+    :key #'gptel-api-key-from-auth-source)
+  (gptel-make-openai "Github"
+    :host "models.inference.ai.azure.com"
+    :endpoint "/chat/completions?api-version=2024-05-01-preview"
+    :stream t
+    :key #'gptel-api-key-from-auth-source
+    ;; See https://github.com/marketplace?type=models for list of models, go to
+    ;; playground then get model name form Code tab if a snipped has been
+    ;; generated.
+    :models '(gpt-4.1 gpt-4o)))
+
 (provide 'after-init)
 
 ;;; after-init.el ends here
