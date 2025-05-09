@@ -335,7 +335,7 @@
 (use-package window
   :ensure nil
   :custom
-  ;; Typical full screen window on built in macBook Air M2 13" is 179
+  ;; Typical full screen window on built in macBook Air M2 13" is 361
   ;; columns. This includes line numbers and fringes.  Yet windows as small as
   ;; 160 seems to be quite all right fitting horizontal split.  On the other
   ;; hand, typical full screen window height on external 4k screen connected to
@@ -352,7 +352,7 @@
   ;;
   ;; (split-window-sensibly)
   (split-height-threshold 56)
-  (split-width-threshold 160))
+  (split-width-threshold 179))
 
 (use-package helm-core
   :ensure nil
