@@ -1648,6 +1648,7 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 
 (use-package dired
   :ensure nil
+  :defer t
   :custom
   (dired-chown-program (or (executable-find "gchown") "chown"))
   (dired-touch-program (or (executable-find "gtouch") "touch"))
@@ -1658,6 +1659,7 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
     (setq insert-directory-program (or (executable-find "gls") "ls"))))
 
 (use-package dired-du
+  :defer t
   :custom
   (dired-du-used-space-program `(,(or (executable-find "gdu") "du") "-sb")))
 
