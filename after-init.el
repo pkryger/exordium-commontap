@@ -1662,19 +1662,6 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   :defer t
   :custom
   (dired-du-used-space-program `(,(or (executable-find "gdu") "du") "-sb")))
-
-
-;; Workaround for https://debbugs.gnu.org/cgi/bugreport.cgi?bug=77944
-;; Until Emacs-31 (perhaps fix in Emacs-30.2)
-(use-package man
-  :ensure nil
-  :defer t
-  :autoload (Man-init-defvars)
-  :custom
-  (Man-sed-command (or (executable-find "gsed") "sed"))
-  (Man-awk-command (or (executable-find "gawk") "awk"))
-  :config
-  (Man-init-defvars))
 
 (use-package ob-async
   :defer t
