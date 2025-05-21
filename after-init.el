@@ -2089,7 +2089,15 @@ would move point to an (partially) invisible line."
                      backward-delete-char
                      backward-delete-char-untabify
                      backward-delete-word
-                     exchange-point-and-mark))
+                     exchange-point-and-mark
+				     symbol-overlay-jump-first
+				     symbol-overlay-jump-last
+				     symbol-overlay-switch-forward
+				     symbol-overlay-switch-backward
+				     symbol-overlay-jump-to-definition
+				     symbol-overlay-echo-mark
+				     symbol-overlay-jump-next
+				     symbol-overlay-jump-prev))
         (apply action `(,fun ,@args pk/maybe-vscroll)))))
 
   (defun pk/ultra-scroll-advices ()
