@@ -574,10 +574,6 @@ the library and PATH is the file containing the library."
 ;;         ("g" . #'helm-google-suggest)))
 
 
-(use-package eldoc
-  :ensure nil
-  :diminish)
-
 (use-package flycheck
   :autoload (flycheck-add-next-checker
              flycheck-sanitize-errors
@@ -756,6 +752,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
 (use-package eldoc
   :ensure nil
   :defer t
+  :diminish
   :custom
   (eldoc-idle-delay 0.25)
   (eldoc-echo-area-prefer-doc-buffer t))
