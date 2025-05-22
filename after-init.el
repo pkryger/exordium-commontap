@@ -560,20 +560,6 @@ the library and PATH is the file containing the library."
               #'pk/async-helm-cache-scan-when-idle))
 
 
-;; @todo remove when exordium has it
-;; (use-package helm
-;;   :diminish
-;;   :custom
-;;   (helm-split-window-other-side-when-one-window 'right)
-;;   (helm-M-x-show-short-doc t)
-;;   :bind
-;;   (("C-x b" . #'helm-buffers-list)
-;;    :map ctl-x-map
-;;         ("b" . #'helm-buffers-list)
-;;    :map helm-command-map
-;;         ("g" . #'helm-google-suggest)))
-
-
 (use-package flycheck
   :autoload (flycheck-add-next-checker
              flycheck-sanitize-errors
