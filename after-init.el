@@ -2093,7 +2093,11 @@ would move point to an (partially) invisible line."
 				     symbol-overlay-jump-to-definition
 				     symbol-overlay-echo-mark
 				     symbol-overlay-jump-next
-				     symbol-overlay-jump-prev))
+				     symbol-overlay-jump-prev
+                     difftastic-next-file
+                     difftastic-next-chunk
+                     difftastic-previous-file
+                     difftastic-previous-chunk))
         (apply action `(,fun ,@args pk/maybe-vscroll)))))
 
   (defun pk/ultra-scroll-advices ()
