@@ -1411,26 +1411,6 @@ language."
           (lambda ()
             (setq auto-composition-mode nil)))
 
-(use-package org-modern
-  :init
-  (remove-hook 'org-mode-hook #'pk/org-prettify-bullet-lists)
-  (remove-hook 'org-mode-hook #'org-superstar-mode) ;; from Exordium
-  :custom
-  (org-modern-todo-faces `(("WORK" exordium-org-work :inverse-video t)
-                           ("WAIT" exordium-org-wait :inverse-video t)
-                           ("STOP" exordium-org-stop :inverse-video t)
-                           ("TODO" org-todo :inverse-video t)
-                           ("DONE" org-done :inverse-video t)))
-  (org-modern-star 'replace)
-  :hook
-  (org-mode . org-modern-mode)
-  (org-agenda-finalize . org-modern-agenda))
-
-(use-package org-modern-indent
-  :vc (:url "https://github.com/jdtsmith/org-modern-indent" :rev :newest)
-  :hook
-  (org-modern . org-modern-indent-mode))
-
 (use-package ediff
   :ensure nil
   :custom
