@@ -746,7 +746,8 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 
 (use-package paredit
-  :defer t)
+  :hook (emacs-lisp-mode . paredit-mode))
+
 
 (use-package dumb-jump
   :defer t
