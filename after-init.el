@@ -1409,8 +1409,8 @@ language."
   :ensure nil
   :custom
   (ediff-window-setup-function #'ediff-setup-windows-plain))
-
 
+
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (use-package forge
   :config
