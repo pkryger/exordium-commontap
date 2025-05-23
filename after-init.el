@@ -743,6 +743,10 @@ See: https://github.com/PrincetonUniversity/blocklint"
   :custom
   (eldoc-idle-delay 0.25)
   (eldoc-echo-area-prefer-doc-buffer t))
+
+
+(use-package paredit
+  :defer t)
 
 (use-package dumb-jump
   :defer t
