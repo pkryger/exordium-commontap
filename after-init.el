@@ -1386,13 +1386,19 @@ language."
 (when (fboundp 'pk/mac-auto-operator-composition-mode)
   (pk/mac-auto-operator-composition-mode))
 
-;; Org mode are not a real ligatures - use prettify symbols for it
-(add-hook 'org-mode-hook
-          (lambda ()
-            (push '("[ ]" . "☐") prettify-symbols-alist)
-            (push '("[X]" . "☑") prettify-symbols-alist)
-            (push '("[-]" . "▣") prettify-symbols-alist)
-            (prettify-symbols-mode)))
+
+(defun pk/org-prettify-bullet-lists ()
+  "Prettify `org-mode' list bullets."
+  (let ((bullets '(("[ ]" . ?\u2610) ; ballot box
+                   ("[X]" . ?\u2611) ; ballot box with check
+                   ("[-]" . ?\u25a3)))) ; white square containing black small square
+    (when (cl-every (lambda (symbol)
+                      (char-displayable-p (cdr symbol)))
+                    bullets)
+      (setq prettify-symbols-alist (append bullets prettify-symbols-alist))
+      (prettify-symbols-mode))))
+
+(add-hook 'org-mode-hook #'pk/org-prettify-bullet-lists)
 
 ;; Helm and ediff are having issues with ligatures
 (add-hook 'helm-major-mode-hook
