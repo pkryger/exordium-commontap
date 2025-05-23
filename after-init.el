@@ -746,7 +746,29 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 
 (use-package paredit
-  :hook (emacs-lisp-mode . paredit-mode))
+  :commands (paredit-RET)
+  :functions (pk/paredit-RET)
+  :init
+  (use-package ielm
+    :ensure nil
+    :commands (ielm-return))
+
+  (defun pk/paredit-RET ()
+    "Call `paredit-RET' unless special handling is required."
+    (interactive)
+    (cond ((derived-mode-p 'inferior-emacs-lisp-mode)
+           (ielm-return))
+          ((minibufferp)
+           (read--expression-try-read))
+          (t (paredit-RET))))
+
+  :bind
+  (:map paredit-mode-map
+        ("RET" . #'pk/paredit-RET))
+  :hook ((emacs-lisp-mode . paredit-mode)
+         (lisp-interaction-mode . paredit-mode)
+         (ielm-mode . paredit-mode)
+         (eval-expression-minibuffer-setup . paredit-mode)))
 
 
 (use-package dumb-jump
