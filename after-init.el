@@ -2048,14 +2048,14 @@ invisible line."
         (apply orig-fun args))))
 
   (defun pk/maybe-disable-vscroll-previous (orig-fun &rest args)
-    "Maybe disable vscroll when caling ORIG-FUN.
+    "Maybe disable vscroll when calling ORIG-FUN.
 The vscroll is disabled unless moving line backward by (car ARGS)
 would move point to an (partially) invisible line."
     (interactive #'pk/vscroll-advice-spec)
     (pk/maybe-disable-vscroll #'- orig-fun args))
 
   (defun pk/maybe-disable-vscroll-next (orig-fun &rest args)
-    "Maybe disable vscroll when caling ORIG-FUN.
+    "Maybe disable vscroll when calling ORIG-FUN.
 The vscroll is disabled unless moving line forward by (car ARGS)
 would move point to an (partially) invisible line."
     (interactive #'pk/vscroll-advice-spec)
