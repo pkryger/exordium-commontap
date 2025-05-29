@@ -2064,7 +2064,13 @@ would move point to an (partially) invisible line."
   (defun pk/maybe-reset-vscroll ()
     "Reset vscroll when point is in a (partially) invisible line."
     (unless (or
-             (memq this-command '(ultra-scroll-mac ultra-scroll))
+             (memq this-command '(self-insert-command
+                                  previous-line
+                                  magit-previous-line
+                                  forward-line
+                                  magit-forward-line
+                                  ultra-scroll-mac ultra-scroll))
+             (minibufferp)
              (pos-visible-in-window-p (point)))
       (set-window-vscroll nil 0 t)))
 
