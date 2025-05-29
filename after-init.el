@@ -2043,7 +2043,7 @@ invisible line."
                (save-excursion
                  (forward-line (funcall op (or (car args) 1)))
                  (pos-visible-in-window-p (point))))
-          (cl-letf (((symbol-function 'set-window-vscroll) 'ignore))
+          (cl-letf (((symbol-function #'set-window-vscroll) #'ignore))
             (apply orig-fun args))
         (apply orig-fun args))))
 
