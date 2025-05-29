@@ -2077,8 +2077,10 @@ would move point to an (partially) invisible line."
              ;; after the command has finished may be needed
              (memq this-command '(self-insert-command
                                   previous-line
+                                  dired-previous-line
                                   magit-previous-line
                                   next-line
+                                  dired-next-line
                                   magit-next-line
                                   ultra-scroll-mac
                                   ultra-scroll))
@@ -2091,10 +2093,12 @@ would move point to an (partially) invisible line."
     (let ((args (when (eq action 'advice-add) '(:around))))
       (dolist (fun '(previous-line
                      previous-logical-line
+                     dired-previous-line
                      magit-prefious-line))
         (apply action `(,fun ,@args pk/maybe-disable-vscroll-previous)))
       (dolist (fun '(next-line
                      next-logical-line
+                     dired-next-line
                      magit-next-line))
         (apply action `(,fun ,@args pk/maybe-disable-vscroll-next)))
       (dolist (fun '(move-beginning-of-line
