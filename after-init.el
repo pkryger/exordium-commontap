@@ -2061,15 +2061,27 @@ would move point to an (partially) invisible line."
     (interactive #'pk/vscroll-advice-spec)
     (pk/maybe-disable-vscroll #'+ orig-fun args))
 
+  (defun pk/maybe-disable-vscroll-same (orig-fun &rest args)
+    "Maybe disable vscroll when calling ORIG-FUN.
+The vscroll is disabled unless moving line forward by (1- (car ARGS))
+would move point to an (partially) invisible line."
+    (interactive #'pk/vscroll-advice-spec)
+    (pk/maybe-disable-vscroll #'1- orig-fun args))
+
   (defun pk/maybe-reset-vscroll ()
     "Reset vscroll when point is in a (partially) invisible line."
     (unless (or
+             ;; `move-end-of-line', `move-beginning-of-line',
+             ;; `end-of-visual-line', and `beginning-of-visual-line' may end up
+             ;; in different line even when ARG is 1, so reset vscroll
+             ;; after the command has finished may be needed
              (memq this-command '(self-insert-command
                                   previous-line
                                   magit-previous-line
-                                  forward-line
-                                  magit-forward-line
-                                  ultra-scroll-mac ultra-scroll))
+                                  next-line
+                                  magit-next-line
+                                  ultra-scroll-mac
+                                  ultra-scroll))
              (minibufferp)
              (pos-visible-in-window-p (point)))
       (set-window-vscroll nil 0 t)))
@@ -2078,11 +2090,18 @@ would move point to an (partially) invisible line."
     "Take ACTION on advices for vscroll for point movement in `ultra-scroll' mode."
     (let ((args (when (eq action 'advice-add) '(:around))))
       (dolist (fun '(previous-line
+                     previous-logical-line
                      magit-prefious-line))
         (apply action `(,fun ,@args pk/maybe-disable-vscroll-previous)))
       (dolist (fun '(next-line
+                     next-logical-line
                      magit-next-line))
         (apply action `(,fun ,@args pk/maybe-disable-vscroll-next)))
+      (dolist (fun '(move-beginning-of-line
+                     move-end-of-line
+                     beginning-of-visual-line
+                     end-of-visual-line))
+        (apply action `(,fun ,@args pk/maybe-disable-vscroll-same)))
       (if (eq action 'advice-add)
           (add-hook 'post-command-hook #'pk/maybe-reset-vscroll)
         (remove-hook 'post-command-hook #'pk/maybe-reset-vscroll))))
