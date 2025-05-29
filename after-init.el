@@ -2023,7 +2023,7 @@ I.e., created with `scratch' or named scratch-"
               pk/maybe-disable-vscroll
               pk/maybe-disable-vscroll-previous
               pk/maybe-disable-vscroll-next
-              pk/maybe-vscroll
+              pk/maybe-reset-vscroll
               pk/vscroll-advices
               pk/ultra-scroll-advices)
   :init
@@ -2061,17 +2061,12 @@ would move point to an (partially) invisible line."
     (interactive #'pk/vscroll-advice-spec)
     (pk/maybe-disable-vscroll #'+ orig-fun args))
 
-  (defun pk/maybe-vscroll (orig-fun &rest args)
-                                        ; checkdoc-params: (orig-fun)
-    "Reset vscroll after moving according to a (partially) invisible line."
-    (interactive #'pk/vscroll-advice-spec)
-    (let* ((interactive (eq (car args) 'pk/interactive))
-           (args (if interactive (cdr args) args)))
-      (prog1
-          (apply orig-fun args)
-        (when (and interactive
-                   (not (pos-visible-in-window-p (point))))
-          (set-window-vscroll nil 0 t)))))
+  (defun pk/maybe-reset-vscroll ()
+    "Reset vscroll when point is in a (partially) invisible line."
+    (unless (or
+             (memq this-command '(ultra-scroll-mac ultra-scroll))
+             (pos-visible-in-window-p (point)))
+      (set-window-vscroll nil 0 t)))
 
   (defun pk/vscroll-advices (action)
     "Take ACTION on advices for vscroll for point movement in `ultra-scroll' mode."
@@ -2082,59 +2077,9 @@ would move point to an (partially) invisible line."
       (dolist (fun '(next-line
                      magit-next-line))
         (apply action `(,fun ,@args pk/maybe-disable-vscroll-next)))
-      (dolist (fun (append
-                    '(backward-char
-                      left-char
-                      forward-char
-                      right-char
-                      backward-word
-                      left-word
-                      forward-word
-                      right-word
-                      backward-sentence
-                      forward-sentence
-                      backward-paragraph
-                      forward-paragraph
-                      backward-page
-                      forward-page
-                      backward-sexp
-                      forward-sexp
-                      backward-symbol
-                      forward-symbol
-                      backward-list
-                      forward-list
-                      backward-to-word
-                      forward-to-word
-                      backward-to-indentation
-                      forward-to-indentation
-                      backward-button
-                      forward-button
-                      forward-same-syntax
-                      beginning-of-buffer
-                      end-of-buffer
-                      backward-up-list
-                      backward-kill-word
-                      backward-kill-sentence
-                      backward-kill-paragraph
-                      backward-kill-sexp
-                      backward-delete-char
-                      backward-delete-char-untabify
-                      backward-delete-word
-                      exchange-point-and-mark
-				      symbol-overlay-jump-first
-				      symbol-overlay-jump-last
-				      symbol-overlay-switch-forward
-				      symbol-overlay-switch-backward
-				      symbol-overlay-jump-to-definition
-				      symbol-overlay-echo-mark
-				      symbol-overlay-jump-next
-				      symbol-overlay-jump-prev
-                      difftastic-next-file
-                      difftastic-next-chunk
-                      difftastic-previous-file
-                      difftastic-previous-chunk)
-                    (apropos-internal (rx string-start "paredit-") #'commandp)))
-        (apply action `(,fun ,@args pk/maybe-vscroll)))))
+      (if (eq action 'advice-add)
+          (add-hook 'post-command-hook #'pk/maybe-reset-vscroll)
+        (remove-hook 'post-command-hook #'pk/maybe-reset-vscroll))))
 
   (defun pk/ultra-scroll-advices ()
     "Add or remove advices for vscroll while point movement."
