@@ -2071,17 +2071,7 @@ would move point to an (partially) invisible line."
   (defun pk/maybe-reset-vscroll ()
     "Reset vscroll when point is in a (partially) invisible line."
     (unless (or
-             ;; `move-end-of-line', `move-beginning-of-line',
-             ;; `end-of-visual-line', and `beginning-of-visual-line' may end up
-             ;; in different line even when ARG is 1, so reset vscroll
-             ;; after the command has finished may be needed
              (memq this-command '(self-insert-command
-                                  previous-line
-                                  dired-previous-line
-                                  magit-previous-line
-                                  next-line
-                                  dired-next-line
-                                  magit-next-line
                                   ultra-scroll-mac
                                   ultra-scroll))
              (minibufferp)
