@@ -2130,7 +2130,6 @@ would move point to an (partially) invisible line."
   (ultra-scroll-mode . pk/ultra-scroll-advices)
 
   :custom
-  (scroll-conservatively 101) ; important for jumbo images
   (scroll-margin 0)
   (ultra-scroll-hide-functions '(hl-line-mode global-hl-line-mode))
 
