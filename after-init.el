@@ -2120,6 +2120,10 @@ would move point to an (partially) invisible line."
   (ultra-scroll-mode . pk/ultra-scroll-advices)
 
   :custom
+  ;; From Exordium init-look-and-feel to  ensure line-by-line scrolling
+  (scroll-step 1)
+  (scroll-conservatively 100000)
+
   (scroll-margin 0)
   (ultra-scroll-hide-functions '(hl-line-mode global-hl-line-mode))
 
