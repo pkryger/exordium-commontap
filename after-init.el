@@ -2163,6 +2163,18 @@ would move point to an (partially) invisible line."
     ;; playground then get model name form Code tab if a snipped has been
     ;; generated.
     :models '(gpt-4.1 gpt-4o)))
+
+
+(use-package debbugs
+  :custom
+  (debbugs-gnu-default-bug-number-list
+   (string-join
+    (list
+     (propertize "77944" 'help-echo "31.0.50; M-x man on macOS fails with error")
+     (propertize "78766" 'help-echo "100-4000x redisplay slowdown with vscroll>0 and make-cursor-line-fully-visible=t")
+     )
+    ",")))
+
 
 (provide 'after-init)
 
