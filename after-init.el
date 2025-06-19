@@ -903,8 +903,25 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 
 (use-package yaml-mode
+  :init
+  (use-package yaml-pro
+    :defer t
+    :autoload (yaml-pro-ts-next-subtree
+               yaml-pro-ts-prev-subtree
+               yaml-pro-move-subtree-down
+               yaml-pro-move-subtree-up)
+    :bind
+    (:map yaml-pro-ts-mode-map
+          ("M-n" . #'yaml-pro-ts-next-subtree)
+          ("M-p" . #'yaml-pro-ts-prev-subtree)
+          ("M-N" . #'yaml-pro-move-subtree-down)
+          ("M-P" . #'yaml-pro-move-subtree-up)))
   :defer t
-  :mode (rx ".y" (zero-or-one "a") "ml.template" string-end))
+  :mode (rx ".y" (zero-or-one "a") "ml.template" string-end)
+  :hook
+  ;; (yaml-mode . yaml-pro-mode)
+  (yaml-ts-mode . yaml-pro-ts-mode))
+
 
 (use-package rust-mode
   :defer t)
