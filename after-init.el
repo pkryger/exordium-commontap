@@ -608,6 +608,8 @@ See: https://github.com/PrincetonUniversity/blocklint"
           (flycheck-add-next-checker checker '(warning . pk/python-blocklint) t))
         '(python-flake8 python-pylint python-pycompile))
 
+  ;; Need to periodically run:
+  ;;   cd /opt/homebrew/Library/Homebrew && bundle install --gemfile /opt/homebrew/Library/Homebrew/Gemfile
   (flycheck-define-checker pk/sorbet-homebrew
     "Sorbet for Homebrew"
     :command ("bundle" "exec" "srb" "tc"
@@ -1699,7 +1701,7 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 
 
 ;; Workaround for https://debbugs.gnu.org/cgi/bugreport.cgi?bug=77944
-;; Until Emacs-31 (perhaps fix in Emacs-30.2)
+;; Until Emacs-30.2
 (use-package man
   :ensure nil
   :defer t
