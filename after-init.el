@@ -2205,6 +2205,11 @@ would move point to an (partially) invisible line."
     ",")))
 
 
+
+(use-package nix-mode
+  :mode "\\.nix\\'")
+
+
 (provide 'after-init)
 
 ;;; after-init.el ends here
