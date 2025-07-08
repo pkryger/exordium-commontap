@@ -156,9 +156,6 @@
            `(helm-candidate-number ((t (,@c :foreground ,cyan))))
            `(helm-candidate-number-suspended ((t (,@c :foreground ,yellow))))
            `(helm-locate-finish ((t (,@c :inherit success))))
-           `(helm-swoop-target-word-face ((t (,@c :inherit modus-themes-completion-match-0))))
-           `(helm-swoop-target-line-face ((t (,@c :inherit highlight :extend t))))
-           `(helm-swoop-target-line-block-face ((t (,@c :inherit highlight :extend t))))
            `(helm-moccur-buffer ((t (,@c :inherit bold :foreground ,name))))
            `(helm-resume-need-update ((t (,@c :inherit pulse-highlight-start-face))))
            `(helm-grep-command ((t (,@c :inherit helm-source-header))))
@@ -1163,16 +1160,6 @@ If the input is empty, select the previous history element instead."
           (ivy-previous-history-element 1)
         (ivy-previous-line arg))))
 
-  (use-package helm-swoop
-    :defer t
-    :init
-    (defun pk/helm-swoop-from-swiper ()
-      (interactive)
-      (unless (string= ivy-text "")
-        (ivy-exit-with-action
-         (lambda (_)
-           (helm-swoop :query ivy-text))))))
-
   (use-package iedit
     :defer t
     :autoload (iedit-lib-cleanup
@@ -1200,15 +1187,13 @@ If the input is empty, select the previous history element instead."
                     (iedit-done)))))))))
 
   :functions (pk/swiper-C-r
-              pk/swiper-iedit
-              pk/helm-swoop-from-swiper)
+              pk/swiper-iedit)
   :bind
   (("C-s" . #'swiper-isearch)
    ("C-r" . #'swiper-isearch-backward)
    :map swiper-map
    ("C-r" . #'pk/swiper-C-r)
-   ("C-c ;" . #'pk/swiper-iedit)
-   ("C-S-s" . #'pk/helm-swoop-from-swiper)))
+   ("C-c ;" . #'pk/swiper-iedit)))
 
 
 
