@@ -1659,6 +1659,8 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
   (:map org-mode-map
    ([remap org-insert-link] . #'pk/org-insert-link-dwim)))
 
+(use-package org-make-toc)
+
 (use-package markdown-mode
   :custom
   ;; Use `github-markup' for makrdown with a github style
