@@ -2033,6 +2033,15 @@ I.e., created with `scratch' or named scratch-"
   :config
   (advice-add #'checkdoc-in-example-string-p
               :after-until #'pk/checkdoc--supress-cask-emacs))
+
+(use-package package-build
+  :config
+  (when-let* ((dir "~/gh/pkryger/melpa-local-recipes")
+              ((file-directory-p dir)))
+    (setopt package-build-working-dir (expand-file-name "working/" dir))
+    (setopt package-build-archive-dir (expand-file-name "packages/" dir))
+    (setopt package-build-recipes-dir (expand-file-name "recipes/" dir))))
+
 
 
 (use-package ultra-scroll
