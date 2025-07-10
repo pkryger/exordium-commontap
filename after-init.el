@@ -1524,9 +1524,10 @@ language."
   (tab-bar-select-tab-modifiers '(hyper))
   (tab-bar-show t)
   :bind
-  (("M-<tab>" . tab-next)
-   ("M-S-<tab>" . tab-previous)
-   ("H-t" . tab-new))
+  (("M-<tab>" . #'tab-next)
+   ("M-S-<tab>" . #'tab-previous)
+   ("H-t" . #'tab-new)
+   ("H-w" . #'tab-close))
   :config
   (advice-add 'tab-bar--format-tab :around
               #'pk/tab-bar--format-tab)
