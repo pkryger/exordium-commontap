@@ -953,7 +953,9 @@ It's so it won't slow expensive commands and completion frameworks."
     "Get back to the original gc threshold.
 Defer it so that commands launched immediately after will enjoy the benefits."
     (run-at-time
-     1 nil (lambda () (setf gc-cons-threshold gcmh-high-cons-threshold))))
+     1 nil (lambda () (setf gc-cons-threshold
+                            (or (bound-and-true-p gcmh-high-cons-threshold)
+                                (* 16 1024 1024))))))
 
   :custom
   (gcmh-idle-delay 5)
