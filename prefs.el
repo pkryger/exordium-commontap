@@ -30,6 +30,8 @@
            . ,(file-name-concat workspace "gh" "pkryger" "basic-stats"))
           (emacs-toml
            . ,(file-name-concat workspace "gh" "gongo" "emacs-toml"))
+          (helm-projectile
+           . ,(file-name-concat workspace "gh" "bbatsov" "helm-projectile"))
           ;; ('ultra-scroll-mac
           ;;  . ,(file-name-concat workspace "gh" "jdtsmith" "ultra-scroll-mac"))
           )))
