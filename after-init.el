@@ -151,7 +151,7 @@
            `(helm-match ((t (,@c :inherit modus-themes-completion-match-0))))
            `(helm-match-item ((t (,@c :inherit modus-themes-completion-match-0))))
            `(helm-visible-mark ((t (,@c :inherit modus-themes-subtle-cyan))))
-           `(helm-source-header ((t (,@c :inherit bold :foreground ,fg-main))))
+           `(helm-source-header ((t (,@c :foreground ,cyan :inherit modus-themes-heading-1))))
            `(helm-header-line-left-margin ((t (,@c :inherit bold :foreground ,yellow-intense))))
            `(helm-candidate-number ((t (,@c :foreground ,cyan))))
            `(helm-candidate-number-suspended ((t (,@c :foreground ,yellow))))
