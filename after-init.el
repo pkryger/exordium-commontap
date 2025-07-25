@@ -362,59 +362,6 @@
   (require 'mouse)
   (xterm-mouse-mode t)
   (defun track-mouse (_)))
-
-
-;; Hack for `beorg' files not being synchronised nicely from iCloud.  Such a
-;; file has the following actions delivered: (renamed attribute-changed
-;; deleted) and `file1-or-cookie' is nil upon a change on iCloud. Trying to
-;; mimic actions that a regular change delivers for such a change (i.e., from
-;; another process on the same machine) , that is (attribute-changed changed).
-(use-package filenotify
-  :ensure nil
-  :functions (pk/file-notify--handle-event-icloud-filter)
-  :autoload (file-notify--handle-event)
-  :init
-  (defun pk/file-notify--handle-event-icloud-filter (args)
-    "Substitute action in ARGS for iCloud files."
-    (pcase-let ((`(,desc ,actions ,file ,file1-or-cookie) args))
-      (if (and (not file1-or-cookie)
-               (equal '(renamed attribute-changed deleted) actions)
-               (let ((truename (file-truename file)))
-                 (or (string-prefix-p "/Users/pkryger/Library/Mobile Documents/"
-                                      truename)
-                     ;; When contents of a directory on macOS are synchronised
-                     ;; to iCloud the directory is symlinked in
-                     ;; com~apple~CloudDocs.  Find if the file name doesn't
-                     ;; match one of such symlinked iCloud directories.
-                     (cl-find-if (lambda (icloud-dir)
-                                   (string-prefix-p icloud-dir truename))
-                                 (mapcar
-                                  #'file-name-as-directory
-                                  (mapcar
-                                   #'file-chase-links
-                                   (cl-remove-if-not
-                                    #'file-directory-p
-                                    (cl-remove-if-not
-                                     #'file-symlink-p
-                                     (directory-files
-                                      "/Users/pkryger/Library/Mobile Documents/com~apple~CloudDocs/"
-                                      t
-                                      directory-files-no-dot-files-regexp)))))))))
-          (let ((filtered-args (list desc
-                                     '(attribute-changed changed)
-                                     file
-                                     file1-or-cookie)))
-            (when file-notify-debug
-              (message "pk/file-notify--handle-event-icloud-filter %S -> %S"
-                       args filtered-args))
-            filtered-args)
-        (when file-notify-debug
-          (message "pk/file-notify--handle-event-icloud-filter %S" args))
-        args)))
-  :config
-  (advice-add #'file-notify--handle-event
-              :filter-args #'pk/file-notify--handle-event-icloud-filter))
-
 
 (defconst pk/shrug-string "¯\\_(ツ)_/¯")
 
