@@ -646,10 +646,16 @@ See: https://github.com/PrincetonUniversity/blocklint"
                   (homebrew-prefix (getenv "HOMEBREW_PREFIX"))
                   (project-current (project-current))
                   ((string-match-p (rx-to-string `(seq string-start ,homebrew-prefix) t)
-                                   (project-root (project-current)))))
-        ;; Ensure sorbet and gems are up to date, by running "brew typecheck"
-        (let ((display-buffer-alist '((t . (display-buffer-no-window)))))
-          (async-shell-command "brew typecheck"))
+                                   (project-root (project-current))))
+                  (display-buffer-alist '((t . (display-buffer-no-window)))))
+        ;; Ensure sorbet and gems are up to date, either by running
+        ;; "homebrew-gems-upgrade" (see
+        ;; https://github.com/pkryger/homebrew-commontap), or if that's not
+        ;; available then "brew typecheck --update".  The latter seems to take
+        ;; longer.
+        (if-let* ((gems-upgrade (executable-find "homebrew-gems-upgrade")))
+            (async-shell-command gems-upgrade)
+          (async-shell-command "brew typecheck --update"))
         t)))
 
   (add-to-list 'flycheck-checkers 'pk/sorbet-homebrew 'append)
