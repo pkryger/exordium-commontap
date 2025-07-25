@@ -2243,6 +2243,7 @@ would move point to an (partially) invisible line."
     (list
      (propertize "67604" 'help-echo "Motion problems with inline images")
      (propertize "77944" 'help-echo "31.0.50; M-x man on macOS fails with error")
+     (propertize "78712" 'help-echo "31.0.50; definition is void in file-notify")
      (propertize "78766" 'help-echo "100-4000x redisplay slowdown with vscroll>0 and make-cursor-line-fully-visible=t")
      )
     ",")))
