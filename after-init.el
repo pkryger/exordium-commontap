@@ -1015,20 +1015,21 @@ Defer it so that commands launched immediately after will enjoy the benefits."
   :ensure nil
   :config
   ;; Don't save some buffers in desktop
-  (add-to-list 'desktop-modes-not-to-save 'dired-mode)
-  (add-to-list 'desktop-modes-not-to-save 'Info-mode)
-  (add-to-list 'desktop-modes-not-to-save 'info-lookup-mode)
-  (add-to-list 'desktop-modes-not-to-save 'fundamental-mode)
-  (add-to-list 'desktop-modes-not-to-save 'helpful-mode)
-  (add-to-list 'desktop-modes-not-to-save 'helm-major-mode)
-  (add-to-list 'desktop-modes-not-to-save 'magit-mode)
-  (add-to-list 'desktop-modes-not-to-save 'magit-log-mode)
-  (add-to-list 'desktop-modes-not-to-save 'magit-status-mode)
-  (add-to-list 'desktop-modes-not-to-save 'magit-process-mode)
-  (add-to-list 'desktop-modes-not-to-save 'magit-diff-mode)
-  (add-to-list 'desktop-modes-not-to-save 'forge-pullreq-mode)
-  (add-to-list 'desktop-modes-not-to-save 'forge-notifications-mode)
-  (add-to-list 'desktop-modes-not-to-save 'difftastic-mode)
+  (dolist (mode'(dired-mode
+                 Info-mode
+                 info-lookup-mode
+                 fundamental-mode
+                 helpful-mode
+                 helm-major-mode
+                 magit-mode
+                 magit-log-mode
+                 magit-status-mode
+                 magit-process-mode
+                 magit-diff-mode
+                 forge-pullreq-mode
+                 forge-notifications-mode
+                 difftastic-mode))
+    (add-to-list 'desktop-modes-not-to-save mode))
   :custom
   (desktop-files-not-to-save
    (rx-to-string `(or
