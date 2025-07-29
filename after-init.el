@@ -647,14 +647,22 @@ See: https://github.com/PrincetonUniversity/blocklint"
                   (project-current (project-current))
                   ((string-match-p (rx-to-string `(seq string-start ,homebrew-prefix) t)
                                    (project-root (project-current))))
+                  (library (expand-file-name "Library" homebrew-prefix))
                   (display-buffer-alist '((t . (display-buffer-no-window)))))
-        ;; Ensure sorbet and gems are up to date, either by running
-        ;; "homebrew-gems-upgrade" (see
-        ;; https://github.com/pkryger/homebrew-commontap), or if that's not
-        ;; available then "brew typecheck --update".  The latter seems to take
-        ;; longer.
-        (if-let* ((gems-upgrade (executable-find "homebrew-gems-upgrade")))
-            (async-shell-command gems-upgrade)
+        ;; Ensure sorbet and gems are up to date, either by running "bundle
+        ;; install" or by falling back to "brew typecheck"
+        (if-let* ((direnv (executable-find "direnv"))
+                  ((file-exists-p (expand-file-name ".envrc" library))))
+            (async-shell-command
+             (format "%s exec %s bundle install --gemfile %s"
+                     direnv
+                     library
+                     (expand-file-name "Homebrew/Gemfile")))
+          (warn "Missing %s"
+                   (if direnv
+                       (concat (expand-file-name ".envrc" library)
+                               " - install from https://github.com/pkryger/dotfiles")
+                     "direnv - install with \"brew install direnv\""))
           (async-shell-command "brew typecheck --update"))
         t)))
 
