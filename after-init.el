@@ -795,8 +795,8 @@ See: https://github.com/PrincetonUniversity/blocklint"
   :defer t
   :custom
   ;; spell checks as suggested by
-  ;; http://blog.binchen.org/posts/effective-spell-check-in-emacs.html
-  ;; http://blog.binchen.org/posts/how-to-spell-check-functionvariable-in-emacs.html
+  ;; http://redguardtoo.github.io/posts/effective-spell-check-in-emacs.html
+  ;; http://redguardtoo.github.io/posts/how-to-spell-check-functionvariable-in-emacs.html
   (ispell-program-name "aspell")
   (ispell-extra-args `("--sug-mode=ultra"
                        "--run-together"
