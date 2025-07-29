@@ -532,7 +532,7 @@ the library and PATH is the file containing the library."
                         (lambda (entry)
                           (pcase-let* ((`(,basename . ,path) entry))
                             (when (and basename path
-                                       (file-directory-p path))
+                                       (file-readable-p path))
                               (cons basename (helm-locate-lib-get-summary path)))))
                         helm--locate-library-cache))))
        (lambda (result)
