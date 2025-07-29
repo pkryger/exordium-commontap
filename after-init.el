@@ -790,31 +790,55 @@ See: https://github.com/PrincetonUniversity/blocklint"
   (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 
 
+;; Spell check suggestion following actual implementation:
+;; https://github.com/redguardtoo/emacs.d/blob/990f4af/lisp/init-spelling.el
+;; And a few blog articles
+;; http://redguardtoo.github.io/posts/effective-spell-check-in-emacs.html
+;; http://redguardtoo.github.io/posts/how-to-spell-check-functionvariable-in-emacs.html
 (use-package ispell
   ;;   :ensure-system-package aspell
   :defer t
+  :functions (pk/ispell-hack-extra-args)
+  :init
+  (defun pk/ispell-hack-extra-args (orig-fun &rest args)
+    "Remove camel case when fixing a typo.
+This is to reduce the number of proposals."
+    (let ((ispell-extra-args '("--sug-mode=ultra")))
+      (ispell-kill-ispell t)
+      (prog1
+          (apply orig-fun args)
+        (ispell-kill-ispell t))))
   :custom
-  ;; spell checks as suggested by
-  ;; http://redguardtoo.github.io/posts/effective-spell-check-in-emacs.html
-  ;; http://redguardtoo.github.io/posts/how-to-spell-check-functionvariable-in-emacs.html
   (ispell-program-name "aspell")
   (ispell-extra-args `("--sug-mode=ultra"
-                       "--run-together"
-                       "--run-together-limit=6"
-                       ,@(when exordium-osx '("--camel-case"))))
-  (ispell-dictionary "british"))
+                       ,@(if (string-match (rx "--" (zero-or-one "[dont-]") "camel-case")
+                                           (shell-command-to-string "aspell --help"))
+                             '("--camel-case")
+                           '("--run-together"
+                             "--run-together-limit=16"))))
+  (ispell-dictionary "british")
+  :config
+  (advice-add #'ispell-word :around #'pk/ispell-hack-extra-args))
 
 (use-package flyspell
   :diminish
   :defer t
-  :config
-  (setq flyspell-issue-message-flag nil)
+  :autoload (flyspell-auto-correct-word)
+  :custom
+  (flyspell-issue-message-flag nil)
   :hook
   ((git-commit-mode . flyspell-mode)
    (org-mode        . flyspell-mode)
    (text-mode       . flyspell-mode))
   :bind
-  (([remap ispell-word] . #'flyspell-correct-wrapper)))
+  (([remap ispell-word] . #'flyspell-correct-wrapper))
+  :config
+  (advice-add #'flyspell-auto-correct-word :around #'pk/ispell-hack-extra-args))
+
+(use-package flyspell-correct
+  :defer t
+  :config
+  (advice-add #'flyspell-correct-at-point :around #'pk/ispell-hack-extra-args))
 
 (use-package flyspell-correct-helm
   :after (flyspell flyspell-correct)
