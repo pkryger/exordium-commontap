@@ -996,7 +996,7 @@ Defer it so that commands launched immediately after will enjoy the benefits."
                                 (* 16 1024 1024))))))
 
   :custom
-  (gcmh-idle-delay 5)
+  (gcmh-idle-delay 'auto)
   (gcmh-high-cons-threshold (* 16 1024 1024))
   :hook
   ;; TODO: this also needs to be after a buffer switch, including current value of `gc-cons-threshold'
