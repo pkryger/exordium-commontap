@@ -32,6 +32,8 @@
            . ,(file-name-concat workspace "gh" "gongo" "emacs-toml"))
           (helm-projectile
            . ,(file-name-concat workspace "gh" "bbatsov" "helm-projectile"))
+          (el-mock
+           . ,(file-name-concat workspace "gh" "rejeep" "el-mock.el"))
           ;; ('ultra-scroll-mac
           ;;  . ,(file-name-concat workspace "gh" "jdtsmith" "ultra-scroll-mac"))
           )))
