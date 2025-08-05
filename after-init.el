@@ -1883,8 +1883,8 @@ I.e., created with `scratch' or named scratch-"
                (not (eq (point-min) (point-max)))))))
   :custom
   (persistent-scratch-scratch-buffer-p-function #'pk/persistent-scratch--scratch-buffer-p)
-  :config
-  (persistent-scratch-setup-default))
+  :hook
+  (after-init . persistent-scratch-setup-default))
 
 
 (use-package cperl-mode
