@@ -47,9 +47,11 @@
                            ("c" modus-themes-nuanced-blue)
                            ("c++" modus-themes-nuanced-blue)
                            ("fortran" modus-themes-nuanced-blue)
-                           ("java" modus-themes-nuanced-blue)
-                           ("rust" modus-themes-nuanced-blue)
                            ("go" modus-themes-nuanced-blue)
+                           ("java" modus-themes-nuanced-blue)
+                           ("objc" modus-themes-nuanced-blue)
+                           ("rust" modus-themes-nuanced-blue)
+
 
                            ("awk" modus-themes-nuanced-yellow)
                            ("bash" modus-themes-nuanced-yellow)
