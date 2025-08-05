@@ -147,6 +147,8 @@
            `(tab-bar-tab-inactive ((t (,@c :box (:line-width (20 . 4) :color ,bg-tab-bar :style flat-button)
                                   :background ,bg-tab-bar))))
 
+           ;; From `objc-font-lock'
+           `(objc-font-lock-background ((t (,@c :slant italic))))
            ;; Redoing helm, inspired by last removed version in:
            ;; https://github.com/protesilaos/modus-themes/commit/1efaa7ef79682ec13493351d52ed1b339fb6ace2
            `(helm-selection ((t (,@c :inherit modus-themes-completion-selected))))
@@ -687,6 +689,11 @@ See: https://github.com/PrincetonUniversity/blocklint"
                                (equal (car p) (car pattern))))
                         (flycheck-checker-get 'emacs-lisp 'error-patterns))
       (push pattern (flycheck-checker-get 'emacs-lisp 'error-patterns)))))
+
+
+(use-package objc-font-lock
+  :config
+  (objc-font-lock-global-mode 1))
 
 
 (use-package clang-format
