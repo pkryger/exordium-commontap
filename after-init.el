@@ -658,7 +658,9 @@ See: https://github.com/PrincetonUniversity/blocklint"
         (if-let* ((direnv (executable-find "direnv"))
                   ((file-exists-p (expand-file-name ".envrc" library))))
             (async-shell-command
-             (format "%s exec %s bundle install --gemfile %s"
+             (format "%s exec %s bundle update --bundler && %s exec %s bundle install --gemfile %s"
+                     direnv
+                     library
                      direnv
                      library
                      (expand-file-name "Homebrew/Gemfile")))
