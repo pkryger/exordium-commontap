@@ -2235,6 +2235,8 @@ would move point to an (partially) invisible line."
 
 (use-package debbugs
   :custom
+  (debbugs-gnu-trunk-directory "~/gh/emacs-mirror/emacs")
+  (debbugs-gnu-apply-patch-prefers-magit t)
   (debbugs-gnu-default-bug-number-list
    (string-join
     (list
