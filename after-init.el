@@ -2234,6 +2234,29 @@ would move point to an (partially) invisible line."
 
 
 (use-package debbugs
+  :ensure t
+  :init
+  (use-package transient
+    :demand nil
+    :autoload (transient-parse-suffix
+               transient-get-suffix))
+  (use-package magit-section
+    :ensure magit
+    :demand nil
+    :autoload (magit-region-values))
+
+  (defun pk/debbugs-gnu-read-commit-range-from-magit ()
+    "Read commit range from a `magit' buffer.
+Return commit at point or a commit range in region if it is active."
+    (when-let* ((ret (if-let* ((commits (magit-region-values '(commit branch) t)))
+                         (progn (deactivate-mark)
+                                (format "%s^..%s" (car (last commits)) (car commits)))
+                       (magit-section-case (commit (oref it value))))))
+      (list ret)))
+
+  :hook
+  (debbugs-gnu-read-commit-range . pk/debbugs-gnu-read-commit-range-from-magit)
+
   :custom
   (debbugs-gnu-trunk-directory "~/gh/emacs-mirror/emacs")
   (debbugs-gnu-apply-patch-prefers-magit t)
@@ -2246,7 +2269,14 @@ would move point to an (partially) invisible line."
      (propertize "78766" 'help-echo "100-4000x redisplay slowdown with vscroll>0 and make-cursor-line-fully-visible=t")
      (propertize "79188" 'help-echo "Cannot build packages installed from VC")
      )
-    ",")))
+    ","))
+
+  :config
+  (with-eval-after-load 'magit-patch
+    (let ((suffix [("M-p" "debbugs pick commits" debbugs-gnu-pick-commits)]))
+      (unless (equal (transient-parse-suffix 'magit-patch suffix)
+                     (transient-get-suffix 'magit-patch '(-1 -1)))
+        (transient-append-suffix 'magit-patch '(-1 -1) suffix)))))
 
 
 
