@@ -2274,6 +2274,7 @@ Return commit at point or a commit range in region if it is active."
 
   :custom
   (debbugs-gnu-trunk-directory "~/gh/emacs-mirror/emacs")
+  (debbugs-gnu-branch-directory "~/gh/mituharu/emacs-mac")
   (debbugs-gnu-apply-patch-prefers-magit t)
   (debbugs-gnu-default-bug-number-list
    (string-join
