@@ -2246,6 +2246,11 @@ would move point to an (partially) invisible line."
     :demand nil
     :autoload (magit-region-values))
 
+  (use-package debbugs-gnu
+    :ensure debbugs
+    :demand nil
+    :autoload (debbugs-gnu-pick-commits))
+
   (defun pk/debbugs-gnu-read-commit-range-from-magit ()
     "Read commit range from a `magit' buffer.
 Return commit at point or a commit range in region if it is active."
