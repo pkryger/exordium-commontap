@@ -2248,11 +2248,25 @@ would move point to an (partially) invisible line."
   (defun pk/debbugs-gnu-read-commit-range-from-magit ()
     "Read commit range from a `magit' buffer.
 Return commit at point or a commit range in region if it is active."
-    (when-let* ((ret (if-let* ((commits (magit-region-values '(commit branch) t)))
+    (when-let* ((range (if-let* ((commits (magit-region-values '(commit branch) t)))
                          (progn (deactivate-mark)
                                 (format "%s^..%s" (car (last commits)) (car commits)))
-                       (magit-section-case (commit (oref it value))))))
-      (list ret)))
+                       (magit-section-case
+                         ;; `debbugs-gnu-read-commit-range-from-vc-log' returns
+                         ;; just a single commit in such a case but I don't
+                         ;; think it is intuitive.  A message of such a commit
+                         ;; is used to search for the bug reference (well, this
+                         ;; one is expected) while subsequent patches are
+                         ;; created with all commits leading to a tip of the
+                         ;; current branch (see git format-patch --help).  ATM,
+                         ;; the `debbugs-gnu-post-patch' takes extra argument
+                         ;; FORMAT-PATCH-ARGS which could be used to format a
+                         ;; single commit, but that would require an advice
+                         ;; that would add "-1" unless COMMIT-RANGE is already
+                         ;; a range.
+                         (commit (let ((commit (oref it value)))
+                                   (format "%s^..%s" commit commit)))))))
+      (list range)))
 
   :hook
   (debbugs-gnu-read-commit-range . pk/debbugs-gnu-read-commit-range-from-magit)
