@@ -2236,6 +2236,7 @@ would move point to an (partially) invisible line."
 (use-package debbugs
   :ensure t
   :demand t
+  :functions (pk/debbugs-gnu-search-with-this-command)
   :init
   (use-package transient
     :demand nil
@@ -2245,11 +2246,74 @@ would move point to an (partially) invisible line."
     :ensure magit
     :demand nil
     :autoload (magit-region-values))
+  (use-package helm-mode
+    :ensure helm
+    :demand nil
+    :autoload (helm-completing-read-default-1
+               helm-completing-read-default-2)
+    :defines (helm-completing-read-handlers-alist))
+  (use-package helm-lib
+    :ensure helm-core
+    :demand nil
+    :autoload (helm-this-command
+               helm-symbol-name))
 
   (use-package debbugs-gnu
     :ensure debbugs
     :demand nil
     :autoload (debbugs-gnu-pick-commits))
+
+  (defun pk/debbugs-gnu-search-completing-read (&rest args)
+                                        ; checkdoc-params: (args)
+    "Allow user to *search* when completing read.
+This is done by adding an extra element to a `completing-read' (an empty
+string) to exit loop in `debbugs-gnu-search' interactive form."
+    ;; Like in `helm-completing-read-default-handler'.
+    (let* ((current-command (or (helm-this-command) this-command))
+           (str-command (if current-command
+                            (helm-symbol-name current-command)
+                          "completing-read"))
+           (buf-name (format "*%s*" str-command))
+           (standard (and (memq helm-completion-style '(helm helm-fuzzy)) t))
+           (fn (if standard
+                   #'helm-completing-read-default-1
+                 #'helm-completing-read-default-2))
+           alistp
+           (args (if (equal (car-safe args) "Enter attribute: ")
+                     (progn
+                       (setq alistp t)
+                       (append (list (car args))
+                               (list (cons
+
+                                      (cons (propertize "*do search*"
+                                                        'face 'debbugs-gnu-done)
+                                            ;; Magic value, that is returned
+                                            ;; from `helm' and yields `length'
+                                            ;; equal to 0.
+                                            [])
+                                      (mapcar (lambda (elt)
+                                                (cons elt (format "%s" elt)))
+                                              (cadr args))))
+                               (cddr args)))
+                   args)))
+      (apply fn
+             (append args
+                     (list str-command buf-name standard nil alistp)))))
+
+  (defun pk/debbugs-gnu-search-with-this-command (&rest _)
+    "Ensure `this-command' is set to `debbugs-gnu-search'.
+This is done such that when `completing-read' calls into `helm' it can
+dispatch to `pk/debbugs-gnu-search-completing-read'."
+    (interactive
+     (lambda (spec)
+       (let ((advice (lambda (orig-fun &rest args)
+                       (let ((this-command 'debbugs-gnu-search))
+                         (apply orig-fun args)))))
+         (unwind-protect
+             (progn
+               (advice-add #'completing-read :around advice)
+               (advice-eval-interactive-spec spec))
+           (advice-remove #'completing-read advice))))))
 
   (defun pk/debbugs-gnu-read-commit-range-from-magit ()
     "Read commit range from a `magit' buffer.
@@ -2293,6 +2357,11 @@ Return commit at point or a commit range in region if it is active."
     ","))
 
   :config
+  (add-to-list 'helm-completing-read-handlers-alist
+               '(debbugs-gnu-search . pk/debbugs-gnu-search-completing-read))
+  (advice-add #'debbugs-gnu-search
+              :before #'pk/debbugs-gnu-search-with-this-command)
+
   (with-eval-after-load 'magit-patch
     (let ((suffix [("M-p" "debbugs pick commits" debbugs-gnu-pick-commits)]))
       (unless (equal (transient-parse-suffix 'magit-patch suffix)
