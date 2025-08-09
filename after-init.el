@@ -2235,6 +2235,7 @@ would move point to an (partially) invisible line."
 
 (use-package debbugs
   :ensure t
+  :demand t
   :init
   (use-package transient
     :demand nil
