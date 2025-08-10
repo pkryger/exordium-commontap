@@ -2249,8 +2249,7 @@ would move point to an (partially) invisible line."
   (use-package helm-mode
     :ensure helm
     :demand nil
-    :autoload (helm-completing-read-default-1
-               helm-completing-read-default-2)
+    :autoload (helm-completing-read-default-handler)
     :defines (helm-completing-read-handlers-alist))
   (use-package helm-lib
     :ensure helm-core
@@ -2265,50 +2264,48 @@ would move point to an (partially) invisible line."
 
   (defun pk/debbugs-gnu-search-completing-read (&rest args)
                                         ; checkdoc-params: (args)
-    "Allow user to *search* when completing read.
-This is done by adding an extra element to a `completing-read' (an empty
-string) to exit loop in `debbugs-gnu-search' interactive form."
-    ;; Like in `helm-completing-read-default-handler'.
-    (let* ((current-command (or (helm-this-command) this-command))
-           (str-command (if current-command
-                            (helm-symbol-name current-command)
-                          "completing-read"))
-           (buf-name (format "*%s*" str-command))
-           (standard (and (memq helm-completion-style '(helm helm-fuzzy)) t))
-           (fn (if standard
-                   #'helm-completing-read-default-1
-                 #'helm-completing-read-default-2))
-           alistp
-           (args (if (equal (car-safe args) "Enter attribute: ")
-                     (progn
-                       (setq alistp t)
-                       (append (list (car args))
-                               (list (cons
-
-                                      (cons (propertize "*do search*"
-                                                        'face 'debbugs-gnu-done)
-                                            ;; Magic value, that is returned
-                                            ;; from `helm' and yields `length'
-                                            ;; equal to 0.
-                                            [])
-                                      (mapcar (lambda (elt)
-                                                (cons elt (format "%s" elt)))
-                                              (cadr args))))
-                               (cddr args)))
-                   args)))
-      (apply fn
-             (append args
-                     (list str-command buf-name standard nil alistp)))))
+    "Allow user to explicitly when completing read in `debbugs-gnu-search'.
+This is done by adding an extra source that yields nil to perform search
+or generates user error to abort operation.  See the
+`debbugs-gnu-search''s interactive form."
+    (if (equal (car-safe args) "Enter attribute: ")
+        (helm :sources (list
+                        (helm-build-sync-source "Action"
+                          :candidates '("Do Search" "Abort")
+                          :action (lambda (candidate)
+                                    (when (equal "Abort" candidate)
+                                      (user-error "Search aborted"))))
+                        (helm-build-sync-source "Query Attributes"
+                          :candidates (cadr args)))
+              :buffer "*debbugs-gnu-search*")
+      ;; Delegate to `helm-completing-read-default-handler'.
+      (let* ((current-command (or (helm-this-command) this-command))
+             (str-command (if current-command
+                              (helm-symbol-name current-command)
+                            "completing-read"))
+             (buf-name (format "*%s*" str-command)))
+        (apply #'helm-completing-read-default-handler
+               (append args
+                       (list str-command buf-name))))))
 
   (defun pk/debbugs-gnu-search-with-this-command (&rest _)
-    "Ensure `this-command' is set to `debbugs-gnu-search'.
-This is done such that when `completing-read' calls into `helm' it can
-dispatch to `pk/debbugs-gnu-search-completing-read'."
+    "Adjust `debbugs-gnu-search' interactive spec to work with `helm'.
+Ensure `this-command' is set such that when `completing-read' calls into
+`helm' it can dispatch to `pk/debbugs-gnu-search-completing-read'.  Also
+handle `helm-exit-status'."
     (interactive
      (lambda (spec)
        (let ((advice (lambda (orig-fun &rest args)
                        (let ((this-command 'debbugs-gnu-search))
-                         (apply orig-fun args)))))
+                         (prog1
+                             (apply orig-fun args)
+                           ;; Can't move abort on C-g to
+                           ;; `pk/debbugs-gnu-search-completing-read' since it
+                           ;; yields Command attempted to use minibuffer while
+                           ;; in minibuffer and the helm doesn't go away.
+                           (when (and (equal (car-safe args) "Enter attribute: ")
+                                      (equal helm-exit-status 1))
+                             (user-error "Search aborted")))))))
          (unwind-protect
              (progn
                (advice-add #'completing-read :around advice)
