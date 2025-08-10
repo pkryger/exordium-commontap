@@ -2366,7 +2366,40 @@ Return commit at point or a commit range in region if it is active."
         (transient-append-suffix 'magit-patch '(-1 -1) suffix)))))
 
 
+(use-package log-edit
+  :ensure nil
+  :demand t
+  :functions (pk/log-edit-magit-commit-setup
+              pk/log-edit-diff-fileset)
+  :init
+  (use-package magit-git
+    :ensure magit
+    :demand nil
+    :autoload (magit-staged-files
+               magit-toplevel))
+  (use-package vc
+    :ensure nil
+    :demand nil
+    :autoload (vc-buffer-sync-fileset
+               vc-diff-internal))
 
+  (defun pk/log-edit-diff-fileset ()
+    (when-let* ((default-directory (magit-toplevel))
+                (files (mapcar #'expand-file-name
+                               (magit-staged-files)))
+                (fileset (list 'Git files)))
+      (vc-buffer-sync-fileset fileset nil)
+      (vc-diff-internal t fileset nil nil)))
+
+  (defun pk/log-edit-magit-commit-setup ()
+    (unless log-edit-vc-backend
+      (setq-local log-edit-vc-backend 'Git
+                  log-edit-diff-function #'pk/log-edit-diff-fileset)))
+
+  :hook
+  (log-edit-mode . pk/log-edit-magit-commit-setup))
+
+
 (use-package nix-mode
   :mode "\\.nix\\'")
 
