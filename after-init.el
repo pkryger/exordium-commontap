@@ -2375,21 +2375,69 @@ Return commit at point or a commit range in region if it is active."
   (use-package magit-git
     :ensure magit
     :demand nil
-    :autoload (magit-staged-files
-               magit-toplevel))
+    :autoload (magit-changed-files
+               magit-staged-files
+               magit-anything-staged-p
+               magit-anything-unstaged-p
+               magit-gitdir))
+  (use-package magit-mode
+    :ensure magit
+    :demand nil
+    :autoload (magit-repository-local-get))
+  (use-package magit-base
+    :ensure magit
+    :demand nil
+    :autoload (magit-file-lines))
   (use-package vc
     :ensure nil
     :demand nil
     :autoload (vc-buffer-sync-fileset
                vc-diff-internal))
+  (use-package vc-git
+    :ensure nil
+    :demand nil
+    :defines (vc-git-diff-switches))
 
   (defun pk/log-edit-diff-fileset ()
-    (when-let* ((default-directory (magit-toplevel))
-                (files (mapcar #'expand-file-name
-                               (magit-staged-files)))
-                (fileset (list 'Git files)))
-      (vc-buffer-sync-fileset fileset nil)
-      (vc-diff-internal t fileset nil nil)))
+    ;; Like in `magit-diff-1'
+    (let ((staged (magit-anything-staged-p))
+          (unstaged (magit-with-toplevel
+                      (magit-anything-unstaged-p)))
+          (command (magit-repository-local-get 'this-commit-command))
+          (squash (let ((f (expand-file-name "rebase-merge/rewritten-pending"
+                                             (magit-gitdir))))
+                    (and (file-exists-p f) (length (magit-file-lines f))))))
+      (pcase-let* ((`(,vc-git-diff-switches ,rev1 ,rev2)
+                    (pcase (list staged unstaged command)
+                      ((and (or
+                             `(,_ ,_ magit-commit--rebase)
+                             ;; TODO: below 3 cases are from autopsy
+                             `(,_, _ with-editor-finish)
+                             `(,_ ,_ magit-rebase-continue)
+                             `(t ,_ nil))
+                            (guard (integerp squash)))
+                       (list "--cached" (format "HEAD~%s" squash) nil))
+                      (`(,_ ,_ magit-commit-amend)
+                       (list "--cached" "HEAD^" nil))
+                      (`(nil nil magit-commit--allow-empty)
+                       (list nil "HEAD" nil))
+                      ((or `(,_ ,_ magit-commit-reword)
+                           `(nil nil ,_))
+                       (list nil "HEAD^" "HEAD"))
+                      (`(,_ t magit-commit--all)
+                       (list nil "HEAD" nil))
+                      (`(nil t handle-switch-frame)
+                       ;; Either --all or --allow-empty. Assume it is the former.
+                       (list nil "HEAD" nil)))))
+        (magit-with-toplevel
+          (let* ((files (mapcar #'expand-file-name
+                                (or (magit-changed-files (if rev2
+                                                          (format "%s..%s" rev1 rev2)
+                                                        rev1))
+                                    (magit-staged-files))))
+                 (fileset (list 'Git files)))
+            (vc-buffer-sync-fileset fileset nil)
+            (vc-diff-internal t fileset rev1 rev2))))))
 
   (defun pk/log-edit-magit-commit-setup ()
     (unless log-edit-vc-backend
