@@ -984,6 +984,24 @@ This is to reduce the number of proposals."
   (compilation-scroll-output 'first-error))
 
 
+;; Add before `gcmh' as buffers `after-init-hook' is executed in a reverse mode
+;; of operation and when `persistent-scratch-setup-default' restores buffers
+;; the `gcmh-high-cons-threshold' may be needed.
+(use-package persistent-scratch
+  :init
+  (defun pk/persistent-scratch--scratch-buffer-p ()
+    "Return non nil when the buffer is a scratch like buffer.
+I.e., created with `scratch' or named scratch-"
+    (let ((buffer-name (buffer-name)))
+      (or (string= "*scratch*" buffer-name)
+          (and (string-prefix-p "scratch-" buffer-name)
+               (not (eq (point-min) (point-max)))))))
+  :custom
+  (persistent-scratch-scratch-buffer-p-function #'pk/persistent-scratch--scratch-buffer-p)
+  :hook
+  (after-init . persistent-scratch-setup-default))
+
+
 ;; Garbage collect magic hack from https://gitlab.com/koral/gcmh
 ;; tuned like in DOOM:
 ;; https://github.com/hlissner/doom-emacs/blob/db16e5c/core/core.el#L350-L351
@@ -1880,20 +1898,6 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
     ;; `eshell-path-env' is a buffer local variable, so change its default
     ;; value.
     (setq-default eshell-path-env path)))
-
-(use-package persistent-scratch
-  :init
-  (defun pk/persistent-scratch--scratch-buffer-p ()
-    "Return non nil when the buffer is a scratch like buffer.
-I.e., created with `scratch' or named scratch-"
-    (let ((buffer-name (buffer-name)))
-      (or (string= "*scratch*" buffer-name)
-          (and (string-prefix-p "scratch-" buffer-name)
-               (not (eq (point-min) (point-max)))))))
-  :custom
-  (persistent-scratch-scratch-buffer-p-function #'pk/persistent-scratch--scratch-buffer-p)
-  :hook
-  (after-init . persistent-scratch-setup-default))
 
 
 (use-package cperl-mode
