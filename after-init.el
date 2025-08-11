@@ -2456,6 +2456,33 @@ Return commit at point or a commit range in region if it is active."
   :mode "\\.nix\\'")
 
 
+;; There may still be more to come,
+;; e.g. https://yhetil.org/emacs-devel/87ectrl9u8.fsf@posteo.net/
+(unless (fboundp 'package-report-bug) ;; Since Emacs 31
+  (defun package-report-bug (desc)
+    "Prepare a message to send to the maintainers of a package.
+DESC must be a `package-desc' object."
+    (interactive (list (package--query-desc package-alist))
+                 package-menu-mode)
+    (let ((maint (package-maintainers desc))
+          (name (symbol-name (package-desc-name desc)))
+          (pkgdir (package-desc-dir desc))
+          vars)
+      (when pkgdir
+        (dolist-with-progress-reporter (group custom-current-group-alist)
+            "Scanning for modified user options..."
+          (when (and (car group)
+                     (file-in-directory-p (car group) pkgdir))
+            (dolist (ent (get (cdr group) 'custom-group))
+              (when (and (custom-variable-p (car ent))
+                         (boundp (car ent))
+                         (not (eq (custom--standard-value (car ent))
+                                  (default-toplevel-value (car ent)))))
+                (push (car ent) vars))))))
+      (dlet ((reporter-prompt-for-summary-p t))
+        (reporter-submit-bug-report maint name vars)))))
+
+
 (provide 'after-init)
 
 ;;; after-init.el ends here
