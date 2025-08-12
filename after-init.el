@@ -2370,6 +2370,10 @@ Return commit at point or a commit range in region if it is active."
   :config
   (add-to-list 'helm-completing-read-handlers-alist
                '(debbugs-gnu-search . pk/debbugs-gnu-search-completing-read))
+  ;; Fall back to Emacs provided completing read, until I know what's needed to
+  ;; convince `helm' to cooperate with `debbugs-gnu-completion-table'.
+  (add-to-list 'helm-completing-read-handlers-alist
+               '(debbugs-gnu-pick-commits . completing-read))
   (advice-add #'debbugs-gnu-search
               :before #'pk/debbugs-gnu-search-with-this-command)
 
