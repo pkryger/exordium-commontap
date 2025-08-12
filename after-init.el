@@ -319,7 +319,7 @@
 (setq-default display-line-numbers-widen t)
 (setq uniquify-dirname-transform 'project-uniquify-dirname-transform)
 
-;; The following needs an smtp.gmail.com entry in ~/.netrc (or in ~/.authinfo)
+;; The following needs an smtp.gmail.com entry in `auth-sources'
 (use-package smtpmail
   :ensure nil
   :custom
@@ -330,6 +330,16 @@
   (smtpmail-servers-requiring-authorization (rx "gmail.com" string-end))
   (smtpmail-smtp-user "pkryger@gmail.com")
   (smtpmail-mail-address "prkyger@gmail.com"))
+
+(use-package message
+  :ensure nil
+  :custom
+  (message-send-mail-function #'smtpmail-send-it))
+
+(use-package sendmail
+  :ensure nil
+  :custom
+  (send-mail-function #'smtpmail-send-it))
 
 
 
