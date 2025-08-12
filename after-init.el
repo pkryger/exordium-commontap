@@ -2278,7 +2278,7 @@ would move point to an (partially) invisible line."
 
   (defun pk/debbugs-gnu-search-completing-read (&rest args)
                                         ; checkdoc-params: (args)
-    "Allow user to explicitly when completing read in `debbugs-gnu-search'.
+    "Allow explicitly search when completing read in `debbugs-gnu-search'.
 This is done by adding an extra source that yields nil to perform search
 or generates user error to abort operation.  See the
 `debbugs-gnu-search''s interactive form."
@@ -2301,6 +2301,42 @@ or generates user error to abort operation.  See the
         (apply #'helm-completing-read-default-handler
                (append args
                        (list str-command buf-name))))))
+
+  (defun pk/debbugs-gnu-pick-commits-completing-read
+      (prompt collection predicate require-match _intial-input hist def _inherit-input-method)
+    ;; checkdoc-params: (prompt collection predicate require-match hist def)
+    "Allow user to handle dynamic candidates in `debbugs-gnu-pick-commits'.
+This is done by wrapping candidates (actually `debugs-gnu-completion'
+table) in a lambda that keep expanding it whenever `helm-pattern'
+changes."
+    (let ((result
+           (helm
+            :sources
+            (list
+             (helm-build-sync-source "Bugs"
+               :candidates (lambda ()
+                             (let ((all-completions
+                                    (completion-all-completions helm-pattern
+                                                                collection
+                                                                predicate
+                                                                (length helm-pattern))))
+                               (when (cdr (last all-completions))
+                                 (setcdr (last all-completions) nil))
+                               (cl-union  (mapcar #'substring-no-properties
+                                                  all-completions)
+                                          (ensure-list def)
+                                          :test #'string=)))
+               :must-match require-match
+               :volatile t))
+            :buffer "*debbugs-gnu-pick-commits*"
+            :prompt prompt
+            :history (when (symbolp hist) hist)
+            :default (or (car-safe def)
+                         def))))
+      (when (and result hist (symbolp hist) (not (eq hist t)))
+        (delete-dups (append (mapcar #'substring-no-properties
+                                     (ensure-list result))
+                             (symbol-value hist))))))
 
   (defun pk/debbugs-gnu-search-with-this-command (&rest _)
     "Adjust `debbugs-gnu-search' interactive spec to work with `helm'.
@@ -2370,10 +2406,8 @@ Return commit at point or a commit range in region if it is active."
   :config
   (add-to-list 'helm-completing-read-handlers-alist
                '(debbugs-gnu-search . pk/debbugs-gnu-search-completing-read))
-  ;; Fall back to Emacs provided completing read, until I know what's needed to
-  ;; convince `helm' to cooperate with `debbugs-gnu-completion-table'.
   (add-to-list 'helm-completing-read-handlers-alist
-               '(debbugs-gnu-pick-commits . completing-read))
+               '(debbugs-gnu-pick-commits . pk/debbugs-gnu-pick-commits-completing-read))
   (advice-add #'debbugs-gnu-search
               :before #'pk/debbugs-gnu-search-with-this-command)
 
