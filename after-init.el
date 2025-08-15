@@ -2322,6 +2322,7 @@ a number over a 1000."
   :hook
   ;; Tree view for groups.
   (gnus-group-mode . gnus-topic-mode)
+  (gnus-mode . bug-reference-mode)
   :config
   (advice-add #'helm-completing-read-default-handler
               :filter-args #'pk/helm-completing-read-hack-gnus-default))
@@ -2466,6 +2467,8 @@ Return commit at point or a commit range in region if it is active."
 
   :hook
   (debbugs-gnu-read-commit-range . pk/debbugs-gnu-read-commit-range-from-magit)
+  (bug-reference-mode . debbugs-browse-mode)
+  (bug-reference-prog-mode . debbugs-browse-mode)
 
   :custom
   (debbugs-gnu-trunk-directory "~/gh/emacs-mirror/emacs")
