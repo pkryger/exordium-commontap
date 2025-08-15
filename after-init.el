@@ -2247,7 +2247,86 @@ would move point to an (partially) invisible line."
     :models '(gpt-4.1 gpt-4o)))
 
 
-(use-package debbugs
+(use-package gnus-topic
+  :ensure nil
+  :demand nil
+  :defer t
+  :autoload (gnus-topic-mode))
+
+(use-package gnus-group
+  :ensure nil
+  :demand nil
+  :defer t
+  :autoload (gnus-group-list-all-groups))
+
+(use-package gnus
+  :ensure nil
+  :demand nil
+  :defer t
+  :functions (pk/gnus-group-list-subscribed-groups
+              pk/helm-completing-read-hack-gnus-default)
+  :defines (gnus-tmp-lines)
+  :init
+  (defun pk/gnus-group-list-subscribed-groups ()
+    "List all subscribed groups with or without un-read messages."
+    (interactive)
+    (gnus-group-list-all-groups 5))
+
+  (defun pk/helm-completing-read-hack-gnus-default (args)
+    "Escape (some) regexps in 4th argument in ARGS for gnus commands.
+This is designed to update DEF argument for
+`helm-completing-read-default-handler'."
+    (when-let* (((listp args))
+                (def (nth 4 args))
+                (name (nth 8 args))
+                ((and (stringp def) (stringp name)
+                      (string-prefix-p "gnus-" name))))
+      (setf (nth 4 args) ;; `when-let*' doesn't bind places
+            (thread-last def
+                         (replace-regexp-in-string (rx "+") "\\\\+")
+                         (replace-regexp-in-string (rx "*") "\\\\*")
+                         (replace-regexp-in-string (rx "?") "\\\\?"))))
+    args)
+
+  (defun gnus-user-format-function-human-lines (_)
+    "Convert LINES for a human consumption.
+The result is always up to 4 characters long and is an approximation for
+a number over a 1000."
+    (pcase gnus-tmp-lines
+      ((rx (any "1-9") (>= 9 (any digit)))
+       "1G")
+      ((and (rx (group (any "1-9") (** 0 2 (any digit))) (= 6 (any digit))) l)
+       (format "%sM" (match-string 1 l)))
+      ((and (rx (group (any "1-9") (** 0 2 (any digit))) (= 3 (any digit))) l)
+       (format "%sk" (match-string 1 l)))
+      ((and (pred stringp) l) (concat l " "))
+      (l l)))
+
+  :bind
+  (:map gnus-group-mode-map
+        ("o" . #'pk/gnus-group-list-subscribed-groups))
+  :custom
+  (gnus-use-cache t)
+  (gnus-summary-thread-gathering-function 'gnus-gather-threads-by-subject)
+  (gnus-thread-sort-functions '(gnus-thread-sort-by-most-recent-date
+                                (not gnus-thread-sort-by-number)))
+
+  (gnus-thread-hide-subtree t)
+  (gnus-thread-ignore-subject t)
+  (gnus-not-empty-thread-mark ?\uffee)  ; ￮ half width white circle
+
+  ;; Original was: "%U%R%z%I%(%[%4L: %-23,23f%]%) %s\n"
+  ;; - added %e
+  ;; - replaced %4L with %4Lu&human-lines;
+  (gnus-summary-line-format "%e%U%R%z%I%(%[%4u&human-lines;: %-23,23f%]%) %s\n")
+  :hook
+  ;; Tree view for groups.
+  (gnus-group-mode . gnus-topic-mode)
+  :config
+  (advice-add #'helm-completing-read-default-handler
+              :filter-args #'pk/helm-completing-read-hack-gnus-default))
+
+(use-package debbugs
   :ensure t
   :demand t
   :functions (pk/debbugs-gnu-search-with-this-command)
