@@ -994,24 +994,6 @@ This is to reduce the number of proposals."
   (compilation-scroll-output 'first-error))
 
 
-;; Add before `gcmh' as buffers `after-init-hook' is executed in a reverse mode
-;; of operation and when `persistent-scratch-setup-default' restores buffers
-;; the `gcmh-high-cons-threshold' may be needed.
-(use-package persistent-scratch
-  :init
-  (defun pk/persistent-scratch--scratch-buffer-p ()
-    "Return non nil when the buffer is a scratch like buffer.
-I.e., created with `scratch' or named scratch-"
-    (let ((buffer-name (buffer-name)))
-      (or (string= "*scratch*" buffer-name)
-          (and (string-prefix-p "scratch-" buffer-name)
-               (not (eq (point-min) (point-max)))))))
-  :custom
-  (persistent-scratch-scratch-buffer-p-function #'pk/persistent-scratch--scratch-buffer-p)
-  :hook
-  (after-init . persistent-scratch-setup-default))
-
-
 ;; Garbage collect magic hack from https://gitlab.com/koral/gcmh
 ;; tuned like in DOOM:
 ;; https://github.com/hlissner/doom-emacs/blob/db16e5c/core/core.el#L350-L351
@@ -1072,55 +1054,6 @@ Defer it so that commands launched immediately after will enjoy the benefits."
                 file)))
     (read-only-mode)))
 (add-hook 'find-file-hook #'pk/read-only-mode-maybe)
-
-
-(use-package desktop
-  :ensure nil
-  :config
-  ;; Don't save some buffers in desktop
-  (dolist (mode'(dired-mode
-                 Info-mode
-                 info-lookup-mode
-                 fundamental-mode
-                 helpful-mode
-                 helm-major-mode
-                 magit-mode
-                 magit-log-mode
-                 magit-status-mode
-                 magit-process-mode
-                 magit-diff-mode
-                 forge-pullreq-mode
-                 forge-notifications-mode
-                 difftastic-mode))
-    (add-to-list 'desktop-modes-not-to-save mode))
-  :custom
-  (desktop-files-not-to-save
-   (rx-to-string `(or
-                   ;; original value of `desktop-files-not-to-save'
-                   (seq string-start "/" (zero-or-more (not (any "/" ":"))) ":")
-                   (seq "(ftp)" string-end)
-                   ;; skip also Emacs and ELPA
-                   (seq string-start
-                        (or ,(expand-file-name
-                              (file-name-parent-directory data-directory))
-                            ,(expand-file-name
-                              (file-name-as-directory package-user-dir)))))))
-  (desktop-restore-eager 8)
-  (desktop-load-locked-desktop (if (version< "29" emacs-version) 'check-pid 'ask)))
-
-
-(use-package savehist
-  :ensure nil
-  :custom
-  (savehist-additional-variables '(command-history
-                                   kill-ring
-                                   log-edit-comment-ring
-                                   recentf-list
-                                   regexp-search-ring
-                                   register-alist
-                                   search-ring))
-  :config
-  (savehist-mode))
 
 
 (use-package python
