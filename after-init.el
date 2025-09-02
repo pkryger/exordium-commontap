@@ -2295,7 +2295,8 @@ changes."
       (when (and result hist (symbolp hist) (not (eq hist t)))
         (delete-dups (append (mapcar #'substring-no-properties
                                      (ensure-list result))
-                             (symbol-value hist))))))
+                             (symbol-value hist))))
+      result))
 
   (defun pk/debbugs-gnu-search-with-this-command (&rest _)
     "Adjust `debbugs-gnu-search' interactive spec to work with `helm'.
