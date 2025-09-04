@@ -2061,12 +2061,6 @@ would move point to an (partially) invisible line."
           (add-hook 'post-command-hook #'pk/maybe-reset-vscroll)
         (remove-hook 'post-command-hook #'pk/maybe-reset-vscroll))))
 
-  (defun pk/ultra-scroll-advices ()
-    "Add or remove advices for vscroll while point movement."
-    (if ultra-scroll-mode
-        (pk/vscroll-advices #'advice-add)
-      (pk/vscroll-advices #'advice-remove)))
-
   (defun pk/remove-vscroll-advices ()
     "Remove advices for vscroll while point movement."
     (pk/vscroll-advices #'advice-remove))
@@ -2074,6 +2068,12 @@ would move point to an (partially) invisible line."
   (defun pk/add-vscroll-advices ()
     "Add advices for vscroll while point movement."
     (pk/vscroll-advices #'advice-add))
+
+  (defun pk/ultra-scroll-advices ()
+    "Add or remove advices for vscroll while point movement."
+    (if ultra-scroll-mode
+        (pk/add-vscroll-advices)
+      (pk/remove-vscroll-advices)))
 
   :hook
   (helm-before-initialize . pk/remove-vscroll-advices)
@@ -2089,7 +2089,7 @@ would move point to an (partially) invisible line."
   (ultra-scroll-hide-functions '(hl-line-mode global-hl-line-mode))
 
   :config
-  (pk/vscroll-advices #'advice-add)
+  (pk/add-vscroll-advices)
   (ultra-scroll-mode))
 
 ;; (use-package jinx
