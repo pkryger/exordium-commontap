@@ -2063,10 +2063,12 @@ would move point to an (partially) invisible line."
 
   (defun pk/remove-vscroll-advices ()
     "Remove advices for vscroll while point movement."
+    (interactive)
     (pk/vscroll-advices #'advice-remove))
 
   (defun pk/add-vscroll-advices ()
     "Add advices for vscroll while point movement."
+    (interactive)
     (pk/vscroll-advices #'advice-add))
 
   (defun pk/ultra-scroll-advices ()
