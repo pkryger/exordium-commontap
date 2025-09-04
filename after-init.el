@@ -1514,7 +1514,7 @@ language."
   :custom
   (git-link-use-commit t)
   :config
-  (transient-append-suffix 'magit-file-dispatch "g" '(1 "f" "copy link" git-link)))
+  (transient-append-suffix 'magit-file-dispatch "g" '(1 "f" "Copy link" git-link)))
 
 
 (use-package dom
