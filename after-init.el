@@ -1351,10 +1351,19 @@ language."
                                                 (append old-rules new-rules)
                                               new-rules))))
                   char-strings-alist))
+          ;; Allow for resolution/matrix like strings, e.g., 12x34.
           (set-char-table-range composition-function-table
-                                ?0
-                                '([".\\(?:x[a-fA-F0-9]\\)" 0
-                                   mac-auto-operator-composition-shape-gstring]))
+                                  '(?0 . ?9)
+                                  '([".\\(?:x[[:digit:]]\\)" 0
+                                     mac-auto-operator-composition-shape-gstring]))
+          ;; Hex numbers, e.g., 0xa, #xa #x1
+          ;; This comes later to overwrite the resolution/matrix for hex digits
+          (dolist (char '(?0 ?#))
+            (set-char-table-range composition-function-table
+                                  char
+                                  '([".\\(?:x[[:xdigit:]]\\)" 0
+                                     mac-auto-operator-composition-shape-gstring])))
+
           (global-auto-composition-mode 1))
       (map-char-table
        (lambda (c rules)
@@ -1364,8 +1373,8 @@ language."
                (if (eq (aref rule 2) 'mac-auto-operator-composition-shape-gstring)
                    (setq removed-p t)
                  (push rule new-rules)))
-             (if removed-p
-                 (set-char-table-range composition-function-table c
+             (when removed-p
+               (set-char-table-range composition-function-table c
                                        (nreverse new-rules))))))
        composition-function-table)
       (clrhash mac-auto-operator-composition-cache))))
