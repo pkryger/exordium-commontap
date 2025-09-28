@@ -2373,6 +2373,7 @@ Return commit at point or a commit range in region if it is active."
      (propertize "78712" 'help-echo "31.0.50; definition is void in file-notify")
      (propertize "78766" 'help-echo "100-4000x redisplay slowdown with vscroll>0 and make-cursor-line-fully-visible=t")
      (propertize "79188" 'help-echo "Cannot build packages installed from VC")
+     (propertize "79521" 'help-echo "31.0.50; debbugs-gnu-pick-commits no longer works")
      )
     ","))
 
