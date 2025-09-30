@@ -1378,9 +1378,6 @@ language."
                                        (nreverse new-rules))))))
        composition-function-table)
       (clrhash mac-auto-operator-composition-cache))))
-(when (fboundp 'pk/mac-auto-operator-composition-mode)
-  (pk/mac-auto-operator-composition-mode))
-
 
 (defun pk/org-prettify-bullet-lists ()
   "Prettify `org-mode' list bullets."
@@ -1405,6 +1402,9 @@ language."
 (add-hook 'ediff-mode-hook
           (lambda ()
             (auto-composition-mode -1)))
+
+(when (fboundp 'pk/mac-auto-operator-composition-mode)
+  (pk/mac-auto-operator-composition-mode))
 
 (use-package ediff
   :ensure nil
