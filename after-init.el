@@ -1413,6 +1413,12 @@ language."
   (ediff-window-setup-function #'ediff-setup-windows-plain))
 
 
+(use-package view-mode
+  :ensure nil
+  :defer t
+  :hook diff-mode)
+
+
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (use-package forge
   :config
