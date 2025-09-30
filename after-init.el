@@ -1398,13 +1398,13 @@ language."
 ;; Helm and ediff are having issues with ligatures
 (add-hook 'helm-major-mode-hook
           (lambda ()
-            (setq auto-composition-mode nil)))
+            (auto-composition-mode -1)))
 ;; Disabling ligatures in ediff mode only removes them in the ediff buffer
 ;; itself (the small buffer underneath) and not the buffers you compare. Which
 ;; is probably a preferred solution.
 (add-hook 'ediff-mode-hook
           (lambda ()
-            (setq auto-composition-mode nil)))
+            (auto-composition-mode -1)))
 
 (use-package ediff
   :ensure nil
