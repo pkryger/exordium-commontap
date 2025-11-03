@@ -33,55 +33,6 @@
                                (member theme custom-safe-themes))
                              (mapcar #'symbol-name
                                      modus-themes-items))))))
-  (use-package org-src
-    :ensure org
-    :defer t
-    :custom
-    (org-src-block-faces '(("clojure" modus-themes-nuanced-magenta)
-                           ("clojurescript" modus-themes-nuanced-magenta)
-                           ("elisp" modus-themes-nuanced-magenta)
-                           ("emacs-lisp" modus-themes-nuanced-magenta)
-                           ("lisp" modus-themes-nuanced-magenta)
-                           ("scheme" modus-themes-nuanced-magenta)
-
-                           ("c" modus-themes-nuanced-blue)
-                           ("c++" modus-themes-nuanced-blue)
-                           ("fortran" modus-themes-nuanced-blue)
-                           ("go" modus-themes-nuanced-blue)
-                           ("java" modus-themes-nuanced-blue)
-                           ("objc" modus-themes-nuanced-blue)
-                           ("rust" modus-themes-nuanced-blue)
-
-
-                           ("awk" modus-themes-nuanced-yellow)
-                           ("bash" modus-themes-nuanced-yellow)
-                           ("ipython" modus-themes-nuanced-yellow)
-                           ("js" modus-themes-nuanced-yellow)
-                           ("perl" modus-themes-nuanced-yellow)
-                           ("python" modus-themes-nuanced-yellow)
-                           ("r" modus-themes-nuanced-yellow)
-                           ("ruby" modus-themes-nuanced-yellow)
-                           ("sed" modus-themes-nuanced-yellow)
-                           ("sh" modus-themes-nuanced-yellow)
-                           ("shell" modus-themes-nuanced-yellow)
-                           ("zsh" modus-themes-nuanced-yellow)
-
-                           ("dot" modus-themes-nuanced-green)
-                           ("html" modus-themes-nuanced-green)
-                           ("latex" modus-themes-nuanced-green)
-                           ("org" modus-themes-nuanced-green)
-                           ("plantuml" modus-themes-nuanced-green)
-                           ("xml" modus-themes-nuanced-green)
-
-                           ("css" modus-themes-nuanced-red)
-                           ("scss" modus-themes-nuanced-red)
-                           ("sql" modus-themes-nuanced-red)
-
-                           ("conf" modus-themes-nuanced-cyan)
-                           ("docker" modus-themes-nuanced-cyan)
-                           ("json" modus-themes-nuanced-cyan)
-                           ("makefile" modus-themes-nuanced-cyan)
-                           ("yaml" modus-themes-nuanced-cyan))))
 
   (use-package helm-rg
     :defer t
@@ -89,119 +40,143 @@
 
   ;; Add all your customizations prior to loading the themes
   (defun pk/modus-themes--custom-faces ()
-    (require 'modus-themes nil t)
-    ;; The following is an expanded macro `modus-themes-with-colors',
-    ;; but need it so that it will evaluate when function is executed
+    (require 'modus-themes)
     (modus-themes-with-colors
-      (setq helm-rg--color-format-argument-alist
-            `((red :cmd-line "red"
-                   :text-property ,(face-attribute 'modus-themes-completion-match-0 :foreground))))
+      ;; Use the `eval' block to silence compiler warnings about references to
+      ;; free variables for `modus-themes' defined colours.
+      (eval
+       '(progn
+          (setq helm-rg--color-format-argument-alist
+                `((red :cmd-line "red"
+                       :text-property ,fg-completion-match-0)))
 
-      (setopt highlight-symbol-colors `(,bg-yellow-intense
-                                        ,bg-magenta-intense
-                                        ,bg-cyan-intense
-                                        ,bg-green-intense
-                                        ,bg-red-intense
-                                        ,bg-blue-intense))
+          (setopt highlight-symbol-colors `(,bg-yellow-intense
+                                            ,bg-magenta-intense
+                                            ,bg-cyan-intense
+                                            ,bg-green-intense
+                                            ,bg-red-intense
+                                            ,bg-blue-intense))
+          (setopt org-src-block-faces
+                  (cl-flet ((lang-with-bg-color (color)
+                              (lambda (lang)
+                                (list lang `(:background ,color)))))
+                    (append
+                     (mapcar (lang-with-bg-color bg-magenta-nuanced)
+                             '("clojure" "clojurescript" "elisp" "emacs-lisp" "lisp"
+                               "scheme"))
+                     (mapcar (lang-with-bg-color bg-blue-nuanced)
+                             '("c" "c++" "fortran" "go" "java" "objc" "rust"))
+                     (mapcar (lang-with-bg-color bg-yellow-nuanced)
+                             '("awk" "bash" "ipython" "js" "perl" "python" "r" "ruby"
+                               "sed" "sh" "shell" "zsh"))
+                     (mapcar (lang-with-bg-color bg-green-nuanced)
+                             '("dot" "html" "latex" "org" "plantuml" "xml"))
+                     (mapcar (lang-with-bg-color bg-red-nuanced)
+                             '("css" "scss" "sql"))
+                     (mapcar (lang-with-bg-color bg-cyan-nuanced)
+                             '("conf" "docker" "json" "makefile" "yaml")))))
 
-      (custom-theme-set-faces
-       'user
-       ;; Something mid Feb 2025 something is messing up with default face, setting its foreground to "unspecifed-fg"
-       ;; and background to "unspecified-bg". Until that's pinpointed and eliminated, forcibly fix it on user level.
-       `(default ((t (,@c :background ,bg-main :foreground ,fg-main))))
+          (custom-theme-set-faces
+           'user
+           ;; Something mid Feb 2025 something is messing up with default face, setting its foreground to "unspecifed-fg"
+           ;; and background to "unspecified-bg". Until that's pinpointed and eliminated, forcibly fix it on user level.
+           `(default ((t (,@c :background ,bg-main :foreground ,fg-main))))
 
-       `(fixed-pitch ((t (,@c :family ,(face-attribute 'default :family) :height ,(face-attribute 'default :height)))))
-       `(scroll-bar ((t (,@c :background ,bg-inactive :foreground ,fg-dim))))
-       `(fill-column-indicator ((t (,@c :height 1.0 :background ,bg-main :foreground ,bg-inactive))))
-       `(exordium-org-work ((t (,@c :inherit 'org-todo :foreground ,magenta-cooler))))
-       `(exordium-org-wait ((t (,@c :inherit 'org-todo :foreground ,cyan))))
-       `(exordium-org-stop ((t (,@c :inherit 'org-todo :foreground ,fg-dim))))
-       `(iedit-occurrence
-         ((t (,@c :inherit nil
-                  :box (:line-width -2 ,@(when-let* ((color (face-attribute 'modus-themes-completion-match-0 :foreground))
+           `(fixed-pitch ((t (,@c :family ,(face-attribute 'default :family) :height ,(face-attribute 'default :height)))))
+           `(scroll-bar ((t (,@c :background ,bg-inactive :foreground ,fg-dim))))
+           `(fill-column-indicator ((t (,@c :height 1.0 :background ,bg-main :foreground ,bg-inactive))))
+           `(exordium-org-work ((t (,@c :inherit 'org-todo :foreground ,magenta-cooler))))
+           `(exordium-org-wait ((t (,@c :inherit 'org-todo :foreground ,cyan))))
+           `(exordium-org-stop ((t (,@c :inherit 'org-todo :foreground ,fg-dim))))
+           `(iedit-occurrence
+             ((t (,@c
+                  :background unspecified :foreground unspecified
+                  :box (:line-width -2 ,@(when-let* ((color fg-completion-match-0)
                                                      ((not (eq color 'unspecified))))
                                            (list :color color)))))))
-       `(iedit-read-only-occurrence
-         ((t (,@c :inherit nil
-                  :box (:line-width -2 ,@(when-let* ((color (face-attribute 'modus-themes-completion-match-1 :foreground))
+           `(iedit-read-only-occurrence
+             ((t (,@c
+                  :background unspecified :foreground unspecified
+                  :box (:line-width -2 ,@(when-let* ((color fg-completion-match-1)
                                                      ((not (eq color 'unspecified))))
                                            (list :color color)))))))
-       `(highlight-symbol-face ((t (,@c :background ,bg-cyan-nuanced))))
+           `(highlight-symbol-face ((t (,@c :background ,bg-cyan-nuanced))))
 
-       `(aw-leading-char-face ((t (,@c :foreground ,red-intense :bold t :height 1.5))))
+           `(aw-leading-char-face ((t (,@c :foreground ,red-intense :bold t :height 1.5))))
 
-       ;; mashup of modus-themes with https://github.com/aaronjensen/emacs-modern-tab-bar
-       `(tab-bar-tab ((t (,@c :box (:line-width (20 . 4) :color ,bg-tab-current :style flat-button)
-                              :background ,bg-tab-current))))
-       `(tab-bar-tab-inactive ((t (,@c :box (:line-width (20 . 4) :color ,bg-tab-bar :style flat-button)
-                                       :background ,bg-tab-bar))))
+           ;; mashup of modus-themes with https://github.com/aaronjensen/emacs-modern-tab-bar
+           `(tab-bar-tab ((t (,@c :box (:line-width (20 . 4) :color ,bg-tab-current :style flat-button)
+                                  :background ,bg-tab-current))))
+           `(tab-bar-tab-inactive ((t (,@c :box (:line-width (20 . 4) :color ,bg-tab-bar :style flat-button)
+                                           :background ,bg-tab-bar))))
 
-       ;; From `objc-font-lock'
-       `(objc-font-lock-background ((t (,@c :slant italic))))
-       ;; Redoing helm, inspired by last removed version in:
-       ;; https://github.com/protesilaos/modus-themes/commit/1efaa7ef79682ec13493351d52ed1b339fb6ace2
-       `(helm-selection ((t (,@c :inherit modus-themes-completion-selected))))
-       `(helm-match ((t (,@c :inherit modus-themes-completion-match-0))))
-       `(helm-match-item ((t (,@c :inherit modus-themes-completion-match-0))))
-       `(helm-visible-mark ((t (,@c :inherit modus-themes-subtle-cyan))))
-       `(helm-source-header ((t (,@c :foreground ,cyan :inherit modus-themes-heading-1))))
-       `(helm-header-line-left-margin ((t (,@c :inherit bold :foreground ,yellow-intense))))
-       `(helm-candidate-number ((t (,@c :foreground ,cyan))))
-       `(helm-candidate-number-suspended ((t (,@c :foreground ,yellow))))
-       `(helm-locate-finish ((t (,@c :inherit success))))
-       `(helm-moccur-buffer ((t (,@c :inherit bold :foreground ,name))))
-       `(helm-resume-need-update ((t (,@c :inherit pulse-highlight-start-face))))
-       `(helm-grep-command ((t (,@c :inherit helm-source-header))))
-       `(helm-grep-match ((t (,@c :inherit modus-themes-completion-match-0))))
-       `(helm-grep-lineno ((t (,@c :inherit shadow))))
-       `(helm-grep-finish ((t (,@c :inherit bold))))
-       `(helm-buffer-archive ((t (,@c :foreground ,warning))))
-       `(helm-buffer-directory ((t (,@c :inherit dired-directory))))
-       `(helm-buffer-file ((t (,@c :foreground ,fg-main))))
-       `(helm-buffer-modified ((t (,@c :foreground ,yellow-warmer))))
-       `(helm-buffer-not-saved ((t (,@c :foreground ,red-warmer))))
-       `(helm-buffer-process ((t (,@c :foreground ,accent-1))))
-       `(helm-buffer-saved-out ((t (,@c :inherit bold :background ,bg-cyan-nuanced :foreground ,red))))
-       `(helm-buffer-size ((t (,@c :inherit shadow))))
-       `(helm-ff-backup-file ((t (,@c :inherit shadow))))
-       `(helm-ff-denied ((t (,@c :inherit dired-warning))))
-       `(helm-ff-directory ((t (,@c :inherit dired-directory))))
-       `(helm-ff-dirs ((t (,@c :inherit bold :foreground ,blue-cooler))))
-       `(helm-ff-dotted-directory ((t (,@c :inherit (dired-header dired-directory)))))
-       `(helm-ff-dotted-symlink-directory ((t (,@c :inherit (dired-symlink dired-directory)))))
-       `(helm-ff-executable ((t (,@c :foreground ,accent-1))))
-       `(helm-ff-file ((t (,@c :foreground ,fg-main))))
-       `(helm-ff-file-extension ((t (,@c :foreground ,variable))))
-       `(helm-ff-invalid-symlink ((t (,@c :inherit dired-broken-symlink))))
-       `(helm-ff-suid ((t (,@c :inherit dired-set-id))))
-       `(helm-ff-symlink ((t (,@c :inherit dired-symlink))))
-       `(helm-ff-pipe ((t (,@c :inherit dired-special))))
-       `(helm-ff-socket ((t (,@c :inherit dired-special))))
-       `(helm-ff-truename ((t (,@c :foreground ,fg-main))))
-       `(helm-ff-prefix ((t (,@c :background ,bg-ochre :foreground ,magenta))))
-       `(helm-history-deleted ((t (,@c :inherit shadow :strike-through t))))
-       `(helm-history-remote ((t (,@c :background ,bg-ochre))))
-       `(helm-delete-async-message ((t (,@c :inherit bold :foreground ,magenta))))
-       `(helm-ff-rsync-progress ((t (,@c :inherit bold :foreground ,red-warmer))))
-       `(helm-rg-match-text-face ((t (,@c :inherit modus-themes-completion-match-0))))
-       `(helm-rg-line-number-match-face ((t (,@c :inherit helm-grep-lineno))))
-       `(helm-rg-file-match-face ((t (,@c :inherit helm-moccur-buffer))))
-       `(helm-rg-preview-line-highlight ((t (,@c :inherit highlight :extend t))))
-       `(helm-rg-title-face ((t (,@c :inherit helm-source-header))))
-       `(helm-rg-base-rg-cmd-face ((t (,@c :inherit helm-source-header))))
-       `(helm-rg-active-arg-face ((t (,@c :foreground ,yellow-warmer))))
-       `(helm-rg-inactive-arg-face ((t (,@c :foreground ,fg-dim :weight thin))))
-       `(helm-rg-extra-arg-face ((t (,@c :foreground ,yellow-cooler))))
-       `(helm-rg-directory-cmd-face ((t (,@c :inherit helm-ff-directory))))
-       `(helm-rg-directory-header-face ((t (,@c :inherit helm-ff-directory))))
-       `(helm-M-x-key ((t (,@c :inherit modus-themes-key-binding))))
-       `(helm-M-x-short-doc ((t (,@c :inherit completions-annotations))))
-       `(helm-completions-annotations ((t (,@c :inherit completions-annotations))))
-       `(helm-completions-detailed ((t (,@c :inherit completions-annotations))))
-       `(helm-completions-invalid ((t (,@c :inherit font-lock-warning-face))))))
+           ;; From `objc-font-lock'
+           `(objc-font-lock-background ((t (,@c :slant italic))))
+           ;; Redoing helm, inspired by last removed version in:
+           ;; https://github.com/protesilaos/modus-themes/commit/1efaa7ef79682ec13493351d52ed1b339fb6ace2
+           `(helm-selection ((t (,@c :inherit modus-themes-completion-selected))))
+           `(helm-match ((t (,@c :inherit modus-themes-completion-match-0))))
+           `(helm-match-item ((t (,@c :inherit modus-themes-completion-match-0))))
+           `(helm-visible-mark ((t (,@c :background ,bg-cyan-nuanced))))
+           `(helm-source-header ((t (,@c :foreground ,cyan :inherit modus-themes-heading-1))))
+           `(helm-header-line-left-margin ((t (,@c :inherit bold :foreground ,yellow-intense))))
+           `(helm-candidate-number ((t (,@c :foreground ,cyan))))
+           `(helm-candidate-number-suspended ((t (,@c :foreground ,yellow))))
+           `(helm-locate-finish ((t (,@c :inherit success))))
+           `(helm-moccur-buffer ((t (,@c :inherit bold :foreground ,name))))
+           `(helm-resume-need-update ((t (,@c :inherit pulse-highlight-start-face))))
+           `(helm-grep-command ((t (,@c :inherit helm-source-header))))
+           `(helm-grep-match ((t (,@c :inherit modus-themes-completion-match-0))))
+           `(helm-grep-lineno ((t (,@c :inherit shadow))))
+           `(helm-grep-finish ((t (,@c :inherit bold))))
+           `(helm-buffer-archive ((t (,@c :foreground ,warning))))
+           `(helm-buffer-directory ((t (,@c :inherit dired-directory))))
+           `(helm-buffer-file ((t (,@c :foreground ,fg-main))))
+           `(helm-buffer-modified ((t (,@c :foreground ,yellow-warmer))))
+           `(helm-buffer-not-saved ((t (,@c :foreground ,red-warmer))))
+           `(helm-buffer-process ((t (,@c :foreground ,accent-1))))
+           `(helm-buffer-saved-out ((t (,@c :inherit bold :background ,bg-cyan-nuanced :foreground ,red))))
+           `(helm-buffer-size ((t (,@c :inherit shadow))))
+           `(helm-ff-backup-file ((t (,@c :inherit shadow))))
+           `(helm-ff-denied ((t (,@c :inherit dired-warning))))
+           `(helm-ff-directory ((t (,@c :inherit dired-directory))))
+           `(helm-ff-dirs ((t (,@c :inherit bold :foreground ,blue-cooler))))
+           `(helm-ff-dotted-directory ((t (,@c :inherit (dired-header dired-directory)))))
+           `(helm-ff-dotted-symlink-directory ((t (,@c :inherit (dired-symlink dired-directory)))))
+           `(helm-ff-executable ((t (,@c :foreground ,accent-1))))
+           `(helm-ff-file ((t (,@c :foreground ,fg-main))))
+           `(helm-ff-file-extension ((t (,@c :foreground ,variable))))
+           `(helm-ff-invalid-symlink ((t (,@c :inherit dired-broken-symlink))))
+           `(helm-ff-suid ((t (,@c :inherit dired-set-id))))
+           `(helm-ff-symlink ((t (,@c :inherit dired-symlink))))
+           `(helm-ff-pipe ((t (,@c :inherit dired-special))))
+           `(helm-ff-socket ((t (,@c :inherit dired-special))))
+           `(helm-ff-truename ((t (,@c :foreground ,fg-main))))
+           `(helm-ff-prefix ((t (,@c :background ,bg-ochre :foreground ,magenta))))
+           `(helm-history-deleted ((t (,@c :inherit shadow :strike-through t))))
+           `(helm-history-remote ((t (,@c :background ,bg-ochre))))
+           `(helm-delete-async-message ((t (,@c :inherit bold :foreground ,magenta))))
+           `(helm-ff-rsync-progress ((t (,@c :inherit bold :foreground ,red-warmer))))
+           `(helm-rg-match-text-face ((t (,@c :inherit modus-themes-completion-match-0))))
+           `(helm-rg-line-number-match-face ((t (,@c :inherit helm-grep-lineno))))
+           `(helm-rg-file-match-face ((t (,@c :inherit helm-moccur-buffer))))
+           `(helm-rg-preview-line-highlight ((t (,@c :inherit highlight :extend t))))
+           `(helm-rg-title-face ((t (,@c :inherit helm-source-header))))
+           `(helm-rg-base-rg-cmd-face ((t (,@c :inherit helm-source-header))))
+           `(helm-rg-active-arg-face ((t (,@c :foreground ,yellow-warmer))))
+           `(helm-rg-inactive-arg-face ((t (,@c :foreground ,fg-dim :weight thin))))
+           `(helm-rg-extra-arg-face ((t (,@c :foreground ,yellow-cooler))))
+           `(helm-rg-directory-cmd-face ((t (,@c :inherit helm-ff-directory))))
+           `(helm-rg-directory-header-face ((t (,@c :inherit helm-ff-directory))))
+           `(helm-M-x-key ((t (,@c :inherit modus-themes-key-binding))))
+           `(helm-M-x-short-doc ((t (,@c :inherit completions-annotations))))
+           `(helm-completions-annotations ((t (,@c :inherit completions-annotations))))
+           `(helm-completions-detailed ((t (,@c :inherit completions-annotations))))
+           `(helm-completions-invalid ((t (,@c :inherit font-lock-warning-face))))))))
 
-    (when (bound-and-true-p ace-window-posframe-mode)
+    (when (fboundp #'posframe-delete-all)
       (posframe-delete-all)))
+
 
   :custom
   (modus-themes-italic-constructs t)
@@ -246,6 +221,7 @@
   :config
   (auto-dark-mode)
   (pk/modus-themes--custom-faces))
+
 
 
 ;; emacs mac ports customisations, per
