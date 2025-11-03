@@ -20,7 +20,7 @@
 (use-package modus-themes
   :unless (bound-and-true-p exordium-theme)
   :demand t
-  :autoload (modus-themes-with-colors)
+  :autoload (modus-themes-get-theme-palette)
   :init
   (use-package custom
     :ensure nil
@@ -38,14 +38,30 @@
     :defer t
     :defines (helm-rg--color-format-argument-alist))
 
+
+  (defun pk/org-src-bloc-face-lang-with-bg-color (color)
+    (lambda (lang)
+      (list lang `(:background ,color))))
+
   ;; Add all your customizations prior to loading the themes
   (defun pk/modus-themes--custom-faces ()
-    (require 'modus-themes)
-    (modus-themes-with-colors
-      ;; Use the `eval' block to silence compiler warnings about references to
-      ;; free variables for `modus-themes' defined colours.
-      (eval
-       '(progn
+    (require 'modus-themes nil t)
+    ;; Expand macro `modus-themes-with-colors' manually (with an extra `eval'),
+    ;; as otherwise compiler generates a warning for each colour from
+    ;; `modus-themes' palette.
+    ;;
+    ;; --- begin `modus-themes-with-colors' macro preface ---
+    (let* ((sym (gensym))
+           (palette (modus-themes-get-theme-palette nil :with-overrides :with-user-palette))
+           (colors (mapcar #'car palette)))
+      (eval ;; extra `eval'
+       `(let* ((c '((class color) (min-colors 256)))
+               (,sym (modus-themes-get-theme-palette nil :with-overrides :with-user-palette))
+               ,@(mapcar (lambda (color)
+                           (list color
+                                 `(modus-themes--retrieve-palette-value ',color ,sym)))
+                         colors))
+          ;; --- end `modus-themes-with-colors' macro preface ---
           (setq helm-rg--color-format-argument-alist
                 `((red :cmd-line "red"
                        :text-property ,fg-completion-match-0)))
@@ -57,24 +73,21 @@
                                             ,bg-red-intense
                                             ,bg-blue-intense))
           (setopt org-src-block-faces
-                  (cl-flet ((lang-with-bg-color (color)
-                              (lambda (lang)
-                                (list lang `(:background ,color)))))
-                    (append
-                     (mapcar (lang-with-bg-color bg-magenta-nuanced)
-                             '("clojure" "clojurescript" "elisp" "emacs-lisp" "lisp"
-                               "scheme"))
-                     (mapcar (lang-with-bg-color bg-blue-nuanced)
-                             '("c" "c++" "fortran" "go" "java" "objc" "rust"))
-                     (mapcar (lang-with-bg-color bg-yellow-nuanced)
-                             '("awk" "bash" "ipython" "js" "perl" "python" "r" "ruby"
-                               "sed" "sh" "shell" "zsh"))
-                     (mapcar (lang-with-bg-color bg-green-nuanced)
-                             '("dot" "html" "latex" "org" "plantuml" "xml"))
-                     (mapcar (lang-with-bg-color bg-red-nuanced)
-                             '("css" "scss" "sql"))
-                     (mapcar (lang-with-bg-color bg-cyan-nuanced)
-                             '("conf" "docker" "json" "makefile" "yaml")))))
+                  (append
+                   (mapcar (pk/org-src-bloc-face-lang-with-bg-color bg-magenta-nuanced)
+                           '("clojure" "clojurescript" "elisp" "emacs-lisp" "lisp"
+                             "scheme"))
+                   (mapcar (pk/org-src-bloc-face-lang-with-bg-color bg-blue-nuanced)
+                           '("c" "c++" "fortran" "go" "java" "objc" "rust"))
+                   (mapcar (pk/org-src-bloc-face-lang-with-bg-color bg-yellow-nuanced)
+                           '("awk" "bash" "ipython" "js" "perl" "python" "r" "ruby"
+                             "sed" "sh" "shell" "zsh"))
+                   (mapcar (pk/org-src-bloc-face-lang-with-bg-color bg-green-nuanced)
+                           '("dot" "html" "latex" "org" "plantuml" "xml"))
+                   (mapcar (pk/org-src-bloc-face-lang-with-bg-color bg-red-nuanced)
+                           '("css" "scss" "sql"))
+                   (mapcar (pk/org-src-bloc-face-lang-with-bg-color bg-cyan-nuanced)
+                           '("conf" "docker" "json" "makefile" "yaml"))))
 
           (custom-theme-set-faces
            'user
@@ -177,9 +190,9 @@
     (when (fboundp #'posframe-delete-all)
       (posframe-delete-all)))
 
-
   :custom
   (modus-themes-italic-constructs t)
+  (modus-themes-bold-constructs t)
   (modus-themes-mixed-fonts t)
   (modus-themes-variable-pitch-ui t)
   (modus-themes-completions '((matches . (extrabold background intense))
