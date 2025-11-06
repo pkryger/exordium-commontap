@@ -21,6 +21,7 @@
   :unless (bound-and-true-p exordium-theme)
   :demand t
   :autoload (modus-themes-get-theme-palette)
+  :defines (pk/error-to-unspecified)
   :init
   (use-package custom
     :ensure nil
@@ -38,10 +39,14 @@
     :defer t
     :defines (helm-rg--color-format-argument-alist))
 
-
   (defun pk/org-src-bloc-face-lang-with-bg-color (color)
     (lambda (lang)
       (list lang `(:background ,color))))
+
+  (defun pk/error-to-unspecified (fun &rest args)
+    "Convert errors to `unspecified' when getting face attribute"
+    (or (ignore-errors (apply fun args))
+        'unspecified))
 
   ;; Add all your customizations prior to loading the themes
   (defun pk/modus-themes--custom-faces ()
@@ -207,6 +212,10 @@
                            (t . (variable-pitch rainbow regular))))
 
   :config
+  ;; Workaround for fonts not being available on all frames
+  (advice-add #'internal-get-lisp-face-attribute
+              :around #'pk/error-to-unspecified)
+
   (setopt modus-themes-common-palette-overrides
           `(;; (border-mode-line-active unspecified)
             ;; (border-mode-line-inactive unspecified)
