@@ -665,7 +665,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
                      library
                      direnv
                      library
-                     (expand-file-name "Homebrew/Gemfile")))
+                     (expand-file-name "Homebrew/Gemfile" library)))
           (warn "Missing %s"
                    (if direnv
                        (concat (expand-file-name ".envrc" library)
