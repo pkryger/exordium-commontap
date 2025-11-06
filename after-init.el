@@ -192,7 +192,6 @@
 
   :custom
   (modus-themes-italic-constructs t)
-  (modus-themes-bold-constructs t)
   (modus-themes-mixed-fonts t)
   (modus-themes-variable-pitch-ui t)
   (modus-themes-completions '((matches . (extrabold background intense))
