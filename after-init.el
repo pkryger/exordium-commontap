@@ -186,6 +186,19 @@
                   `((tab-bar-tab . ,bg-tab-current)
                     (tab-bar-tab-inactive . ,bg-tab-bar))))
 
+                ;; FIXME: `dots' seems to be unavailable
+                ;; (writegood-faces
+                ;;  (mapcar
+                ;;   (lambda (face)
+                ;;     `(,face ((t (,@c :underline
+                ;;                      ,(if-let* ((underline (face-attribute face :underline))
+                ;;                                 ((plistp underline)))
+                ;;                         (plist-put underline :style 'dots)
+                ;;                         underline))))))
+                ;;   `(writegood-weasels-face
+                ;;     writegood-duplicates-face
+                ;;     writegood-passive-voice-face)))
+
                 (other-faces
                  (list
                   ;; Something mid Feb 2025 something is messing up with
@@ -208,6 +221,8 @@
             (apply #'custom-theme-set-faces
                    (cons 'user
                          (append other-faces
+                                 ;; FIXME: `dots' seems to be unavailable
+                                 ;; writegood-faces
                                  tab-bar-faces
                                  iedit-faces
                                  exordium-org-faces
@@ -2012,6 +2027,9 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
     (setopt package-build-working-dir (expand-file-name "working/" dir))
     (setopt package-build-archive-dir (expand-file-name "packages/" dir))
     (setopt package-build-recipes-dir (expand-file-name "recipes/" dir))))
+
+(use-package writegood-mode
+  :defer t)
 
 
 
