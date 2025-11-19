@@ -94,103 +94,124 @@
                    (mapcar (pk/org-src-bloc-face-lang-with-bg-color bg-cyan-nuanced)
                            '("conf" "docker" "json" "makefile" "yaml"))))
 
-          (custom-theme-set-faces
-           'user
-           ;; Something mid Feb 2025 something is messing up with default face, setting its foreground to "unspecifed-fg"
-           ;; and background to "unspecified-bg". Until that's pinpointed and eliminated, forcibly fix it on user level.
-           `(default ((t (,@c :background ,bg-main :foreground ,fg-main))))
+          (let ((helm-faces
+                 (list ;; Redoing helm, inspired by last removed version in:
+                  ;; https://github.com/protesilaos/modus-themes/commit/1efaa7ef79682ec13493351d52ed1b339fb6ace2
+                  `(helm-selection ((t (,@c :inherit modus-themes-completion-selected))))
+                  `(helm-match ((t (,@c :inherit modus-themes-completion-match-0))))
+                  `(helm-match-item ((t (,@c :inherit modus-themes-completion-match-0))))
+                  `(helm-visible-mark ((t (,@c :background ,bg-cyan-nuanced))))
+                  `(helm-source-header ((t (,@c :foreground ,cyan :inherit modus-themes-heading-1))))
+                  `(helm-header-line-left-margin ((t (,@c :inherit bold :foreground ,yellow-intense))))
+                  `(helm-candidate-number ((t (,@c :foreground ,cyan))))
+                  `(helm-candidate-number-suspended ((t (,@c :foreground ,yellow))))
+                  `(helm-locate-finish ((t (,@c :inherit success))))
+                  `(helm-moccur-buffer ((t (,@c :inherit bold :foreground ,name))))
+                  `(helm-resume-need-update ((t (,@c :inherit pulse-highlight-start-face))))
+                  `(helm-grep-command ((t (,@c :inherit helm-source-header))))
+                  `(helm-grep-match ((t (,@c :inherit modus-themes-completion-match-0))))
+                  `(helm-grep-lineno ((t (,@c :inherit shadow))))
+                  `(helm-grep-finish ((t (,@c :inherit bold))))
+                  `(helm-buffer-archive ((t (,@c :foreground ,warning))))
+                  `(helm-buffer-directory ((t (,@c :inherit dired-directory))))
+                  `(helm-buffer-file ((t (,@c :foreground ,fg-main))))
+                  `(helm-buffer-modified ((t (,@c :foreground ,yellow-warmer))))
+                  `(helm-buffer-not-saved ((t (,@c :foreground ,red-warmer))))
+                  `(helm-buffer-process ((t (,@c :foreground ,accent-1))))
+                  `(helm-buffer-saved-out ((t (,@c :inherit bold :background ,bg-cyan-nuanced :foreground ,red))))
+                  `(helm-buffer-size ((t (,@c :inherit shadow))))
+                  `(helm-ff-backup-file ((t (,@c :inherit shadow))))
+                  `(helm-ff-denied ((t (,@c :inherit dired-warning))))
+                  `(helm-ff-directory ((t (,@c :inherit dired-directory))))
+                  `(helm-ff-dirs ((t (,@c :inherit bold :foreground ,blue-cooler))))
+                  `(helm-ff-dotted-directory ((t (,@c :inherit (dired-header dired-directory)))))
+                  `(helm-ff-dotted-symlink-directory ((t (,@c :inherit (dired-symlink dired-directory)))))
+                  `(helm-ff-executable ((t (,@c :foreground ,accent-1))))
+                  `(helm-ff-file ((t (,@c :foreground ,fg-main))))
+                  `(helm-ff-file-extension ((t (,@c :foreground ,variable))))
+                  `(helm-ff-invalid-symlink ((t (,@c :inherit dired-broken-symlink))))
+                  `(helm-ff-suid ((t (,@c :inherit dired-set-id))))
+                  `(helm-ff-symlink ((t (,@c :inherit dired-symlink))))
+                  `(helm-ff-pipe ((t (,@c :inherit dired-special))))
+                  `(helm-ff-socket ((t (,@c :inherit dired-special))))
+                  `(helm-ff-truename ((t (,@c :foreground ,fg-main))))
+                  `(helm-ff-prefix ((t (,@c :background ,bg-ochre :foreground ,magenta))))
+                  `(helm-history-deleted ((t (,@c :inherit shadow :strike-through t))))
+                  `(helm-history-remote ((t (,@c :background ,bg-ochre))))
+                  `(helm-delete-async-message ((t (,@c :inherit bold :foreground ,magenta))))
+                  `(helm-ff-rsync-progress ((t (,@c :inherit bold :foreground ,red-warmer))))
+                  `(helm-rg-match-text-face ((t (,@c :inherit modus-themes-completion-match-0))))
+                  `(helm-rg-line-number-match-face ((t (,@c :inherit helm-grep-lineno))))
+                  `(helm-rg-file-match-face ((t (,@c :inherit helm-moccur-buffer))))
+                  `(helm-rg-preview-line-highlight ((t (,@c :inherit highlight :extend t))))
+                  `(helm-rg-title-face ((t (,@c :inherit helm-source-header))))
+                  `(helm-rg-base-rg-cmd-face ((t (,@c :inherit helm-source-header))))
+                  `(helm-rg-active-arg-face ((t (,@c :foreground ,yellow-warmer))))
+                  `(helm-rg-inactive-arg-face ((t (,@c :foreground ,fg-dim :weight thin))))
+                  `(helm-rg-extra-arg-face ((t (,@c :foreground ,yellow-cooler))))
+                  `(helm-rg-directory-cmd-face ((t (,@c :inherit helm-ff-directory))))
+                  `(helm-rg-directory-header-face ((t (,@c :inherit helm-ff-directory))))
+                  `(helm-M-x-key ((t (,@c :inherit modus-themes-key-binding))))
+                  `(helm-M-x-short-doc ((t (,@c :inherit completions-annotations))))
+                  `(helm-completions-annotations ((t (,@c :inherit completions-annotations))))
+                  `(helm-completions-detailed ((t (,@c :inherit completions-annotations))))
+                  `(helm-completions-invalid ((t (,@c :inherit font-lock-warning-face))))))
 
-           `(fixed-pitch ((t (,@c :family ,(face-attribute 'default :family) :height ,(face-attribute 'default :height)))))
-           `(scroll-bar ((t (,@c :background ,bg-inactive :foreground ,fg-dim))))
-           `(fill-column-indicator ((t (,@c :height 1.0 :background ,bg-main :foreground ,bg-inactive))))
-           `(exordium-org-work ((t (,@c :inherit 'org-todo :foreground ,magenta-cooler))))
-           `(exordium-org-wait ((t (,@c :inherit 'org-todo :foreground ,cyan))))
-           `(exordium-org-stop ((t (,@c :inherit 'org-todo :foreground ,fg-dim))))
-           `(iedit-occurrence
-             ((t (,@c
-                  :background unspecified :foreground unspecified
-                  :box (:line-width -2 ,@(when-let* ((color fg-completion-match-0)
-                                                     ((not (eq color 'unspecified))))
-                                           (list :color color)))))))
-           `(iedit-read-only-occurrence
-             ((t (,@c
-                  :background unspecified :foreground unspecified
-                  :box (:line-width -2 ,@(when-let* ((color fg-completion-match-1)
-                                                     ((not (eq color 'unspecified))))
-                                           (list :color color)))))))
-           `(highlight-symbol-face ((t (,@c :background ,bg-cyan-nuanced))))
+                (exordium-org-faces
+                 (mapcar
+                  (lambda (elt)
+                    `(,(car elt) ((t (,@c :inherit 'org-todo :foreground ,(cdr elt))))))
+                  `((exordium-org-work . ,magenta-cooler)
+                    (exordium-org-wait . ,cyan)
+                    (exordium-org-stop . ,fg-dim))))
 
-           `(aw-leading-char-face ((t (,@c :foreground ,red-intense :bold t :height 1.5))))
+                (iedit-faces
+                 (mapcar
+                  (lambda (elt)
+                    `(,(car elt)
+                      ((t (,@c
+                           :background unspecified :foreground unspecified
+                           :box (:line-width -2 ,@(when-let* ((color (cdr elt))
+                                                              ((not (eq color 'unspecified))))
+                                                    (list :color color))))))))
+                  `((iedit-occurrence . ,fg-completion-match-0)
+                    (iedit-read-only-occurrence . ,fg-completion-match-1))))
 
-           ;; mashup of modus-themes with https://github.com/aaronjensen/emacs-modern-tab-bar
-           `(tab-bar-tab ((t (,@c :box (:line-width (20 . 4) :color ,bg-tab-current :style flat-button)
-                                  :background ,bg-tab-current))))
-           `(tab-bar-tab-inactive ((t (,@c :box (:line-width (20 . 4) :color ,bg-tab-bar :style flat-button)
-                                           :background ,bg-tab-bar))))
+                (tab-bar-faces
+                 (mapcar
+                  (lambda (elt)
+                    ;; mashup of modus-themes with https://github.com/aaronjensen/emacs-modern-tab-bar
+                    `(,(car elt) ((t (,@c :box (:line-width (20 . 4) :color ,(cdr elt) :style flat-button)
+                                      :background ,(cdr elt))))))
+                  `((tab-bar-tab . ,bg-tab-current)
+                    (tab-bar-tab-inactive . ,bg-tab-bar))))
 
-           ;; From `objc-font-lock'
-           `(objc-font-lock-background ((t (,@c :slant italic))))
-           ;; Redoing helm, inspired by last removed version in:
-           ;; https://github.com/protesilaos/modus-themes/commit/1efaa7ef79682ec13493351d52ed1b339fb6ace2
-           `(helm-selection ((t (,@c :inherit modus-themes-completion-selected))))
-           `(helm-match ((t (,@c :inherit modus-themes-completion-match-0))))
-           `(helm-match-item ((t (,@c :inherit modus-themes-completion-match-0))))
-           `(helm-visible-mark ((t (,@c :background ,bg-cyan-nuanced))))
-           `(helm-source-header ((t (,@c :foreground ,cyan :inherit modus-themes-heading-1))))
-           `(helm-header-line-left-margin ((t (,@c :inherit bold :foreground ,yellow-intense))))
-           `(helm-candidate-number ((t (,@c :foreground ,cyan))))
-           `(helm-candidate-number-suspended ((t (,@c :foreground ,yellow))))
-           `(helm-locate-finish ((t (,@c :inherit success))))
-           `(helm-moccur-buffer ((t (,@c :inherit bold :foreground ,name))))
-           `(helm-resume-need-update ((t (,@c :inherit pulse-highlight-start-face))))
-           `(helm-grep-command ((t (,@c :inherit helm-source-header))))
-           `(helm-grep-match ((t (,@c :inherit modus-themes-completion-match-0))))
-           `(helm-grep-lineno ((t (,@c :inherit shadow))))
-           `(helm-grep-finish ((t (,@c :inherit bold))))
-           `(helm-buffer-archive ((t (,@c :foreground ,warning))))
-           `(helm-buffer-directory ((t (,@c :inherit dired-directory))))
-           `(helm-buffer-file ((t (,@c :foreground ,fg-main))))
-           `(helm-buffer-modified ((t (,@c :foreground ,yellow-warmer))))
-           `(helm-buffer-not-saved ((t (,@c :foreground ,red-warmer))))
-           `(helm-buffer-process ((t (,@c :foreground ,accent-1))))
-           `(helm-buffer-saved-out ((t (,@c :inherit bold :background ,bg-cyan-nuanced :foreground ,red))))
-           `(helm-buffer-size ((t (,@c :inherit shadow))))
-           `(helm-ff-backup-file ((t (,@c :inherit shadow))))
-           `(helm-ff-denied ((t (,@c :inherit dired-warning))))
-           `(helm-ff-directory ((t (,@c :inherit dired-directory))))
-           `(helm-ff-dirs ((t (,@c :inherit bold :foreground ,blue-cooler))))
-           `(helm-ff-dotted-directory ((t (,@c :inherit (dired-header dired-directory)))))
-           `(helm-ff-dotted-symlink-directory ((t (,@c :inherit (dired-symlink dired-directory)))))
-           `(helm-ff-executable ((t (,@c :foreground ,accent-1))))
-           `(helm-ff-file ((t (,@c :foreground ,fg-main))))
-           `(helm-ff-file-extension ((t (,@c :foreground ,variable))))
-           `(helm-ff-invalid-symlink ((t (,@c :inherit dired-broken-symlink))))
-           `(helm-ff-suid ((t (,@c :inherit dired-set-id))))
-           `(helm-ff-symlink ((t (,@c :inherit dired-symlink))))
-           `(helm-ff-pipe ((t (,@c :inherit dired-special))))
-           `(helm-ff-socket ((t (,@c :inherit dired-special))))
-           `(helm-ff-truename ((t (,@c :foreground ,fg-main))))
-           `(helm-ff-prefix ((t (,@c :background ,bg-ochre :foreground ,magenta))))
-           `(helm-history-deleted ((t (,@c :inherit shadow :strike-through t))))
-           `(helm-history-remote ((t (,@c :background ,bg-ochre))))
-           `(helm-delete-async-message ((t (,@c :inherit bold :foreground ,magenta))))
-           `(helm-ff-rsync-progress ((t (,@c :inherit bold :foreground ,red-warmer))))
-           `(helm-rg-match-text-face ((t (,@c :inherit modus-themes-completion-match-0))))
-           `(helm-rg-line-number-match-face ((t (,@c :inherit helm-grep-lineno))))
-           `(helm-rg-file-match-face ((t (,@c :inherit helm-moccur-buffer))))
-           `(helm-rg-preview-line-highlight ((t (,@c :inherit highlight :extend t))))
-           `(helm-rg-title-face ((t (,@c :inherit helm-source-header))))
-           `(helm-rg-base-rg-cmd-face ((t (,@c :inherit helm-source-header))))
-           `(helm-rg-active-arg-face ((t (,@c :foreground ,yellow-warmer))))
-           `(helm-rg-inactive-arg-face ((t (,@c :foreground ,fg-dim :weight thin))))
-           `(helm-rg-extra-arg-face ((t (,@c :foreground ,yellow-cooler))))
-           `(helm-rg-directory-cmd-face ((t (,@c :inherit helm-ff-directory))))
-           `(helm-rg-directory-header-face ((t (,@c :inherit helm-ff-directory))))
-           `(helm-M-x-key ((t (,@c :inherit modus-themes-key-binding))))
-           `(helm-M-x-short-doc ((t (,@c :inherit completions-annotations))))
-           `(helm-completions-annotations ((t (,@c :inherit completions-annotations))))
-           `(helm-completions-detailed ((t (,@c :inherit completions-annotations))))
-           `(helm-completions-invalid ((t (,@c :inherit font-lock-warning-face))))))))
+                (other-faces
+                 (list
+                  ;; Something mid Feb 2025 something is messing up with
+                  ;; default face, setting its foreground to "unspecifed-fg"
+                  ;; and background to "unspecified-bg". Until that's
+                  ;; pinpointed and eliminated, forcibly fix it on user level.
+                  `(default ((t (,@c :background ,bg-main :foreground ,fg-main))))
+
+                  `(fixed-pitch ((t (,@c :family ,(face-attribute 'default :family)
+                                         :height ,(face-attribute 'default :height)))))
+                  `(scroll-bar ((t (,@c :background ,bg-inactive :foreground ,fg-dim))))
+                  `(fill-column-indicator ((t (,@c :height 1.0
+                                                   :background ,bg-main :foreground ,bg-inactive))))
+
+                  `(highlight-symbol-face ((t (,@c :background ,bg-cyan-nuanced))))
+                  `(aw-leading-char-face ((t (,@c :foreground ,red-intense :bold t :height 1.5))))
+                  ;; From `objc-font-lock'
+                  `(objc-font-lock-background ((t (,@c :slant italic)))))))
+
+            (apply #'custom-theme-set-faces
+                   (cons 'user
+                         (append other-faces
+                                 tab-bar-faces
+                                 iedit-faces
+                                 exordium-org-faces
+                                 helm-faces)))))))
 
     (when (fboundp #'posframe-delete-all)
       (posframe-delete-all)))
