@@ -621,7 +621,13 @@ the library and PATH is the file containing the library."
   (use-package project
     :ensure nil
     :autoload (project-root))
-
+  (use-package vc-git
+    :ensure nil
+    :autoload (vc-git-checkout))
+  (use-package 'ansii-color
+    :ensure nil
+    :autoload (ansi-color-apply))
+  
   (defun pk/loaddefs-generate--filter-flycheck (args)
     "Append flycheck_ files to ignored files in 2nd arg in ARGS.
 When such temporary flycheck_ files are present they can be
@@ -699,25 +705,58 @@ See: https://github.com/PrincetonUniversity/blocklint"
                   ((string-match-p (rx-to-string `(seq string-start ,homebrew-prefix) t)
                                    (project-root (project-current))))
                   (library (expand-file-name "Library" homebrew-prefix))
-                  (display-buffer-alist '((t . (display-buffer-no-window)))))
+                  (display-buffer-alist '((t . (display-buffer-no-window))))
+                  (default-directory library))
+        ;; Sometimes Gemfile.lock gets changed, let's reset it to HEAD.
+        (vc-git-checkout "Homebrew/Gemfile.lock")
         ;; Ensure sorbet and gems are up to date, either by running "bundle
         ;; install" or by falling back to "brew typecheck"
         (if-let* ((direnv (executable-find "direnv"))
                   ((file-exists-p (expand-file-name ".envrc" library))))
             (async-shell-command
-             (format "%s exec %s bundle update --bundler && %s exec %s bundle install --gemfile %s"
-                     direnv
-                     library
-                     direnv
-                     library
-                     (expand-file-name "Homebrew/Gemfile" library)))
-          (warn "Missing %s"
-                   (if direnv
-                       (concat (expand-file-name ".envrc" library)
-                               " - install from https://github.com/pkryger/dotfiles")
-                     "direnv - install with \"brew install direnv\""))
+             (format (concat "%s exec %s bundle update --bundler"
+                             " && %s exec %s bundle install --gemfile %s")
+                     direnv library
+                     direnv library (expand-file-name "Homebrew/Gemfile"
+                                                      library)))
+          (warn "[pk/sorbet-homebrew] Missing %s"
+                (if direnv
+                    (concat (expand-file-name ".envrc" library)
+                            " - install from https://github.com/pkryger/dotfiles")
+                  "direnv - install with \"brew install direnv\""))
           (async-shell-command "brew typecheck --update"))
         t)))
+
+  (setopt pk/sorbet-homebrew
+          (if-let* ((homebrew-prefix (getenv "HOMEBREW_PREFIX"))
+                    (library (expand-file-name "Library" homebrew-prefix))
+                    (direnv (executable-find "direnv"))
+                    ((file-exists-p (file-name-concat library ".envrc")))
+                    (stderr (make-temp-file "pk-sorbet-homebrew-"))
+                    (bundle (string-trim
+                             (with-output-to-string
+                               (call-process direnv
+                                             nil (list standard-output stderr) nil
+                                             "exec" library "which" "bundle"))))
+                    ((not (string-empty-p bundle))))
+              (progn
+                (delete-file stderr)
+                bundle)
+            (warn "[pk/sorbet-homebrew] Missing %s"
+                  (cond
+                   (stderr
+                    (prog1
+                        (format "bundle executable: %s"
+                                (with-temp-buffer
+                                  (insert-file-contents stderr)
+                                  (ansi-color-apply (buffer-string))))
+                      (delete-file stderr)))
+                   (direnv
+                    (concat (expand-file-name ".envrc" library)
+                            " - install from https://github.com/pkryger/dotfiles"))
+                   (t
+                    "direnv - install with \"brew install direnv\"")))
+            "bundle"))
 
   (add-to-list 'flycheck-checkers 'pk/sorbet-homebrew 'append)
   (flycheck-add-next-checker 'ruby '(warning . pk/sorbet-homebrew) t)
@@ -2030,6 +2069,10 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
 
 (use-package writegood-mode
   :defer t)
+
+(use-package powershell
+  :mode ((rx ".ps" (zero-or-one (or "m" "d")) "1" string-end)
+         . powershell-mode))
 
 
 
