@@ -862,6 +862,9 @@ See: https://github.com/PrincetonUniversity/blocklint"
   (use-package ielm
     :ensure nil
     :commands (ielm-return))
+  (use-package rect
+    :ensure nil
+    :commands (rectangle-mark-mode))
 
   (defun pk/paredit-RET ()
     "Call `paredit-RET' unless special handling is required."
@@ -872,13 +875,20 @@ See: https://github.com/PrincetonUniversity/blocklint"
            (read--expression-try-read))
           (t (paredit-RET))))
 
+  (defun pk/suppress-paredit-mode-for-rectangle-mark-mode ()
+    "Suppress `paredit-mode' when entering `rectangle-mark-mode'."
+    (if rectangle-mark-mode
+        (paredit-mode -1)
+      (paredit-mode)))
+
   :bind
   (:map paredit-mode-map
         ("RET" . #'pk/paredit-RET))
   :hook ((emacs-lisp-mode . paredit-mode)
          (lisp-interaction-mode . paredit-mode)
          (ielm-mode . paredit-mode)
-         (eval-expression-minibuffer-setup . paredit-mode)))
+         (eval-expression-minibuffer-setup . paredit-mode)
+         (rectangle-mark-mode . pk/suppress-paredit-mode-for-rectangle-mark-mode)))
 
 
 (use-package dumb-jump
