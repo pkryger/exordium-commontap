@@ -857,7 +857,8 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
 (use-package paredit
   :commands (paredit-RET)
-  :functions (pk/paredit-RET)
+  :functions (pk/paredit-RET
+              pk/suppress-paredit-mode-for-active-region-or-prefix-arg)
   :init
   (use-package ielm
     :ensure nil
@@ -881,6 +882,19 @@ See: https://github.com/PrincetonUniversity/blocklint"
         (paredit-mode -1)
       (paredit-mode)))
 
+  (defun pk/suppress-paredit-mode-for-active-region-or-prefix-arg (orig-fun &rest args)
+    "Suppress `paredit-mode' when region is active or car ARGS is non number."
+    (let* ((arg (car-safe args))
+           (suppress-paredit (and paredit-mode
+                                  (or (region-active-p)
+                                      (and arg (not (numberp arg)))))))
+      (when suppress-paredit
+        (paredit-mode -1))
+      (unwind-protect
+          (apply orig-fun args)
+        (when suppress-paredit
+          (paredit-mode)))))
+
   :bind
   (:map paredit-mode-map
         ("RET" . #'pk/paredit-RET))
@@ -888,7 +902,10 @@ See: https://github.com/PrincetonUniversity/blocklint"
          (lisp-interaction-mode . paredit-mode)
          (ielm-mode . paredit-mode)
          (eval-expression-minibuffer-setup . paredit-mode)
-         (rectangle-mark-mode . pk/suppress-paredit-mode-for-rectangle-mark-mode)))
+         (rectangle-mark-mode . pk/suppress-paredit-mode-for-rectangle-mark-mode))
+  :config
+  (advice-add #'undo
+              :around #'pk/suppress-paredit-mode-for-active-region-or-prefix-arg))
 
 
 (use-package dumb-jump
