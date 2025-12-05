@@ -39,6 +39,10 @@
     :defer t
     :defines (helm-rg--color-format-argument-alist))
 
+  (use-package auto-dark
+    :defer t
+    :defines (auto-dark-themes))
+
   (defun pk/org-src-bloc-face-lang-with-bg-color (color)
     (lambda (lang)
       (list lang `(:background ,color))))
@@ -51,6 +55,10 @@
   ;; Add all your customizations prior to loading the themes
   (defun pk/modus-themes--custom-faces ()
     (require 'modus-themes nil t)
+    (require 'auto-dark nil t)
+    (dolist (themes auto-dark-themes)
+      (dolist (theme themes)
+        (load-theme theme t t)))
     ;; Expand macro `modus-themes-with-colors' manually (with an extra `eval'),
     ;; as otherwise compiler generates a warning for each colour from
     ;; `modus-themes' palette.
@@ -182,7 +190,7 @@
                   (lambda (elt)
                     ;; mashup of modus-themes with https://github.com/aaronjensen/emacs-modern-tab-bar
                     `(,(car elt) ((t (,@c :box (:line-width (20 . 4) :color ,(cdr elt) :style flat-button)
-                                      :background ,(cdr elt))))))
+                                          :background ,(cdr elt))))))
                   `((tab-bar-tab . ,bg-tab-current)
                     (tab-bar-tab-inactive . ,bg-tab-bar))))
 
@@ -624,7 +632,7 @@ the library and PATH is the file containing the library."
   (use-package vc-git
     :ensure nil
     :autoload (vc-git-checkout))
-  (use-package 'ansii-color
+  (use-package ansii-color
     :ensure nil
     :autoload (ansi-color-apply))
   
