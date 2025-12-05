@@ -21,7 +21,7 @@
   :unless (bound-and-true-p exordium-theme)
   :demand t
   :autoload (modus-themes-get-theme-palette)
-  :defines (pk/error-to-unspecified)
+  :functions (pk/error-to-unspecified)
   :init
   (use-package custom
     :ensure nil
