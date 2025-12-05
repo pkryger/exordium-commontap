@@ -28,12 +28,11 @@
     :after (modus-themes)
     :custom
     (custom-safe-themes
-     (progn
-       (append custom-safe-themes
-               (cl-remove-if (lambda (theme)
-                               (member theme custom-safe-themes))
-                             (mapcar #'symbol-name
-                                     modus-themes-items))))))
+     (append custom-safe-themes
+             (cl-remove-if (lambda (theme)
+                             (member theme custom-safe-themes))
+                           (mapcar #'symbol-name
+                                   modus-themes-items)))))
 
   (use-package helm-rg
     :defer t
