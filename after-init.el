@@ -36,7 +36,18 @@
 
   (use-package helm-rg
     :defer t
-    :defines (helm-rg--color-format-argument-alist))
+    :defines (helm-rg--color-format-argument-alist)
+    :autoload (helm-rg--construct-match-text-properties)
+    :functions (pk/helm-rg-fixup-match-text-properties)
+    :init
+    (defun pk/helm-rg-fixup-match-text-properties (val)
+      (pcase-let ((`(bold (foreground-color . ,color)) val))
+        (if color
+            `(ansi-color-bold (:foreground ,color))
+          val)))
+    :config
+    (advice-add #'helm-rg--construct-match-text-properties
+                :filter-return #'pk/helm-rg-fixup-match-text-properties))
 
   (use-package auto-dark
     :defer t
@@ -76,7 +87,7 @@
           ;; --- end `modus-themes-with-colors' macro preface ---
           (setq helm-rg--color-format-argument-alist
                 `((red :cmd-line "red"
-                       :text-property ,fg-completion-match-0)))
+                       :text-property ,red)))
 
           (setopt highlight-symbol-colors `(,bg-yellow-intense
                                             ,bg-magenta-intense
