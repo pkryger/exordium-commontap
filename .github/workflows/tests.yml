@@ -23,6 +23,7 @@ jobs:
          - macos-latest
        emacs_version:
          - 29.4
+         - 30.2
          - snapshot
     steps:
       - uses: purcell/setup-emacs@master
