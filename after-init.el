@@ -885,6 +885,7 @@ See: https://github.com/PrincetonUniversity/blocklint"
   :commands (paredit-RET)
   :functions (pk/paredit-RET
               pk/suppress-paredit-mode-for-active-region-or-prefix-arg)
+  :defines (pk/suppressed-paredit-mode)
   :init
   (use-package ielm
     :ensure nil
@@ -904,9 +905,13 @@ See: https://github.com/PrincetonUniversity/blocklint"
 
   (defun pk/suppress-paredit-mode-for-rectangle-mark-mode ()
     "Suppress `paredit-mode' when entering `rectangle-mark-mode'."
-    (if rectangle-mark-mode
-        (paredit-mode -1)
-      (paredit-mode)))
+    (cond
+     ((and paredit-mode rectangle-mark-mode)
+      (setq-local pk/suppressed-paredit-mode t)
+      (paredit-mode -1))
+     ((bound-and-true-p pk/suppressed-paredit-mode)
+      (setq-local pk/suppressed-paredit-mode nil)
+      (paredit-mode))))
 
   (defun pk/suppress-paredit-mode-for-active-region-or-prefix-arg (orig-fun &rest args)
     "Suppress `paredit-mode' when region is active or car ARGS is non number."
