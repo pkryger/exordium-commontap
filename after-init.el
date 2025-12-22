@@ -1583,9 +1583,32 @@ language."
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (use-package forge
+  :init
+  (use-package transient
+    :ensure nil
+    :autoload (transient-lisp-variable))
+
+  (transient-define-infix pk/forge-toggle-limit-topic-choices ()
+    "Toggle `forge-limit-topic-choices' in current buffer."
+    :class 'transient-lisp-variable
+    :reader (lambda (&rest _) (not forge-limit-topic-choices))
+    :variable 'forge-limit-topic-choices
+    :set-value (lambda (_symbol newvalue)
+                 (set (make-local-variable 'forge-limit-topic-choices)
+                      newvalue)))
+
   :config
   (add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
-  (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium"))))
+  (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium")))
+
+  (with-eval-after-load 'forge-commands
+    (let ((suffix (transient-parse-suffix
+                   'forge-dispatch
+                   '("-l" "limit topic choices"
+                     pk/forge-toggle-limit-topic-choices))))
+      (unless (equal suffix
+                     (transient-get-suffix 'forge-dispatch '(-2 -1 -1)))
+        (transient-append-suffix 'forge-dispatch '(-2 -1 -1) suffix)))))
 
 
 (when-let*  ((font-and-size (car (cl-remove-if-not
