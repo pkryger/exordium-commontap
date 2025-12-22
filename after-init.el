@@ -1583,10 +1583,19 @@ language."
 
 (add-hook 'git-commit-mode-hook 'turn-on-auto-fill)
 (use-package forge
+  :functions (pk/helm-forge-read-topic-lift-limit)
   :init
+  (use-package forge-topic
+    :ensure nil
+    :autoload (forge--replace-minibuffer-prompt
+               forge-read-topic-lift-limit))
+
   (use-package transient
     :ensure nil
     :autoload (transient-lisp-variable))
+
+  (use-package helm-core
+    :autoload (helm-force-update))
 
   (transient-define-infix pk/forge-toggle-limit-topic-choices ()
     "Toggle `forge-limit-topic-choices' in current buffer."
@@ -1597,9 +1606,52 @@ language."
                  (set (make-local-variable 'forge-limit-topic-choices)
                       newvalue)))
 
+  (defun pk/helm-forge-read-topic-lift-limit (&rest _args)
+    "Ensure `forge-read-topic-lift-limit' works with Helm."
+    (when (and
+           (minibufferp)
+           (bound-and-true-p helm-alive-p)
+           ;; Prevent changing a local variable that user might have set in
+           ;; `helm-current-buffer'.
+           (with-helm-current-buffer
+             (and (not (local-variable-p 'forge-limit-topic-choices))
+                  forge-limit-topic-choices)))
+      ;; When using `helm', candidates calculation and updates are done in a
+      ;; `helm-current-buffer', i.e., not in a minibuffer like when using default
+      ;; completion.  Execution in a minibuffer is what
+      ;; `forge-read-topic-lift-limit' seems to assume.
+      (with-helm-current-buffer
+        ;; After the `helm' completion finishes we want to kill the local
+        ;; variable, such that next command will start with the original value of
+        ;; `forge-limit-topic-choices'.
+        (letrec ((buffer (current-buffer))
+                 (kill-local-fltc (lambda ()
+                                    (with-current-buffer buffer
+                                      (kill-local-variable 'forge-limit-topic-choices))
+                                    (remove-hook 'helm-cleanup-hook kill-local-fltc))))
+          (add-hook 'helm-cleanup-hook kill-local-fltc)
+          (setq-local forge-limit-topic-choices nil)))
+
+      ;; `helm-force-update' triggers the candidates update which in turn which
+      ;; manipulates prompt in minibuffer.  Ensure the manipulation happens
+      ;; in the minibuffer.
+      (let* ((minibuf (current-buffer))
+             (with-minibuffer (lambda (orig-fun &rest args)
+                                (with-current-buffer minibuf
+                                  (apply orig-fun args)))))
+        (advice-add #'forge--replace-minibuffer-prompt
+                    :around with-minibuffer)
+        (unwind-protect
+            (helm-force-update)
+          (advice-remove #'forge--replace-minibuffer-prompt
+                         with-minibuffer)))))
+
   :config
   (add-to-list 'forge-owned-accounts '("pkryger" . (remote-name "pkryger")))
   (add-to-list 'forge-owned-accounts '("emacs-exordium" . (remote-name "exordium")))
+
+  (advice-add #'forge-read-topic-lift-limit
+              :after #'pk/helm-forge-read-topic-lift-limit)
 
   (with-eval-after-load 'forge-commands
     (let ((suffix (transient-parse-suffix
