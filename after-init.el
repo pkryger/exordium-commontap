@@ -1697,7 +1697,7 @@ language."
 
 (use-package dom
   :ensure nil
-  :autoload (dom-text
+  :autoload (dom-inner-text
              dom-by-tag))
 
 (defun pk/insert-link-dwim (make-link-string insert-link &optional arg)
@@ -1722,11 +1722,12 @@ Based on https://xenodium.com/emacs-dwim-do-what-i-mean/"
                     clipboard-url
                     (read-string "title: "
                                  (with-current-buffer (url-retrieve-synchronously clipboard-url)
-                                   (dom-text (car
-                                              (dom-by-tag (libxml-parse-html-region
-                                                           (point-min)
-                                                           (point-max))
-                                                          'title))))))))
+                                   (dom-inner-text
+                                    (car
+                                     (dom-by-tag (libxml-parse-html-region
+                                                  (point-min)
+                                                  (point-max))
+                                                 'title))))))))
           (t
            (let ((current-prefix-arg arg))
              (call-interactively insert-link))))))
