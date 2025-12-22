@@ -212,18 +212,17 @@
                   `((tab-bar-tab . ,bg-tab-current)
                     (tab-bar-tab-inactive . ,bg-tab-bar))))
 
-                ;; FIXME: `dots' seems to be unavailable
-                ;; (writegood-faces
-                ;;  (mapcar
-                ;;   (lambda (face)
-                ;;     `(,face ((t (,@c :underline
-                ;;                      ,(if-let* ((underline (face-attribute face :underline))
-                ;;                                 ((plistp underline)))
-                ;;                         (plist-put underline :style 'dots)
-                ;;                         underline))))))
-                ;;   `(writegood-weasels-face
-                ;;     writegood-duplicates-face
-                ;;     writegood-passive-voice-face)))
+                (writegood-faces
+                 (mapcar
+                  (lambda (face)
+                    `(,face ((t (,@c
+                                 ,@(when-let* ((underline (face-attribute face :underline))
+                                               ((plistp underline)))
+                                     (list :underline
+                                           (plist-put underline :style 'dots))))))))
+                  '(writegood-weasels-face
+                    writegood-duplicates-face
+                    writegood-passive-voice-face)))
 
                 (other-faces
                  (list
@@ -247,8 +246,7 @@
             (apply #'custom-theme-set-faces
                    (cons 'user
                          (append other-faces
-                                 ;; FIXME: `dots' seems to be unavailable
-                                 ;; writegood-faces
+                                 writegood-faces
                                  tab-bar-faces
                                  iedit-faces
                                  exordium-org-faces
