@@ -53,14 +53,6 @@
     :defer t
     :defines (auto-dark-themes))
 
-  (use-package org
-    :ensure nil
-    :autoload (org-fontify-meta-lines-and-blocks))
-
-  (use-package org-src
-    :ensure nil
-    :autoload (org-fontify-inline-src-blocks))
-
   (defun pk/org-src-bloc-face-lang-with-bg-color (color)
     (lambda (lang)
       (list lang `(:background ,color))))
@@ -255,22 +247,7 @@
     (dolist (buffer (buffer-list))
       (with-current-buffer buffer
         (when (derived-mode-p '(org-mode))
-          (run-with-idle-timer
-           1 nil
-           (lambda ()
-             (with-current-buffer buffer
-               (save-excursion)
-               (let* ((start (point-min))
-                      (end (point-max))
-                      (last start))
-                 (goto-char start)
-                 (while (progn
-                          (org-fontify-meta-lines-and-blocks end)
-                          (when-let* ((pt (point))
-                                      ((/= pt last)))
-                            (setq last pt))))
-                 (goto-char start)
-                 (org-fontify-inline-src-blocks end))))))))
+          (font-lock-flush))))
 
     (when (fboundp #'posframe-delete-all)
       (posframe-delete-all)))
