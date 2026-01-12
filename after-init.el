@@ -16,6 +16,14 @@
 
 (when (boundp 'native-comp-async-report-warnings-errors)
   (setq native-comp-async-report-warnings-errors 'silent))
+
+;; the `tram-flush-file-function' causes crashes on Emacs 31 (20251215)
+(use-package tramp-cache
+  :ensure nil
+  :defer t
+  :config
+  (advice-add #'tramp-flush-file-function :override #'ignore))
+
 
 (use-package modus-themes
   :unless (bound-and-true-p exordium-theme)
