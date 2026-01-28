@@ -663,15 +663,20 @@ When such temporary flycheck_ files are present they can be
 scrubbed for autoloads clobbering real declarations.  This only
 happens in `project' directories, such that it shouldn't kick in
 packages are reinstalled from MELPA."
-    (when-let* ((default-directory (nth 0 args))
-                (project-root (project-root (project-current))))
-      (setf (nth 2 args)
-            (append (nth 2 args)
-                    (directory-files
-                     project-root t
-                     (rx string-start "flycheck_"
-                         (one-or-more (or alnum punct)) ".el" string-end)))))
-    args)
+    (if-let* ((dir (car args))
+              ((stringp dir))
+              ((file-directory-p dir))
+              (default-directory dir)
+              (project-root (project-root (project-current))))
+        (cl-list* dir
+                  (nth 1 args)
+                  (append (nth 2 args)
+                          (directory-files
+                           project-root t
+                           (rx string-start "flycheck_"
+                               (one-or-more (or alnum punct)) ".el" string-end)))
+                  (drop 3 args))
+      args))
 
   :config
   (put 'flycheck-emacs-lisp-load-path 'risky-local-variable nil)
