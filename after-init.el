@@ -947,6 +947,81 @@ See: https://github.com/PrincetonUniversity/blocklint"
               :around #'pk/suppress-paredit-mode-for-active-region-or-prefix-arg))
 
 
+(defmacro pk/*** (string &rest objects)
+  "Format f-string expressions in STRING with OBJECTS."
+  (let ((end 0)
+        res objs start)
+    (while  (and (setq start
+                       (let ((from end))
+                         (catch 'pos
+                           (while (string-match
+                                   (rx (or "{"  (seq "%"
+                                                     (? (group (+ num) "$"))
+                                                     (? (+ (any "+ #0-")))
+                                                     (? (+ num))
+                                                     (? "." (+ num))
+                                                     (any "sSdibBoxXefgc"))))
+                                   string from)
+                             (when (match-string 1 string)
+                               (error "Numbered %%-sequences are not supported"))
+                             (when (string= (match-string 0 string) "{")
+                               (throw 'pos (match-beginning 0)))
+                             (push (pop objects) objs)
+                             (setq from (match-end 0))))))
+                 (push (substring string end start) res)
+                 (cl-incf start)
+                 (setq end (or (string-search "}" string start)
+                               (error "Expecting '}'"))))
+      (if (= start end)
+          (error "Valid expression-required before '}'")
+        (let ((value (substring string start end)))
+          (when-let* ((pos (string-match "=$" value)))
+            (push value res)
+            (setq value (substring value 0 pos)))
+          (push "%s" res)
+          (push (intern value) objs)))
+      (cl-incf end))
+    (push (substring string end) res)
+    `(message ,(apply #'concat '"*** " (reverse res))
+              ,@(reverse objs)
+              ,@objects)))
+
+;; (let* ((tokens '("{foo}" "{bar=}" "%b" "%08x"))
+;;        (cases
+;;         (cl-loop
+;;          for t1 in tokens append
+;;          (cl-loop
+;;           for t2 in tokens append
+;;           (cl-loop
+;;            for t3 in tokens append
+;;            (cl-loop
+;;             for t4 in tokens collect
+;;             (let ((tkns (list t1 t2 t3 t4)))
+;;               (list
+;;                (mapconcat #'identity tkns " ")
+;;                (delq nil (mapcar (lambda (tkn)
+;;                                    (pcase tkn
+;;                                      ("%b" 'baz)
+;;                                      ("%08x" 'hex)))
+;;                                  tkns))
+;;                (mapconcat (lambda (tkn)
+;;                             (pcase tkn
+;;                               ("{foo}" "%s")
+;;                               ("{bar=}" "bar=%s")
+;;                               (_ tkn)))
+;;                           tkns " ")
+;;                (mapcar (lambda (tkn)
+;;                          (pcase tkn
+;;                            ("{foo}" 'foo)
+;;                            ("{bar=}" 'bar)
+;;                            ("%b" 'baz)
+;;                            ("%08x" 'hex)))
+;;                        tkns)))))))))
+;;   (pcase-dolist (`(,string ,objects ,expected-str ,expected-objs) cases)
+;;     (cl-assert (equal (macroexpand `(pk/*** ,string ,@objects))
+;;                       `(message ,(concat "*** " expected-str) ,@expected-objs))
+;;                t)))
+
 (use-package dumb-jump
   :defer t
   :config
