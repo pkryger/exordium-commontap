@@ -947,8 +947,15 @@ See: https://github.com/PrincetonUniversity/blocklint"
               :around #'pk/suppress-paredit-mode-for-active-region-or-prefix-arg))
 
 
-(defmacro pk/*** (string &rest objects)
-  "Format f-string expressions in STRING with OBJECTS."
+(defun pk/f-string-parse (string &rest objects)
+  "Parse f-string expressions in STRING.
+STRING may optionally contain format-string and arguments in OBJECTS
+like in `format', which see.  Return a list where car is a format-string
+and cdr is a list of arguments compatible with applying `format'.  Note
+that object extracted from f-string are interned symbols, which values
+are not accessible when variables are lexically bound.  To get real
+values evaluate the arguments in appropriate context, for example
+splicing it in a macro like in `pk/***'."
   (let ((end 0)
         res objs start)
     (while  (and (setq start
@@ -982,9 +989,14 @@ See: https://github.com/PrincetonUniversity/blocklint"
           (push (intern value) objs)))
       (cl-incf end))
     (push (substring string end) res)
-    `(message ,(apply #'concat '"*** " (reverse res))
-              ,@(reverse objs)
-              ,@objects)))
+    (cons (apply #'concat (reverse res))
+          (append (reverse objs)
+                  objects))))
+
+(defmacro pk/*** (string &rest objects)
+  "Format f-string expressions in STRING with OBJECTS."
+  (pcase-let* ((`(,str . ,objs) (apply #'pk/f-string-parse string objects)))
+    `(message ,(concat "*** " str) ,@objs)))
 
 ;; (let* ((tokens '("{foo}" "{bar=}" "%b" "%08x"))
 ;;        (cases
@@ -1018,8 +1030,8 @@ See: https://github.com/PrincetonUniversity/blocklint"
 ;;                            ("%08x" 'hex)))
 ;;                        tkns)))))))))
 ;;   (pcase-dolist (`(,string ,objects ,expected-str ,expected-objs) cases)
-;;     (cl-assert (equal (macroexpand `(pk/*** ,string ,@objects))
-;;                       `(message ,(concat "*** " expected-str) ,@expected-objs))
+;;     (cl-assert (equal (apply #'pk/f-string-parse string objects)
+;;                       (cons expected-str expected-objs))
 ;;                t)))
 
 (use-package dumb-jump
