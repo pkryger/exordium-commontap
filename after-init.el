@@ -294,19 +294,18 @@
   :bind
   ("<f5>" . modus-themes-toggle))
 
-(use-package auto-dark
-  :demand t
-  :diminish
-  :custom
-  (auto-dark-themes '((modus-vivendi) (modus-operandi)))
-  (auto-dark-detection-method (when (getenv "ci_tests")
-                                'none))
-  :hook
-  (auto-dark-dark-mode . pk/modus-themes--custom-faces)
-  (auto-dark-light-mode . pk/modus-themes--custom-faces)
-  :config
-  (auto-dark-mode)
-  (pk/modus-themes--custom-faces))
+(unless (getenv "ci_tests")
+  (use-package auto-dark
+    :demand t
+    :diminish
+    :custom
+    (auto-dark-themes '((modus-vivendi) (modus-operandi)))
+    :hook
+    (auto-dark-dark-mode . pk/modus-themes--custom-faces)
+    (auto-dark-light-mode . pk/modus-themes--custom-faces)
+    :config
+    (auto-dark-mode)
+    (pk/modus-themes--custom-faces)))
 
 
 
