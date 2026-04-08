@@ -1206,7 +1206,8 @@ This is to reduce the number of proposals."
           ("M-N" . #'yaml-pro-move-subtree-down)
           ("M-P" . #'yaml-pro-move-subtree-up)))
   :defer t
-  :mode (rx ".y" (zero-or-one "a") "ml.template" string-end)
+  :mode ((rx ".y" (zero-or-one "a") "ml.template" string-end)
+         (rx ".clang-tidy" string-end))
   :hook
   ;; (yaml-mode . yaml-pro-mode)
   (yaml-ts-mode . yaml-pro-ts-mode))
