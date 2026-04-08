@@ -939,6 +939,8 @@ See: https://github.com/PrincetonUniversity/blocklint"
         ("RET" . #'pk/paredit-RET))
   :hook ((emacs-lisp-mode . paredit-mode)
          (lisp-interaction-mode . paredit-mode)
+         (lisp-mode . paredit-mode)
+         (lisp-data-mode . paredit-mode)
          (ielm-mode . paredit-mode)
          (eval-expression-minibuffer-setup . paredit-mode)
          (rectangle-mark-mode . pk/suppress-paredit-mode-for-rectangle-mark-mode))
