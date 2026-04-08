@@ -2749,6 +2749,9 @@ DESC must be a `package-desc' object."
                 (push (car ent) vars))))))
       (dlet ((reporter-prompt-for-summary-p t))
         (reporter-submit-bug-report maint name vars)))))
+
+;; MAkeLisp files, see https::github.com/kanaka/mal
+(add-to-list 'auto-mode-alist `(,(rx ".mal" eos) . lisp-mode))
 
 
 (provide 'after-init)
